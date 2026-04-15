@@ -34,3 +34,6 @@ yarn-error.log*
 
 # Optional local cache for NWS responses (if we add one later)
 .cache/
+
+# Superpowers brainstorming artifacts (mockups, session state)
+.superpowers/
