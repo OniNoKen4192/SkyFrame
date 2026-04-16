@@ -442,6 +442,7 @@ describe('normalizeWeather', () => {
         if (path.includes('/forecast')) return forecast as never;
         if (path.includes('/observations/latest')) return FIXTURE_OBS_LATEST as never;
         if (path.includes('/observations')) return FIXTURE_OBS_HISTORY as never;
+        if (path.includes('/alerts/active')) return { features: [] } as never;
         throw new Error('Unexpected path: ' + path);
       });
     }
