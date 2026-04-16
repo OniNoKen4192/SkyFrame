@@ -3,6 +3,7 @@ import type { WeatherMeta } from '../../shared/types';
 interface FooterProps {
   meta: WeatherMeta | null;
   error: string | null;
+  nextRetryAt?: string | null;
 }
 
 function formatHM(iso: string | undefined): string {
@@ -18,15 +19,17 @@ function formatHM(iso: string | undefined): string {
   return `${map.hour}:${map.minute}:${map.second}`;
 }
 
-export function Footer({ meta, error }: FooterProps) {
+export function Footer({ meta, error, nextRetryAt }: FooterProps) {
   const stationId = meta?.stationId ?? 'KMKE';
   const lastPull = formatHM(meta?.fetchedAt);
-  const nextPull = formatHM(meta?.nextRefreshAt);
+  const nextPull = error && nextRetryAt
+    ? formatHM(nextRetryAt)
+    : formatHM(meta?.nextRefreshAt);
 
   return (
     <div className="hud-footer">
       <span className={error ? 'dot dot-error' : 'dot'}></span>
-      {error ? 'LINK FAIL' : `LINK.${stationId}`}
+      {error ? 'LINK.OFFLINE' : `LINK.${stationId}`}
       &nbsp;·&nbsp; LAST PULL {lastPull} &nbsp;·&nbsp; NEXT {nextPull}
     </div>
   );

@@ -22,6 +22,7 @@ const ERROR_RETRY_MS = 30 * 1000;
 export default function App() {
   const [data, setData] = useState<WeatherResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [nextRetryAt, setNextRetryAt] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -41,6 +42,7 @@ export default function App() {
 
         setData(json);
         setError(null);
+        setNextRetryAt(null);
 
         // Schedule next poll based on the server's own expiration timestamp,
         // not a fixed client interval. This keeps the displayed "NEXT" time
@@ -53,6 +55,7 @@ export default function App() {
       } catch (e) {
         if (cancelled) return;
         setError((e as Error).message);
+        setNextRetryAt(new Date(Date.now() + ERROR_RETRY_MS).toISOString());
         scheduleNext(ERROR_RETRY_MS);
       }
     };
@@ -66,7 +69,7 @@ export default function App() {
 
   return (
     <div className="hud-showcase">
-      <TopBar />
+      <TopBar stationId={data?.meta?.stationId ?? null} error={error} />
 
       {data ? (
         <CurrentPanel current={data.current} />
@@ -80,7 +83,7 @@ export default function App() {
 
       {data && <OutlookPanel daily={data.daily} />}
 
-      <Footer meta={data?.meta ?? null} error={error} />
+      <Footer meta={data?.meta ?? null} error={error} nextRetryAt={nextRetryAt} />
     </div>
   );
 }

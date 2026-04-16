@@ -23,7 +23,12 @@ function partsToMap(parts: Intl.DateTimeFormatPart[]): Record<string, string> {
   return map;
 }
 
-export function TopBar() {
+interface TopBarProps {
+  stationId: string | null;
+  error: string | null;
+}
+
+export function TopBar({ stationId, error }: TopBarProps) {
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
@@ -38,9 +43,16 @@ export function TopBar() {
   const tz = t.timeZoneName ?? '';
   const dateStr = `${d.weekday?.toUpperCase() ?? ''} · ${d.month?.toUpperCase() ?? ''} ${d.day ?? ''} · ${d.year ?? ''}`;
 
+  const linkText = error ? 'LINK.OFFLINE' : `LINK.${stationId ?? 'KMKE'}`;
+  const linkClass = error ? 'link link-offline' : 'link';
+  const locClass = error ? 'loc loc-offline' : 'loc';
+
   return (
     <div className="hud-topbar">
-      <div className="loc">■ SKYFRAME &nbsp;·&nbsp; OAK CREEK 53154 &nbsp;·&nbsp; KMKE LINK</div>
+      <div className={locClass}>
+        ■ SKYFRAME &nbsp;·&nbsp; OAK CREEK 53154 &nbsp;·&nbsp;
+        <span className={linkClass}>{linkText}</span>
+      </div>
       <div className="clock">
         <div className="clock-time">
           <span className="clock-digits">{digits}</span>
