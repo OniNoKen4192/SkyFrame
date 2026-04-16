@@ -7,6 +7,7 @@ import { mapNwsIcon } from './icon-mapping';
 import { computeTrend, type TimedValue } from './trends';
 import { buildPrecipOutlook } from './precip';
 import { mapEventToTier, tierRank } from '../../shared/alert-tiers';
+import { synthesizeDebugAlerts } from './debug-alerts';
 
 // ========== Unit conversion helpers ==========
 
@@ -136,7 +137,7 @@ interface NwsObsListResponse {
   features: Array<{ properties: NwsObsProperties }>;
 }
 
-interface NwsAlertsResponse {
+export interface NwsAlertsResponse {
   features: Array<{
     properties: {
       id: string;
@@ -203,6 +204,9 @@ interface AlertsFetchResult {
 }
 
 async function fetchAlertsSafe(): Promise<AlertsFetchResult> {
+  if (CONFIG.debug.injectTiers.length > 0) {
+    return { data: synthesizeDebugAlerts([...CONFIG.debug.injectTiers], new Date()), failed: false };
+  }
   const { location } = CONFIG;
   try {
     const data = await fetchNws<NwsAlertsResponse>(

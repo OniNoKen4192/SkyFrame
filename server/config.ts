@@ -1,3 +1,5 @@
+import { parseDebugTiers } from './nws/debug-alerts';
+
 export const CONFIG = {
   // Location (ZIP 53154, Oak Creek, WI)
   location: {
@@ -47,5 +49,11 @@ export const CONFIG = {
   server: {
     port: 3000,
     host: '127.0.0.1',
+  },
+
+  // Dev-only: when SKYFRAME_DEBUG_TIERS env var is set, synthetic alerts
+  // for the listed tiers replace the real NWS alerts fetch. Empty in production.
+  debug: {
+    injectTiers: parseDebugTiers(process.env.SKYFRAME_DEBUG_TIERS),
   },
 } as const;

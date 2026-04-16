@@ -1,7 +1,9 @@
 // server/nws/normalizer.test.ts
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { normalizeWeather } from './normalizer';
 import * as client from './client';
+import { CONFIG } from '../config';
+import type { AlertTier } from '../../shared/types';
 
 // Minimal but realistic fixture payloads. Real NWS responses have many more
 // fields; these include just what the normalizer reads.
@@ -402,6 +404,45 @@ describe('normalizeWeather', () => {
       expect(a.effective).toBe('2026-04-16T16:30:00-05:00');
       expect(a.expires).toBe('2026-04-16T17:15:00-05:00');
       expect(a.areaDesc).toBe('Milwaukee, WI');
+    });
+  });
+
+  describe('debug alert injection', () => {
+    // CONFIG.debug.injectTiers is `as const` readonly at compile time but a
+    // plain mutable array at runtime. Mutate via type-cast and restore after.
+    const originalTiers: AlertTier[] = [...CONFIG.debug.injectTiers];
+
+    afterEach(() => {
+      const arr = CONFIG.debug.injectTiers as AlertTier[];
+      arr.length = 0;
+      arr.push(...originalTiers);
+    });
+
+    it('returns synthetic alerts and skips the NWS alerts fetch when injectTiers is set', async () => {
+      const arr = CONFIG.debug.injectTiers as AlertTier[];
+      arr.length = 0;
+      arr.push('tornado-warning', 'flood');
+
+      const fetchSpy = vi.spyOn(client, 'fetchNws').mockImplementation(async (path: string) => {
+        if (path.includes('/points/')) return FIXTURE_POINT as never;
+        if (path.includes('/forecast/hourly')) return FIXTURE_HOURLY as never;
+        if (path.includes('/forecast')) return FIXTURE_FORECAST as never;
+        if (path.includes('/observations/latest')) return FIXTURE_OBS_LATEST as never;
+        if (path.includes('/observations')) return FIXTURE_OBS_HISTORY as never;
+        if (path.includes('/alerts/active')) throw new Error('alerts endpoint should not be called in debug mode');
+        throw new Error('Unexpected path: ' + path);
+      });
+
+      const result = await normalizeWeather();
+
+      expect(result.alerts).toHaveLength(2);
+      expect(result.alerts[0]!.event).toBe('Tornado Warning');
+      expect(result.alerts[0]!.tier).toBe('tornado-warning');
+      expect(result.alerts[1]!.event).toBe('Flood Warning');
+      expect(result.alerts[1]!.tier).toBe('flood');
+      // Confirm no /alerts/active call was attempted.
+      const alertCalls = fetchSpy.mock.calls.filter(([p]) => typeof p === 'string' && p.includes('/alerts/active'));
+      expect(alertCalls).toHaveLength(0);
     });
   });
 

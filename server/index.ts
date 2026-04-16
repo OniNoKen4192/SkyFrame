@@ -12,6 +12,13 @@ const CLIENT_DIST = resolve(__dirname, '../dist/client');
 async function main() {
   const app = Fastify({ logger: { level: 'info' } });
 
+  if (CONFIG.debug.injectTiers.length > 0) {
+    console.log(
+      `[debug] SKYFRAME_DEBUG_TIERS active: ${CONFIG.debug.injectTiers.join(',')}` +
+      ` — synthetic alerts will replace NWS fetch`,
+    );
+  }
+
   await registerRoutes(app);
 
   // Serve built client assets in production. In dev, Vite serves them on 5173
