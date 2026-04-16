@@ -1,15 +1,15 @@
-# WxDeck v1 Implementation Plan
+# SkyFrame v1 Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build WxDeck v1 — a local ad-free weather dashboard for ZIP 53154 that fetches from NOAA/NWS, normalizes the data, and renders a cyan-on-black HUD-style dashboard with current conditions, 12-hour hourly forecast, and 7-day outlook.
+**Goal:** Build SkyFrame v1 — a local ad-free weather dashboard for ZIP 53154 that fetches from NOAA/NWS, normalizes the data, and renders a cyan-on-black HUD-style dashboard with current conditions, 12-hour hourly forecast, and 7-day outlook.
 
 **Architecture:** Single-package Node.js/TypeScript project. Fastify backend acts as a local proxy to NWS (required because `User-Agent` is a forbidden header in browsers, so a pure client-side app can't comply with NWS terms). React + Vite frontend served by the same backend as static files. One `GET /api/weather` endpoint returns a fully-normalized `WeatherResponse` shape consumed by the client. In-memory TTL cache prevents hammering NWS.
 
 **Tech Stack:** TypeScript 5.x · Fastify 5.x · React 18/19 · Vite 5/6 · tsx (dev-time TS runner) · Vitest (tests). No database, no environment variables, no external APIs beyond NWS.
 
 **Reference documents (read these before starting):**
-- [docs/superpowers/specs/2026-04-15-wxdeck-design.md](../specs/2026-04-15-wxdeck-design.md) — full design spec with data contracts, per-metric trend thresholds, precip outlook string format, error strategy, and explicit non-goals
+- [docs/superpowers/specs/2026-04-15-skyframe-design.md](../specs/2026-04-15-skyframe-design.md) — full design spec with data contracts, per-metric trend thresholds, precip outlook string format, error strategy, and explicit non-goals
 - [docs/mockups/current-conditions.html](../../mockups/current-conditions.html) — source of truth for current conditions visual design (CSS, SVG icons, DOM structure)
 - [docs/mockups/hourly.html](../../mockups/hourly.html) — source of truth for hourly view
 - [docs/mockups/outlook.html](../../mockups/outlook.html) — source of truth for 7-day outlook
@@ -19,7 +19,7 @@
 **Hard rules (enforce throughout):**
 - No ads, analytics, telemetry, third-party trackers, or CDN-hosted assets. Bundle everything locally.
 - NOAA/NWS is the only upstream. Do not introduce any API-key-gated fallback provider.
-- Every NWS request must include the `User-Agent: WxDeck/0.1 (ken.culver@gmail.com)` header. NWS may rate-limit or reject requests without it.
+- Every NWS request must include the `User-Agent: SkyFrame/0.1 (ken.culver@gmail.com)` header. NWS may rate-limit or reject requests without it.
 - Minimize dependencies. Before adding a package, ask whether ~100 lines of hand-written code would cover the same need.
 - No persistent storage. Cache is in-memory only.
 
@@ -30,7 +30,7 @@
 The project uses a single `package.json` with three source directories (`server/`, `client/`, `shared/`), not monorepo workspaces. The backend and frontend coexist in one package; Vite handles the client build, `tsx` runs the server in development.
 
 ```
-e:/WxDeck/
+e:/SkyFrame/
 ├── package.json                    # All dependencies in one place
 ├── tsconfig.json                   # Shared TS base config
 ├── tsconfig.server.json            # Server-specific TS config (node resolution)
@@ -87,18 +87,18 @@ e:/WxDeck/
 **Goal:** Get `npm run dev` working with a Vite dev server showing a stub page, and `npm run server` working with a Fastify server responding to `GET /api/weather` with hardcoded fake data. Establishes the full toolchain before any real logic.
 
 **Files:**
-- Create: `e:/WxDeck/package.json`
-- Create: `e:/WxDeck/.gitattributes`
-- Create: `e:/WxDeck/tsconfig.json`
-- Create: `e:/WxDeck/tsconfig.server.json`
-- Create: `e:/WxDeck/tsconfig.client.json`
-- Create: `e:/WxDeck/vite.config.ts`
-- Create: `e:/WxDeck/index.html`
-- Create: `e:/WxDeck/shared/types.ts`
-- Create: `e:/WxDeck/client/main.tsx`
-- Create: `e:/WxDeck/client/App.tsx`
-- Create: `e:/WxDeck/client/styles/hud.css` (empty for now, will be filled in Task 6)
-- Create: `e:/WxDeck/server/index.ts` (minimal version, will be expanded in Task 5)
+- Create: `e:/SkyFrame/package.json`
+- Create: `e:/SkyFrame/.gitattributes`
+- Create: `e:/SkyFrame/tsconfig.json`
+- Create: `e:/SkyFrame/tsconfig.server.json`
+- Create: `e:/SkyFrame/tsconfig.client.json`
+- Create: `e:/SkyFrame/vite.config.ts`
+- Create: `e:/SkyFrame/index.html`
+- Create: `e:/SkyFrame/shared/types.ts`
+- Create: `e:/SkyFrame/client/main.tsx`
+- Create: `e:/SkyFrame/client/App.tsx`
+- Create: `e:/SkyFrame/client/styles/hud.css` (empty for now, will be filled in Task 6)
+- Create: `e:/SkyFrame/server/index.ts` (minimal version, will be expanded in Task 5)
 
 - [ ] **Step 1: Create `.gitattributes`** to normalize line endings across platforms.
 
@@ -115,7 +115,7 @@ e:/WxDeck/
 
 ```json
 {
-  "name": "wxdeck",
+  "name": "skyframe",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -151,7 +151,7 @@ e:/WxDeck/
 
 - [ ] **Step 3: Install dependencies.**
 
-Run: `cd e:/WxDeck && npm install`
+Run: `cd e:/SkyFrame && npm install`
 Expected: `node_modules/` populated, `package-lock.json` created, no peer-dependency errors. If a package version is unavailable, let npm pick the nearest valid version — don't hand-downgrade.
 
 - [ ] **Step 4: Create `tsconfig.json`** (shared base).
@@ -242,7 +242,7 @@ export default defineConfig({
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>WxDeck</title>
+    <title>SkyFrame</title>
     <link rel="stylesheet" href="/client/styles/hud.css" />
   </head>
   <body>
@@ -357,7 +357,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 export default function App() {
   return (
     <div style={{ padding: 40, color: '#00e5d1', background: '#000d10', minHeight: '100vh', fontFamily: 'monospace' }}>
-      <h1>WxDeck — scaffold running</h1>
+      <h1>SkyFrame — scaffold running</h1>
       <p>Vite dev server is working. Backend proxy will be wired in Task 5.</p>
     </div>
   );
@@ -367,7 +367,7 @@ export default function App() {
 - [ ] **Step 12: Create `client/styles/hud.css`** as an empty placeholder (will be filled in Task 6).
 
 ```css
-/* WxDeck HUD styles — populated in Task 6 by porting from docs/mockups/ */
+/* SkyFrame HUD styles — populated in Task 6 by porting from docs/mockups/ */
 ```
 
 - [ ] **Step 13: Create `server/index.ts`** — minimal Fastify server responding with a fake payload.
@@ -388,7 +388,7 @@ app.get('/api/weather', async () => {
 });
 
 app.listen({ port: PORT, host: HOST })
-  .then(() => app.log.info(`WxDeck backend listening on http://${HOST}:${PORT}`))
+  .then(() => app.log.info(`SkyFrame backend listening on http://${HOST}:${PORT}`))
   .catch((err) => {
     app.log.error(err);
     process.exit(1);
@@ -397,23 +397,23 @@ app.listen({ port: PORT, host: HOST })
 
 - [ ] **Step 14: Run the Vite dev server to verify it works.**
 
-Run: `cd e:/WxDeck && npm run dev`
-Expected: Vite starts on http://localhost:5173, opening that URL in a browser shows "WxDeck — scaffold running" in cyan on a dark background. Kill the dev server with Ctrl+C.
+Run: `cd e:/SkyFrame && npm run dev`
+Expected: Vite starts on http://localhost:5173, opening that URL in a browser shows "SkyFrame — scaffold running" in cyan on a dark background. Kill the dev server with Ctrl+C.
 
 - [ ] **Step 15: Run the backend server in a second terminal to verify it works.**
 
-Run: `cd e:/WxDeck && npm run server`
-Expected: logs `WxDeck backend listening on http://127.0.0.1:3000`. In another terminal: `curl http://localhost:3000/api/weather` returns the scaffold JSON. Kill with Ctrl+C.
+Run: `cd e:/SkyFrame && npm run server`
+Expected: logs `SkyFrame backend listening on http://127.0.0.1:3000`. In another terminal: `curl http://localhost:3000/api/weather` returns the scaffold JSON. Kill with Ctrl+C.
 
 - [ ] **Step 16: Verify the typecheck passes.**
 
-Run: `cd e:/WxDeck && npm run typecheck`
+Run: `cd e:/SkyFrame && npm run typecheck`
 Expected: No output, exit code 0. If there are errors, fix them before committing.
 
 - [ ] **Step 17: Commit.**
 
 ```bash
-cd e:/WxDeck
+cd e:/SkyFrame
 git add .gitattributes package.json package-lock.json tsconfig.json tsconfig.server.json tsconfig.client.json vite.config.ts index.html shared/ client/ server/
 git commit -m "$(cat <<'EOF'
 Scaffold Vite + React + Fastify + TypeScript project
@@ -440,11 +440,11 @@ EOF
 **Goal:** Build the primitives the normalizer will use: a low-level HTTP client that wraps `fetch()` with the required `User-Agent` header and retry logic, and an in-memory TTL cache.
 
 **Files:**
-- Create: `e:/WxDeck/server/config.ts`
-- Create: `e:/WxDeck/server/nws/client.ts`
-- Create: `e:/WxDeck/server/nws/client.test.ts`
-- Create: `e:/WxDeck/server/nws/cache.ts`
-- Create: `e:/WxDeck/server/nws/cache.test.ts`
+- Create: `e:/SkyFrame/server/config.ts`
+- Create: `e:/SkyFrame/server/nws/client.ts`
+- Create: `e:/SkyFrame/server/nws/client.test.ts`
+- Create: `e:/SkyFrame/server/nws/cache.ts`
+- Create: `e:/SkyFrame/server/nws/cache.test.ts`
 
 - [ ] **Step 1: Create `server/config.ts`** with all hardcoded constants from the design doc.
 
@@ -465,7 +465,7 @@ export const CONFIG = {
     gridY: 58,
     timezone: 'America/Chicago',
     forecastZone: 'WIZ066',
-    userAgent: 'WxDeck/0.1 (ken.culver@gmail.com)',
+    userAgent: 'SkyFrame/0.1 (ken.culver@gmail.com)',
     baseUrl: 'https://api.weather.gov',
   },
 
@@ -552,7 +552,7 @@ describe('TTLCache', () => {
 
 - [ ] **Step 3: Run test to verify it fails.**
 
-Run: `cd e:/WxDeck && npx vitest run server/nws/cache.test.ts`
+Run: `cd e:/SkyFrame && npx vitest run server/nws/cache.test.ts`
 Expected: FAIL with "Cannot find module './cache'" or similar.
 
 - [ ] **Step 4: Implement `server/nws/cache.ts`.**
@@ -605,7 +605,7 @@ export class TTLCache {
 
 - [ ] **Step 5: Run test to verify it passes.**
 
-Run: `cd e:/WxDeck && npx vitest run server/nws/cache.test.ts`
+Run: `cd e:/SkyFrame && npx vitest run server/nws/cache.test.ts`
 Expected: All 5 tests pass.
 
 - [ ] **Step 6: Create the failing test for the NWS client.** Tests User-Agent header, retry on 5xx, error on malformed JSON.
@@ -680,7 +680,7 @@ describe('fetchNws', () => {
 
 - [ ] **Step 7: Run test to verify it fails.**
 
-Run: `cd e:/WxDeck && npx vitest run server/nws/client.test.ts`
+Run: `cd e:/SkyFrame && npx vitest run server/nws/client.test.ts`
 Expected: FAIL with "Cannot find module './client'".
 
 - [ ] **Step 8: Implement `server/nws/client.ts`.**
@@ -771,18 +771,18 @@ export async function fetchNws<T = unknown>(path: string): Promise<T> {
 
 - [ ] **Step 9: Run test to verify it passes.**
 
-Run: `cd e:/WxDeck && npx vitest run server/nws/client.test.ts`
+Run: `cd e:/SkyFrame && npx vitest run server/nws/client.test.ts`
 Expected: All 5 tests pass.
 
 - [ ] **Step 10: Run all tests together as a sanity check.**
 
-Run: `cd e:/WxDeck && npm test`
+Run: `cd e:/SkyFrame && npm test`
 Expected: All tests pass (cache + client = 10 tests).
 
 - [ ] **Step 11: Commit.**
 
 ```bash
-cd e:/WxDeck
+cd e:/SkyFrame
 git add server/config.ts server/nws/cache.ts server/nws/cache.test.ts server/nws/client.ts server/nws/client.test.ts
 git commit -m "$(cat <<'EOF'
 Add NWS HTTP client and in-memory TTL cache
@@ -813,12 +813,12 @@ EOF
 **Goal:** Implement the three pure utility functions that convert raw NWS values into display-ready data. Each is unit-tested independently because they're the parts where subtle bugs are most painful.
 
 **Files:**
-- Create: `e:/WxDeck/server/nws/icon-mapping.ts`
-- Create: `e:/WxDeck/server/nws/icon-mapping.test.ts`
-- Create: `e:/WxDeck/server/nws/trends.ts`
-- Create: `e:/WxDeck/server/nws/trends.test.ts`
-- Create: `e:/WxDeck/server/nws/precip.ts`
-- Create: `e:/WxDeck/server/nws/precip.test.ts`
+- Create: `e:/SkyFrame/server/nws/icon-mapping.ts`
+- Create: `e:/SkyFrame/server/nws/icon-mapping.test.ts`
+- Create: `e:/SkyFrame/server/nws/trends.ts`
+- Create: `e:/SkyFrame/server/nws/trends.test.ts`
+- Create: `e:/SkyFrame/server/nws/precip.ts`
+- Create: `e:/SkyFrame/server/nws/precip.test.ts`
 
 - [ ] **Step 1: Create the failing test for icon-mapping.**
 
@@ -870,7 +870,7 @@ describe('mapNwsIcon', () => {
 
 - [ ] **Step 2: Run test to verify it fails.**
 
-Run: `cd e:/WxDeck && npx vitest run server/nws/icon-mapping.test.ts`
+Run: `cd e:/SkyFrame && npx vitest run server/nws/icon-mapping.test.ts`
 Expected: FAIL with "Cannot find module './icon-mapping'".
 
 - [ ] **Step 3: Implement `server/nws/icon-mapping.ts`.**
@@ -944,7 +944,7 @@ export function mapNwsIcon(url: string): IconCode {
 
 - [ ] **Step 4: Run icon-mapping tests.**
 
-Run: `cd e:/WxDeck && npx vitest run server/nws/icon-mapping.test.ts`
+Run: `cd e:/SkyFrame && npx vitest run server/nws/icon-mapping.test.ts`
 Expected: All tests pass.
 
 - [ ] **Step 5: Create the failing test for trends.**
@@ -1024,7 +1024,7 @@ describe('computeTrend', () => {
 
 - [ ] **Step 6: Run test to verify it fails.**
 
-Run: `cd e:/WxDeck && npx vitest run server/nws/trends.test.ts`
+Run: `cd e:/SkyFrame && npx vitest run server/nws/trends.test.ts`
 Expected: FAIL with "Cannot find module './trends'".
 
 - [ ] **Step 7: Implement `server/nws/trends.ts`.**
@@ -1085,7 +1085,7 @@ export function computeTrend(series: TimedValue[], steadyThresholdPerHour: numbe
 
 - [ ] **Step 8: Run trends tests.**
 
-Run: `cd e:/WxDeck && npx vitest run server/nws/trends.test.ts`
+Run: `cd e:/SkyFrame && npx vitest run server/nws/trends.test.ts`
 Expected: All tests pass.
 
 - [ ] **Step 9: Create the failing test for precipitation outlook.**
@@ -1178,7 +1178,7 @@ describe('buildPrecipOutlook', () => {
 
 - [ ] **Step 10: Run test to verify it fails.**
 
-Run: `cd e:/WxDeck && npx vitest run server/nws/precip.test.ts`
+Run: `cd e:/SkyFrame && npx vitest run server/nws/precip.test.ts`
 Expected: FAIL with "Cannot find module './precip'".
 
 - [ ] **Step 11: Implement `server/nws/precip.ts`.**
@@ -1248,18 +1248,18 @@ export function buildPrecipOutlook(input: PrecipInput): string {
 
 - [ ] **Step 12: Run precip tests.**
 
-Run: `cd e:/WxDeck && npx vitest run server/nws/precip.test.ts`
+Run: `cd e:/SkyFrame && npx vitest run server/nws/precip.test.ts`
 Expected: All tests pass.
 
 - [ ] **Step 13: Run full test suite.**
 
-Run: `cd e:/WxDeck && npm test`
+Run: `cd e:/SkyFrame && npm test`
 Expected: All tests pass across cache, client, icon-mapping, trends, precip.
 
 - [ ] **Step 14: Commit.**
 
 ```bash
-cd e:/WxDeck
+cd e:/SkyFrame
 git add server/nws/icon-mapping.ts server/nws/icon-mapping.test.ts server/nws/trends.ts server/nws/trends.test.ts server/nws/precip.ts server/nws/precip.test.ts
 git commit -m "$(cat <<'EOF'
 Add pure NWS transformation utilities
@@ -1291,8 +1291,8 @@ EOF
 **Goal:** Build the composition root that orchestrates fetching `/points`, `/gridpoints/.../forecast`, `/gridpoints/.../forecast/hourly`, `/stations/KMKE/observations/latest`, and `/stations/KMKE/observations?limit=6`, applies station fallback logic, runs the pure transforms, and returns a fully-populated `WeatherResponse`.
 
 **Files:**
-- Create: `e:/WxDeck/server/nws/normalizer.ts`
-- Create: `e:/WxDeck/server/nws/normalizer.test.ts`
+- Create: `e:/SkyFrame/server/nws/normalizer.ts`
+- Create: `e:/SkyFrame/server/nws/normalizer.test.ts`
 
 - [ ] **Step 1: Create the failing test with fixture NWS responses.** This test uses pre-captured JSON fixtures to verify the normalizer produces correct output without hitting real NWS.
 
@@ -1456,7 +1456,7 @@ describe('normalizeWeather', () => {
 
 - [ ] **Step 2: Run test to verify it fails.**
 
-Run: `cd e:/WxDeck && npx vitest run server/nws/normalizer.test.ts`
+Run: `cd e:/SkyFrame && npx vitest run server/nws/normalizer.test.ts`
 Expected: FAIL with "Cannot find module './normalizer'".
 
 - [ ] **Step 3: Implement `server/nws/normalizer.ts`.**
@@ -1770,18 +1770,18 @@ function collapseDailyPeriods(
 
 - [ ] **Step 4: Run normalizer tests.**
 
-Run: `cd e:/WxDeck && npx vitest run server/nws/normalizer.test.ts`
+Run: `cd e:/SkyFrame && npx vitest run server/nws/normalizer.test.ts`
 Expected: All tests pass. If any fail, read the assertion failure carefully — most likely culprit is a unit conversion formula or a timezone formatting issue.
 
 - [ ] **Step 5: Run the full test suite.**
 
-Run: `cd e:/WxDeck && npm test`
+Run: `cd e:/SkyFrame && npm test`
 Expected: All tests pass across every module.
 
 - [ ] **Step 6: Commit.**
 
 ```bash
-cd e:/WxDeck
+cd e:/SkyFrame
 git add server/nws/normalizer.ts server/nws/normalizer.test.ts
 git commit -m "$(cat <<'EOF'
 Add NWS normalizer composition root
@@ -1816,8 +1816,8 @@ EOF
 **Goal:** Implement the design doc §4.1 requirement that the backend automatically falls back from the primary observation station (KMKE) to the secondary (KRAC) when KMKE's latest observation is older than ~90 minutes OR has null values in critical fields (`temperature`, `windSpeed`, `textDescription`). Surface which station was actually used via `WeatherMeta.stationId` and `WeatherMeta.error`.
 
 **Files:**
-- Modify: `e:/WxDeck/server/nws/normalizer.ts`
-- Modify: `e:/WxDeck/server/nws/normalizer.test.ts`
+- Modify: `e:/SkyFrame/server/nws/normalizer.ts`
+- Modify: `e:/SkyFrame/server/nws/normalizer.test.ts`
 
 - [ ] **Step 1: Add a failing test for station fallback.** Append to the existing `describe('normalizeWeather', ...)` block.
 
@@ -1887,7 +1887,7 @@ it('uses KMKE without error flag when primary is fresh and complete', async () =
 
 - [ ] **Step 2: Run the new tests to confirm they fail.**
 
-Run: `cd e:/WxDeck && npx vitest run server/nws/normalizer.test.ts`
+Run: `cd e:/SkyFrame && npx vitest run server/nws/normalizer.test.ts`
 Expected: the three new tests fail — the first two because normalizer never tries KRAC, the third because `meta.stationId` might already work but `meta.error` field is unset.
 
 - [ ] **Step 3: Refactor `normalizer.ts` to pull observation fetching into a helper that applies fallback logic.** Replace the existing observation fetching in `normalizeWeather` with calls to a new helper function. Add this helper above `normalizeWeather`:
@@ -2020,18 +2020,18 @@ const meta = {
 
 - [ ] **Step 6: Run the normalizer tests to verify the new tests pass and the existing tests still pass.**
 
-Run: `cd e:/WxDeck && npx vitest run server/nws/normalizer.test.ts`
+Run: `cd e:/SkyFrame && npx vitest run server/nws/normalizer.test.ts`
 Expected: all tests (original + 3 new) pass.
 
 - [ ] **Step 7: Run the full test suite as a sanity check.**
 
-Run: `cd e:/WxDeck && npm test`
+Run: `cd e:/SkyFrame && npm test`
 Expected: all tests across every module still pass.
 
 - [ ] **Step 8: Commit.**
 
 ```bash
-cd e:/WxDeck
+cd e:/SkyFrame
 git add server/nws/normalizer.ts server/nws/normalizer.test.ts
 git commit -m "$(cat <<'EOF'
 Add station fallback: KMKE → KRAC on stale or null observations
@@ -2064,9 +2064,9 @@ EOF
 **Goal:** Tie the normalizer to an HTTP endpoint. Add the caching layer. Serve the built client from `dist/client`. This is the step where the backend becomes a real, runnable app.
 
 **Files:**
-- Modify: `e:/WxDeck/server/index.ts`
-- Create: `e:/WxDeck/server/routes.ts`
-- Create: `e:/WxDeck/server/routes.test.ts`
+- Modify: `e:/SkyFrame/server/index.ts`
+- Create: `e:/SkyFrame/server/routes.ts`
+- Create: `e:/SkyFrame/server/routes.test.ts`
 
 - [ ] **Step 1: Create the failing integration test for the routes module.**
 
@@ -2152,7 +2152,7 @@ describe('GET /api/weather', () => {
 
 - [ ] **Step 2: Run test to verify it fails.**
 
-Run: `cd e:/WxDeck && npx vitest run server/routes.test.ts`
+Run: `cd e:/SkyFrame && npx vitest run server/routes.test.ts`
 Expected: FAIL with "Cannot find module './routes'".
 
 - [ ] **Step 3: Implement `server/routes.ts`.**
@@ -2195,7 +2195,7 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
 
 - [ ] **Step 4: Run routes tests.**
 
-Run: `cd e:/WxDeck && npx vitest run server/routes.test.ts`
+Run: `cd e:/SkyFrame && npx vitest run server/routes.test.ts`
 Expected: All 3 tests pass.
 
 - [ ] **Step 5: Update `server/index.ts` to wire the routes and serve static client from `dist/client`.**
@@ -2228,7 +2228,7 @@ async function main() {
   }
 
   await app.listen({ port: CONFIG.server.port, host: CONFIG.server.host });
-  app.log.info(`WxDeck listening on http://${CONFIG.server.host}:${CONFIG.server.port}`);
+  app.log.info(`SkyFrame listening on http://${CONFIG.server.host}:${CONFIG.server.port}`);
 }
 
 main().catch((err) => {
@@ -2239,18 +2239,18 @@ main().catch((err) => {
 
 - [ ] **Step 6: Run the server against real NWS.** This is the integration smoke test.
 
-Run: `cd e:/WxDeck && npm run server`
-Expected: logs `WxDeck listening on http://127.0.0.1:3000`. In another terminal: `curl http://localhost:3000/api/weather | head -c 500`. Expected: a JSON response with real current conditions for Oak Creek, WI. If it fails with an NWS error, check that the User-Agent in `server/config.ts` is set correctly and that you can reach https://api.weather.gov from your machine. Kill with Ctrl+C.
+Run: `cd e:/SkyFrame && npm run server`
+Expected: logs `SkyFrame listening on http://127.0.0.1:3000`. In another terminal: `curl http://localhost:3000/api/weather | head -c 500`. Expected: a JSON response with real current conditions for Oak Creek, WI. If it fails with an NWS error, check that the User-Agent in `server/config.ts` is set correctly and that you can reach https://api.weather.gov from your machine. Kill with Ctrl+C.
 
 - [ ] **Step 7: Full test suite pass.**
 
-Run: `cd e:/WxDeck && npm test`
+Run: `cd e:/SkyFrame && npm test`
 Expected: All tests pass.
 
 - [ ] **Step 8: Commit.**
 
 ```bash
-cd e:/WxDeck
+cd e:/SkyFrame
 git add server/index.ts server/routes.ts server/routes.test.ts
 git commit -m "$(cat <<'EOF'
 Wire Fastify routes and cache; backend is now functionally complete
@@ -2278,20 +2278,20 @@ EOF
 **Goal:** Extract the hud styles and the SVG icon sprite from the mockup files and set them up as the client's styling layer. No React yet — just the assets the components will use.
 
 **Files:**
-- Modify: `e:/WxDeck/client/styles/hud.css` (currently empty placeholder)
-- Create: `e:/WxDeck/client/icons.svg`
+- Modify: `e:/SkyFrame/client/styles/hud.css` (currently empty placeholder)
+- Create: `e:/SkyFrame/client/icons.svg`
 
 - [ ] **Step 1: Read the current-conditions mockup to find the CSS rules.**
 
-Run: open `e:/WxDeck/docs/mockups/current-conditions.html` in an editor. Find the `<style>` block at the top. Copy every CSS rule inside it into `e:/WxDeck/client/styles/hud.css`, **preserving exact selectors, properties, and values**. Do not rename classes or refactor.
+Run: open `e:/SkyFrame/docs/mockups/current-conditions.html` in an editor. Find the `<style>` block at the top. Copy every CSS rule inside it into `e:/SkyFrame/client/styles/hud.css`, **preserving exact selectors, properties, and values**. Do not rename classes or refactor.
 
 - [ ] **Step 2: Add the additional hourly-view CSS rules from the hourly mockup.**
 
-Open `e:/WxDeck/docs/mockups/hourly.html`. Find the `<style>` block. The `.hud-showcase`, `.hud-topbar`, `.hud-section-label`, and `.hud-footer` rules will already exist in `hud.css` from step 1. Skip those (they're shared). **Copy the new rules into hud.css**: `.hourly-wrap`, `.hourly-chart`, `.hl-line`, `.hl-point`, `.hl-temp-label`, `.hl-midline`, `.hourly-icons`, `.hourly-precip`, `.hourly-precip .bar.low`, `.hourly-precip .bar.med`, `.hourly-precip .bar.high`, `.hourly-precip .pct`, `.hourly-hours`.
+Open `e:/SkyFrame/docs/mockups/hourly.html`. Find the `<style>` block. The `.hud-showcase`, `.hud-topbar`, `.hud-section-label`, and `.hud-footer` rules will already exist in `hud.css` from step 1. Skip those (they're shared). **Copy the new rules into hud.css**: `.hourly-wrap`, `.hourly-chart`, `.hl-line`, `.hl-point`, `.hl-temp-label`, `.hl-midline`, `.hourly-icons`, `.hourly-precip`, `.hourly-precip .bar.low`, `.hourly-precip .bar.med`, `.hourly-precip .bar.high`, `.hourly-precip .pct`, `.hourly-hours`.
 
 - [ ] **Step 3: Add the additional outlook-view CSS rules from the outlook mockup.**
 
-Open `e:/WxDeck/docs/mockups/outlook.html`. Same principle: skip the rules you already have, copy the new ones. **New rules to copy**: `.outlook`, `.outlook .date`, `.outlook .icon`, `.outlook .precip.low`, `.outlook .precip.med`, `.outlook .precip.high`, `.outlook .precip.zero`, `.outlook .range`, `.outlook .range .seg`, `.outlook .range .tick`, `.outlook .lh`, `.outlook-scale`.
+Open `e:/SkyFrame/docs/mockups/outlook.html`. Same principle: skip the rules you already have, copy the new ones. **New rules to copy**: `.outlook`, `.outlook .date`, `.outlook .icon`, `.outlook .precip.low`, `.outlook .precip.med`, `.outlook .precip.high`, `.outlook .precip.zero`, `.outlook .range`, `.outlook .range .seg`, `.outlook .range .tick`, `.outlook .lh`, `.outlook-scale`.
 
 - [ ] **Step 4: Remove the `display: block !important` and `aspect-ratio: auto !important` from `.hud-showcase`.**
 
@@ -2317,7 +2317,7 @@ To:
 
 - [ ] **Step 5: Create `client/icons.svg`** as a standalone sprite file extracted from the current-conditions mockup.
 
-Open `e:/WxDeck/docs/mockups/current-conditions.html`. Find the hidden `<svg style="display:none">` block that contains the nine `<symbol>` elements. Copy the entire block into a new file `e:/WxDeck/client/icons.svg`, but wrap it as a standalone SVG document:
+Open `e:/SkyFrame/docs/mockups/current-conditions.html`. Find the hidden `<svg style="display:none">` block that contains the nine `<symbol>` elements. Copy the entire block into a new file `e:/SkyFrame/client/icons.svg`, but wrap it as a standalone SVG document:
 
 ```svg
 <?xml version="1.0" encoding="UTF-8"?>
@@ -2332,13 +2332,13 @@ Open `e:/WxDeck/docs/mockups/current-conditions.html`. Find the hidden `<svg sty
 
 - [ ] **Step 6: Verify the stylesheet loads.**
 
-Run: `cd e:/WxDeck && npm run dev`
+Run: `cd e:/SkyFrame && npm run dev`
 Expected: Vite starts; http://localhost:5173 still shows the stub page, but now the browser's DevTools Network tab shows `hud.css` is being served with the rules inside (check the Elements tab, inspect `<link rel="stylesheet">`). Kill the server.
 
 - [ ] **Step 7: Commit.**
 
 ```bash
-cd e:/WxDeck
+cd e:/SkyFrame
 git add client/styles/hud.css client/icons.svg
 git commit -m "$(cat <<'EOF'
 Port HUD styles and SVG icon sprite from mockups to client assets
@@ -2364,10 +2364,10 @@ EOF
 **Goal:** Replace the scaffold stub with a real React root that fetches `/api/weather` on mount, refreshes every 90 seconds, exposes the data to child components via props, and renders the shared TopBar (with live clock) and Footer (with link status dot) around a placeholder middle.
 
 **Files:**
-- Modify: `e:/WxDeck/client/App.tsx`
-- Create: `e:/WxDeck/client/components/TopBar.tsx`
-- Create: `e:/WxDeck/client/components/Footer.tsx`
-- Create: `e:/WxDeck/client/components/WxIcon.tsx`
+- Modify: `e:/SkyFrame/client/App.tsx`
+- Create: `e:/SkyFrame/client/components/TopBar.tsx`
+- Create: `e:/SkyFrame/client/components/Footer.tsx`
+- Create: `e:/SkyFrame/client/components/WxIcon.tsx`
 
 - [ ] **Step 1: Create `client/components/WxIcon.tsx`** — thin wrapper around `<svg><use />`.
 
@@ -2439,7 +2439,7 @@ export function TopBar() {
 
   return (
     <div className="hud-topbar">
-      <div className="loc">■ WXDECK &nbsp;·&nbsp; OAK CREEK 53154 &nbsp;·&nbsp; KMKE LINK</div>
+      <div className="loc">■ SKYFRAME &nbsp;·&nbsp; OAK CREEK 53154 &nbsp;·&nbsp; KMKE LINK</div>
       <div className="clock">
         <div className="clock-time">
           <span className="clock-digits">{digits}</span>
@@ -2552,8 +2552,8 @@ export default function App() {
 
 - [ ] **Step 6: Start both Vite and the backend to verify end-to-end.**
 
-Run in one terminal: `cd e:/WxDeck && npm run server`
-Run in another terminal: `cd e:/WxDeck && npm run dev`
+Run in one terminal: `cd e:/SkyFrame && npm run server`
+Run in another terminal: `cd e:/SkyFrame && npm run dev`
 Open http://localhost:5173 in a browser.
 
 Expected: HUD panel with a working top bar (live ticking Chicago-time clock and date on the right), the middle shows "DATA LOADED · PANELS IN NEXT TASK" in cyan once the fetch succeeds, and the footer shows a pulsing cyan dot with `LINK.KMKE · LAST PULL HH:MM:SS · NEXT HH:MM:SS` where both times are real. If the fetch fails (e.g., backend not running), the dot should become static red and the text should say `LINK FAIL`.
@@ -2563,7 +2563,7 @@ Kill both servers.
 - [ ] **Step 7: Commit.**
 
 ```bash
-cd e:/WxDeck
+cd e:/SkyFrame
 git add client/App.tsx client/components/TopBar.tsx client/components/Footer.tsx client/components/WxIcon.tsx client/styles/hud.css
 git commit -m "$(cat <<'EOF'
 Add root client: App fetch lifecycle, TopBar, Footer, WxIcon
@@ -2594,8 +2594,8 @@ EOF
 **Goal:** Render the current conditions view from the fetched data. This is the single largest component; it has the hero temperature readout, the 5 bars with trends, the precipitation/sunrise description line, and the hero icon.
 
 **Files:**
-- Create: `e:/WxDeck/client/components/CurrentPanel.tsx`
-- Modify: `e:/WxDeck/client/App.tsx` (add CurrentPanel to render tree)
+- Create: `e:/SkyFrame/client/components/CurrentPanel.tsx`
+- Modify: `e:/SkyFrame/client/App.tsx` (add CurrentPanel to render tree)
 
 - [ ] **Step 1: Create `client/components/CurrentPanel.tsx`.**
 
@@ -2725,8 +2725,8 @@ import { CurrentPanel } from './components/CurrentPanel';
 
 - [ ] **Step 3: Verify in the browser.**
 
-Run in one terminal: `cd e:/WxDeck && npm run server`
-Run in another: `cd e:/WxDeck && npm run dev`
+Run in one terminal: `cd e:/SkyFrame && npm run server`
+Run in another: `cd e:/SkyFrame && npm run dev`
 Open http://localhost:5173.
 
 Expected: the HUD panel now shows the current conditions view populated with real Oak Creek data. Top bar with live clock, hero temperature with feels-like and trend arrow, weather condition icon on the right (whatever's current — probably cloud, partly-day, or similar), description line with condition + precip outlook + sunrise/sunset, five bars with their fills + values + trend arrows, and the footer with pulsing dot. Compare side-by-side against [docs/mockups/current-conditions.html](../../mockups/current-conditions.html) — they should be visually very close (not identical because real data replaces the mockup's hardcoded values).
@@ -2736,7 +2736,7 @@ Kill both servers.
 - [ ] **Step 4: Commit.**
 
 ```bash
-cd e:/WxDeck
+cd e:/SkyFrame
 git add client/components/CurrentPanel.tsx client/App.tsx
 git commit -m "$(cat <<'EOF'
 Add CurrentPanel component
@@ -2764,8 +2764,8 @@ EOF
 **Goal:** Render the 12-hour forecast view as an SVG line chart with an icon row, precip bars row, and hour labels row.
 
 **Files:**
-- Create: `e:/WxDeck/client/components/HourlyPanel.tsx`
-- Modify: `e:/WxDeck/client/App.tsx` (add HourlyPanel below CurrentPanel)
+- Create: `e:/SkyFrame/client/components/HourlyPanel.tsx`
+- Modify: `e:/SkyFrame/client/App.tsx` (add HourlyPanel below CurrentPanel)
 
 - [ ] **Step 1: Create `client/components/HourlyPanel.tsx`.**
 
@@ -2888,7 +2888,7 @@ Kill both servers.
 - [ ] **Step 4: Commit.**
 
 ```bash
-cd e:/WxDeck
+cd e:/SkyFrame
 git add client/components/HourlyPanel.tsx client/App.tsx
 git commit -m "$(cat <<'EOF'
 Add HourlyPanel with SVG line chart
@@ -2913,8 +2913,8 @@ EOF
 **Goal:** Render the 7-day outlook view with shared-scale range bars for each day.
 
 **Files:**
-- Create: `e:/WxDeck/client/components/OutlookPanel.tsx`
-- Modify: `e:/WxDeck/client/App.tsx` (add OutlookPanel after HourlyPanel)
+- Create: `e:/SkyFrame/client/components/OutlookPanel.tsx`
+- Modify: `e:/SkyFrame/client/App.tsx` (add OutlookPanel after HourlyPanel)
 
 - [ ] **Step 1: Create `client/components/OutlookPanel.tsx`.**
 
@@ -3037,12 +3037,12 @@ Expected: the dashboard now shows all three views stacked vertically. Current co
 
 - [ ] **Step 4: Typecheck.**
 
-Run: `cd e:/WxDeck && npm run typecheck`
+Run: `cd e:/SkyFrame && npm run typecheck`
 Expected: no errors.
 
 - [ ] **Step 5: Full test suite.**
 
-Run: `cd e:/WxDeck && npm test`
+Run: `cd e:/SkyFrame && npm test`
 Expected: all tests still pass.
 
 Kill both servers.
@@ -3050,10 +3050,10 @@ Kill both servers.
 - [ ] **Step 6: Commit.**
 
 ```bash
-cd e:/WxDeck
+cd e:/SkyFrame
 git add client/components/OutlookPanel.tsx client/App.tsx
 git commit -m "$(cat <<'EOF'
-Add OutlookPanel — WxDeck v1 is now visually complete
+Add OutlookPanel — SkyFrame v1 is now visually complete
 
 7-day outlook view with shared-scale range bars. The scale min/max
 are computed from the actual forecast data (rounded outward to even
@@ -3079,8 +3079,8 @@ EOF
 **Goal:** Verify that `npm run build` produces a working `dist/client` bundle and that the Fastify server can serve it standalone (no Vite dev server needed).
 
 **Files:**
-- Modify: `e:/WxDeck/package.json` (add `start:prod` script)
-- Create: `e:/WxDeck/README.md`
+- Modify: `e:/SkyFrame/package.json` (add `start:prod` script)
+- Create: `e:/SkyFrame/README.md`
 
 - [ ] **Step 1: Add a `start:prod` script to `package.json`.**
 
@@ -3092,19 +3092,19 @@ Add to the `scripts` object:
 
 - [ ] **Step 2: Run the production build.**
 
-Run: `cd e:/WxDeck && npm run build`
+Run: `cd e:/SkyFrame && npm run build`
 Expected: Vite builds to `dist/client/`. Output lists assets (index.html, JS bundle, CSS bundle, hashed filenames). No TypeScript errors.
 
 - [ ] **Step 3: Start the server and verify it serves the built client.**
 
-Run: `cd e:/WxDeck && npm run server`
+Run: `cd e:/SkyFrame && npm run server`
 Open http://localhost:3000 (note: port 3000, not 5173 — we're hitting the backend directly, not Vite).
-Expected: the full WxDeck dashboard loads with real data. All three views render correctly. The live clock ticks. The footer shows LINK.KMKE with pulsing dot and real last/next pull times.
+Expected: the full SkyFrame dashboard loads with real data. All three views render correctly. The live clock ticks. The footer shows LINK.KMKE with pulsing dot and real last/next pull times.
 
 - [ ] **Step 4: Kill the server and verify the dev loop still works.**
 
-Run: `cd e:/WxDeck && npm run dev`
-In another terminal: `cd e:/WxDeck && npm run server`
+Run: `cd e:/SkyFrame && npm run dev`
+In another terminal: `cd e:/SkyFrame && npm run server`
 Open http://localhost:5173.
 Expected: same dashboard loads, this time through the Vite dev server with HMR enabled (for future development). The /api proxy routes /api/weather to localhost:3000.
 
@@ -3113,11 +3113,11 @@ Kill both.
 - [ ] **Step 5: Create `README.md` with setup and run instructions.**
 
 ```markdown
-# WxDeck
+# SkyFrame
 
 Local ad-free weather dashboard for ZIP 53154 (Oak Creek, WI). Single-purpose utility that pulls directly from NOAA/NWS and renders the data as a cyan-on-black HUD-style dashboard in your browser.
 
-See [PROJECT_SPEC.md](PROJECT_SPEC.md) for product context, [WEATHER_PROVIDER_RESEARCH.md](WEATHER_PROVIDER_RESEARCH.md) for the NWS evaluation, and [docs/superpowers/specs/2026-04-15-wxdeck-design.md](docs/superpowers/specs/2026-04-15-wxdeck-design.md) for the implementation design.
+See [PROJECT_SPEC.md](PROJECT_SPEC.md) for product context, [WEATHER_PROVIDER_RESEARCH.md](WEATHER_PROVIDER_RESEARCH.md) for the NWS evaluation, and [docs/superpowers/specs/2026-04-15-skyframe-design.md](docs/superpowers/specs/2026-04-15-skyframe-design.md) for the implementation design.
 
 ## Setup
 
@@ -3125,7 +3125,7 @@ Requires Node.js 20+ and npm.
 
 ```bash
 git clone <repo>
-cd WxDeck
+cd SkyFrame
 npm install
 ```
 
@@ -3168,13 +3168,13 @@ npm run typecheck  # TypeScript check without building
 
 ## Why a backend at all?
 
-NWS requires a `User-Agent` header identifying your app and contact email. Browsers forbid `fetch()` from setting `User-Agent` (it's on the forbidden headers list), so a pure client-side WxDeck couldn't comply with NWS terms. The Fastify backend acts as a thin local proxy: browser calls `/api/weather`, the server calls NWS with the required headers, normalizes the response, and returns a single clean JSON shape.
+NWS requires a `User-Agent` header identifying your app and contact email. Browsers forbid `fetch()` from setting `User-Agent` (it's on the forbidden headers list), so a pure client-side SkyFrame couldn't comply with NWS terms. The Fastify backend acts as a thin local proxy: browser calls `/api/weather`, the server calls NWS with the required headers, normalizes the response, and returns a single clean JSON shape.
 ```
 
 - [ ] **Step 6: Final sanity run — test, typecheck, build, production start.**
 
 ```bash
-cd e:/WxDeck
+cd e:/SkyFrame
 npm test && npm run typecheck && npm run build && echo "All green"
 ```
 Expected: "All green" printed at the end.
@@ -3182,7 +3182,7 @@ Expected: "All green" printed at the end.
 - [ ] **Step 7: Commit.**
 
 ```bash
-cd e:/WxDeck
+cd e:/SkyFrame
 git add package.json README.md
 git commit -m "$(cat <<'EOF'
 Add production build script and README
@@ -3194,7 +3194,7 @@ No Vite needed at runtime.
 README documents setup, dev vs production run flows, and the reason
 we need a backend at all (NWS User-Agent header requirement).
 
-WxDeck v1 is complete. All three views render real NWS data for Oak
+SkyFrame v1 is complete. All three views render real NWS data for Oak
 Creek, WI. No ads, no trackers, no API keys, no external CDN assets.
 EOF
 )"

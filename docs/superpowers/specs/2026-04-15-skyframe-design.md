@@ -1,4 +1,4 @@
-# WxDeck v1 Design
+# SkyFrame v1 Design
 
 **Date:** 2026-04-15
 **Status:** Design locked, ready for implementation planning.
@@ -46,7 +46,7 @@ Full details live in [CLAUDE.md](../../../CLAUDE.md). Summary:
 - **Location:** hardcoded lat/lon `42.89387888628059, -87.92605499945817` (ZIP 53154, Oak Creek, WI).
 - **NWS point metadata** (cached forever, resolved once): office `MKX`, grid `88,58`, radar `KMKX`, timezone `America/Chicago`, forecast zone `WIZ066`.
 - **Observation station:** primary `KMKE`, fallback `KRAC`.
-- **User-Agent header (required by NWS):** `WxDeck/0.1 (ken.culver@gmail.com)`.
+- **User-Agent header (required by NWS):** `SkyFrame/0.1 (ken.culver@gmail.com)`.
 - **Units:** Fahrenheit, mph, inches of mercury, miles, 12/24-hour time per context.
 
 ---
@@ -64,7 +64,7 @@ Full details live in [CLAUDE.md](../../../CLAUDE.md). Summary:
 | `GET /stations/KMKE/observations?limit=6` | ≈3 hours of history for trend computation | 90 sec |
 | `GET /alerts/active?point=42.8939,-87.9261` | Weather alerts (deferred to v1.1, not v1) | n/a |
 
-**All requests include:** `User-Agent: WxDeck/0.1 (ken.culver@gmail.com)` and `Accept: application/geo+json`.
+**All requests include:** `User-Agent: SkyFrame/0.1 (ken.culver@gmail.com)` and `Accept: application/geo+json`.
 
 **Station fallback logic:** if the latest KMKE observation is older than 90 minutes or has `null` in any core field (`temperature`, `windSpeed`, `textDescription`), retry against KRAC. If both fail, surface an error state to the client with `meta.stationError` set and show the last successfully cached observation with an "OBS STALE" indicator in the link-status footer.
 
@@ -230,7 +230,7 @@ export interface WeatherResponse {
 ## 7. Project structure
 
 ```
-e:/WxDeck/
+e:/SkyFrame/
 ├── package.json              # Single package, all deps here
 ├── tsconfig.json             # Base TS config
 ├── tsconfig.server.json      # Extends base for Node backend

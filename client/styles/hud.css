@@ -1,0 +1,483 @@
+/* SkyFrame HUD styles — assembled from docs/mockups/ (Task 6)
+   Sources: current-conditions.html, hourly.html, outlook.html
+   !important flags removed; error-dot variant added.
+*/
+
+/* ============================================================
+   SCAFFOLD / CONTAINER
+   ============================================================ */
+
+.hud-showcase {
+  display: block;
+  aspect-ratio: auto;
+  background: #000d10;
+  padding: 28px 40px 36px;
+  font-family: 'SF Mono','Consolas','Courier New',monospace;
+  min-height: 560px;
+  position: relative;
+  overflow: hidden;
+  color: #00e5d1;
+}
+.hud-showcase::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(0,229,209,0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,229,209,0.06) 1px, transparent 1px);
+  background-size: 20px 20px;
+  pointer-events: none;
+  z-index: 0;
+}
+.hud-showcase > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ============================================================
+   TOP BAR (clock + location)
+   ============================================================ */
+
+.hud-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin: 0 0 24px;
+  padding-bottom: 14px;
+  border-bottom: 1px dashed rgba(0,229,209,0.18);
+}
+.hud-topbar .loc {
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  opacity: 0.6;
+  padding-top: 6px;
+}
+.hud-topbar .clock { text-align: right; }
+.hud-topbar .clock-time {
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: #00e5d1;
+  text-shadow: 0 0 8px rgba(0,229,209,0.5);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.hud-topbar .clock-time .tz {
+  font-size: 10px;
+  opacity: 0.55;
+  margin-left: 6px;
+  letter-spacing: 0.2em;
+}
+.hud-topbar .clock-date {
+  font-size: 10px;
+  color: #00e5d1;
+  opacity: 0.55;
+  letter-spacing: 0.2em;
+  margin-top: 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============================================================
+   SECTION LABEL (used in hourly + outlook views)
+   ============================================================ */
+
+.hud-hourly-section,
+.hud-outlook-section {
+  margin-top: 40px;
+  padding-top: 24px;
+  border-top: 1px dashed rgba(0, 229, 209, 0.18);
+}
+
+.hud-section-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  opacity: 0.6;
+  margin: 0 0 22px;
+}
+.hud-section-label .right { opacity: 0.55; }
+
+/* ============================================================
+   CURRENT CONDITIONS — hero readout
+   ============================================================ */
+
+.hud-hero {
+  display: flex;
+  align-items: center;
+  gap: 48px;
+  margin: 0 0 30px;
+}
+.hud-readout {
+  position: relative;
+  padding: 18px 22px 16px;
+  margin: 0;
+  display: inline-block;
+}
+.hud-readout .corner {
+  position: absolute;
+  width: 14px; height: 14px;
+  border: 2px solid #00e5d1;
+}
+.hud-readout .corner.tl { top: 0; left: 0;  border-right: 0; border-bottom: 0; }
+.hud-readout .corner.tr { top: 0; right: 0; border-left: 0;  border-bottom: 0; }
+.hud-readout .corner.bl { bottom: 0; left: 0;  border-right: 0; border-top: 0; }
+.hud-readout .corner.br { bottom: 0; right: 0; border-left: 0;  border-top: 0; }
+.hud-readout .tag {
+  font-size: 9px; letter-spacing: 0.22em; opacity: 0.6; margin-bottom: 2px;
+}
+.hud-readout .temp {
+  font-size: 56px; font-weight: 500; line-height: 1; letter-spacing: -0.01em;
+  text-shadow: 0 0 12px rgba(0,229,209,0.4);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.hud-readout .temp .unit { font-size: 24px; opacity: 0.7; }
+.hud-readout .temp .feel { font-size: 18px; opacity: 0.5; margin-left: 10px; }
+.hud-readout .temp .trend {
+  font-size: 14px;
+  font-weight: normal;
+  opacity: 0.75;
+  margin-left: 14px;
+  letter-spacing: 0.03em;
+  text-shadow: none;
+}
+.hud-readout .desc {
+  font-size: 11px;
+  opacity: 0.75;
+  margin-top: 8px;
+  letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.hud-readout .desc .sep {
+  opacity: 0.4;
+  margin: 0 8px;
+}
+.hud-readout .desc .suntime {
+  letter-spacing: 0.04em;
+}
+
+.hud-hero-icon {
+  color: #00e5d1;
+  filter: drop-shadow(0 0 8px rgba(0,229,209,0.5));
+  flex-shrink: 0;
+}
+.hud-hero-icon svg {
+  width: 112px;
+  height: 112px;
+  display: block;
+}
+
+/* ============================================================
+   CURRENT CONDITIONS — sensor bars
+   ============================================================ */
+
+.bars {
+  display: grid;
+  grid-template-columns: 44px 1fr 72px 92px;
+  gap: 11px 14px;
+  align-items: center;
+  max-width: 640px;
+  margin: 0;
+}
+.bars .lbl   { font-size: 10px; letter-spacing: 0.15em; opacity: 0.55; }
+.bars .val   { font-size: 11px; letter-spacing: 0.05em; text-align: right; font-variant-numeric: tabular-nums; }
+.bars .trend {
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  text-align: right;
+  opacity: 0.75;
+  font-variant-numeric: tabular-nums;
+}
+.bars .trend.steady { opacity: 0.45; }
+
+.sb { position: relative; height: 12px; }
+.sb-off, .sb-on {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    90deg,
+    currentColor 0 calc(5% - 0.6%),
+    transparent calc(5% - 0.6%) 5%
+  );
+}
+.sb-off { opacity: 0.14; }
+.sb-on {
+  filter: drop-shadow(0 0 3px currentColor);
+  clip-path: inset(0 calc(100% - var(--fill, 50%)) 0 0);
+}
+
+/* ============================================================
+   FOOTER (shared across all views)
+   ============================================================ */
+
+.hud-footer {
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  opacity: 0.55;
+  margin: 28px 0 0;
+  padding-top: 14px;
+  border-top: 1px dashed rgba(0,229,209,0.18);
+}
+.hud-footer .dot {
+  display: inline-block;
+  width: 6px; height: 6px;
+  background: #00e5d1;
+  border-radius: 50%;
+  box-shadow: 0 0 6px rgba(0,229,209,0.9);
+  margin-right: 8px;
+  vertical-align: middle;
+  animation: hudBlink 1.8s ease-in-out infinite;
+}
+.hud-footer .dot.dot-error {
+  background: #ff4444;
+  box-shadow: 0 0 6px rgba(255, 68, 68, 0.9);
+  animation: none;
+}
+@keyframes hudBlink {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.35; }
+}
+
+/* ============================================================
+   ICON PALETTE (current-conditions showcase section)
+   ============================================================ */
+
+.hud-palette {
+  margin: 28px 0 0;
+  padding-top: 18px;
+  border-top: 1px dashed rgba(0,229,209,0.12);
+}
+.hud-palette .palette-label {
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  opacity: 0.45;
+  margin-bottom: 14px;
+}
+.hud-palette .palette-row {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  gap: 16px;
+  max-width: 780px;
+}
+.hud-palette .palette-item {
+  text-align: center;
+  color: #00e5d1;
+}
+.hud-palette .palette-item svg {
+  width: 48px;
+  height: 48px;
+  display: block;
+  margin: 0 auto 6px;
+  filter: drop-shadow(0 0 3px rgba(0,229,209,0.5));
+}
+.hud-palette .palette-item .lbl {
+  font-size: 8px;
+  letter-spacing: 0.15em;
+  opacity: 0.55;
+}
+
+/* ============================================================
+   HOURLY FORECAST VIEW
+   ============================================================ */
+
+.hourly-wrap {
+  max-width: 760px;
+  margin: 0;
+}
+.hourly-chart {
+  width: 100%;
+  height: 110px;
+  margin: 0 0 10px;
+}
+.hourly-chart svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+}
+.hl-line {
+  fill: none;
+  stroke: #00e5d1;
+  stroke-width: 1.5;
+  filter: drop-shadow(0 0 4px rgba(0,229,209,0.7));
+}
+.hl-point {
+  fill: #00e5d1;
+  stroke: #000d10;
+  stroke-width: 1.5;
+  filter: drop-shadow(0 0 3px rgba(0,229,209,0.9));
+}
+.hl-temp-label {
+  fill: #00e5d1;
+  opacity: 0.9;
+  font-size: 11px;
+  font-family: 'SF Mono','Consolas',monospace;
+  text-anchor: middle;
+  font-variant-numeric: tabular-nums;
+}
+.hl-midline {
+  stroke: rgba(0,229,209,0.1);
+  stroke-width: 1;
+  stroke-dasharray: 2 4;
+}
+
+.hourly-icons {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  margin: 0 0 12px;
+}
+.hourly-icons > .col {
+  color: #00e5d1;
+  opacity: 0.8;
+  text-align: center;
+  filter: drop-shadow(0 0 2px rgba(0,229,209,0.4));
+}
+.hourly-icons svg {
+  width: 26px;
+  height: 26px;
+  display: block;
+  margin: 0 auto;
+}
+
+.hourly-precip {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  height: 36px;
+  margin: 0 0 6px;
+  align-items: end;
+  position: relative;
+}
+.hourly-precip > .col {
+  display: flex;
+  align-items: end;
+  justify-content: center;
+  height: 100%;
+  position: relative;
+}
+.hourly-precip .bar {
+  width: 14px;
+  background: #00e5d1;
+  box-shadow: 0 0 4px rgba(0,229,209,0.6);
+}
+.hourly-precip .bar.low  { opacity: 0.25; }
+.hourly-precip .bar.med  { opacity: 0.55; }
+.hourly-precip .bar.high { opacity: 0.9; }
+.hourly-precip .pct {
+  position: absolute;
+  top: -2px;
+  font-size: 8px;
+  color: #00e5d1;
+  opacity: 0.75;
+  letter-spacing: 0.05em;
+  font-variant-numeric: tabular-nums;
+}
+
+.hourly-hours {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: #00e5d1;
+  opacity: 0.55;
+  font-variant-numeric: tabular-nums;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(0,229,209,0.14);
+}
+.hourly-hours > .col {
+  text-align: center;
+}
+
+/* ============================================================
+   7-DAY OUTLOOK VIEW
+   ============================================================ */
+
+.outlook {
+  max-width: 780px;
+  display: grid;
+  grid-template-columns: 112px 38px 52px 1fr 68px;
+  column-gap: 16px;
+  row-gap: 14px;
+  align-items: center;
+}
+
+.outlook .date {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  font-variant-numeric: tabular-nums;
+}
+.outlook .date .dow { opacity: 0.9; }
+.outlook .date .dot { opacity: 0.35; margin: 0 6px; }
+.outlook .date .dt  { opacity: 0.55; }
+
+.outlook .icon {
+  color: #00e5d1;
+  opacity: 0.85;
+  filter: drop-shadow(0 0 3px rgba(0,229,209,0.5));
+}
+.outlook .icon svg {
+  width: 30px;
+  height: 30px;
+  display: block;
+}
+
+.outlook .precip {
+  font-size: 10px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.05em;
+}
+.outlook .precip.low  { opacity: 0.3; }
+.outlook .precip.med  { opacity: 0.65; }
+.outlook .precip.high { opacity: 0.95; }
+.outlook .precip.zero { opacity: 0.2; }
+
+.outlook .range {
+  position: relative;
+  height: 12px;
+  background: rgba(0,229,209,0.08);
+  border-left: 1px solid rgba(0,229,209,0.14);
+  border-right: 1px solid rgba(0,229,209,0.14);
+}
+.outlook .range .seg {
+  position: absolute;
+  top: 2px; bottom: 2px;
+  background: #00e5d1;
+  opacity: 0.85;
+  box-shadow: 0 0 6px rgba(0,229,209,0.7);
+}
+.outlook .range .tick {
+  position: absolute;
+  top: -2px; bottom: -2px;
+  width: 1px;
+  background: #00e5d1;
+  box-shadow: 0 0 3px rgba(0,229,209,0.9);
+}
+
+.outlook .lh {
+  font-size: 11px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+.outlook .lh .h { opacity: 0.95; }
+.outlook .lh .sep { opacity: 0.35; margin: 0 4px; }
+.outlook .lh .l { opacity: 0.5; }
+
+.outlook-scale {
+  max-width: 780px;
+  display: grid;
+  grid-template-columns: 112px 38px 52px 1fr 68px;
+  column-gap: 16px;
+  margin: 0 0 10px;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  opacity: 0.45;
+  font-variant-numeric: tabular-nums;
+}
+.outlook-scale .scale-axis {
+  grid-column: 4;
+  display: flex;
+  justify-content: space-between;
+}
