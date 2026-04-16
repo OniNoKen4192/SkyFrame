@@ -215,7 +215,7 @@ export async function normalizeWeather(): Promise<WeatherResponse> {
     startTime: p.startTime,
     hourLabel: formatHourMinute(p.startTime, nws.timezone),
     tempF: p.temperature,
-    iconCode: mapNwsIcon(p.icon),
+    iconCode: mapNwsIcon(p.icon, p.probabilityOfPrecipitation?.value ?? null),
     precipProbPct: p.probabilityOfPrecipitation?.value ?? 0,
     wind: {
       speedMph: parseWindSpeedString(p.windSpeed),
@@ -326,40 +326,43 @@ function collapseDailyPeriods(
 
     if (a.isDaytime && b && !b.isDaytime) {
       // Day + night pair
+      const pairProb = Math.max(a.probabilityOfPrecipitation?.value ?? 0, b.probabilityOfPrecipitation?.value ?? 0);
       daily.push({
         dateISO: formatDateISO(a.startTime, timeZone),
         dayOfWeek: formatDayOfWeek(a.startTime, timeZone),
         dateLabel: formatDateLabel(a.startTime, timeZone),
         highF: a.temperature,
         lowF: b.temperature,
-        iconCode: mapNwsIcon(a.icon),
-        precipProbPct: Math.max(a.probabilityOfPrecipitation?.value ?? 0, b.probabilityOfPrecipitation?.value ?? 0),
+        iconCode: mapNwsIcon(a.icon, pairProb),
+        precipProbPct: pairProb,
         shortDescription: a.shortForecast,
       });
       i += 2;
     } else if (!a.isDaytime) {
       // First period is a night (we're currently in evening) — use night temp as low, no high
+      const nightProb = a.probabilityOfPrecipitation?.value ?? 0;
       daily.push({
         dateISO: formatDateISO(a.startTime, timeZone),
         dayOfWeek: formatDayOfWeek(a.startTime, timeZone),
         dateLabel: formatDateLabel(a.startTime, timeZone),
         highF: a.temperature,
         lowF: a.temperature,
-        iconCode: mapNwsIcon(a.icon),
-        precipProbPct: a.probabilityOfPrecipitation?.value ?? 0,
+        iconCode: mapNwsIcon(a.icon, nightProb),
+        precipProbPct: nightProb,
         shortDescription: a.shortForecast,
       });
       i += 1;
     } else {
       // Orphaned day period at the end of the forecast window
+      const dayProb = a.probabilityOfPrecipitation?.value ?? 0;
       daily.push({
         dateISO: formatDateISO(a.startTime, timeZone),
         dayOfWeek: formatDayOfWeek(a.startTime, timeZone),
         dateLabel: formatDateLabel(a.startTime, timeZone),
         highF: a.temperature,
         lowF: a.temperature,
-        iconCode: mapNwsIcon(a.icon),
-        precipProbPct: a.probabilityOfPrecipitation?.value ?? 0,
+        iconCode: mapNwsIcon(a.icon, dayProb),
+        precipProbPct: dayProb,
         shortDescription: a.shortForecast,
       });
       i += 1;
