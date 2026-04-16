@@ -37,3 +37,7 @@ yarn-error.log*
 
 # Superpowers brainstorming artifacts (mockups, session state)
 .superpowers/
+
+# Local-only scratch (personal notes, icon experiments)
+docs/userInput/
+icons/
