@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { WeatherResponse } from '../shared/types';
 import { TopBar } from './components/TopBar';
 import { Footer } from './components/Footer';
+import { CurrentPanel } from './components/CurrentPanel';
 
 const REFRESH_INTERVAL_MS = 90 * 1000;
 
@@ -35,9 +36,13 @@ export default function App() {
     <div className="hud-showcase">
       <TopBar />
 
-      <div style={{ padding: '40px 0', textAlign: 'center', opacity: 0.5, fontSize: 11, letterSpacing: '0.22em' }}>
-        {data ? '■ DATA LOADED · PANELS IN NEXT TASK' : '■ LOADING...'}
-      </div>
+      {data ? (
+        <CurrentPanel current={data.current} />
+      ) : (
+        <div style={{ padding: '40px 0', textAlign: 'center', opacity: 0.5, fontSize: 11, letterSpacing: '0.22em' }}>
+          ■ LOADING...
+        </div>
+      )}
 
       <Footer meta={data?.meta ?? null} error={error} />
     </div>
