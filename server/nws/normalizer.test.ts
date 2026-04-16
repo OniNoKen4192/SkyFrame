@@ -263,4 +263,82 @@ describe('normalizeWeather', () => {
 
     vi.useRealTimers();
   });
+
+  describe('daily collapse — overnight orphan handling', () => {
+    // NWS at late-night/early-morning serves an "Overnight" period that shares
+    // its local-timezone date label with the next "Day" period. Without
+    // dedup, that produced two THU rows (one night-only orphan + one
+    // day+night pair). The collapse logic must skip the orphan in that case.
+    const FIXTURE_FORECAST_OVERNIGHT = {
+      properties: {
+        periods: [
+          { name: 'Overnight',      startTime: '2026-04-16T00:00:00-05:00', endTime: '2026-04-16T06:00:00-05:00', isDaytime: false, temperature: 50, shortForecast: 'Mostly Clear', icon: 'https://api.weather.gov/icons/land/night/few?size=medium', probabilityOfPrecipitation: { value: 5 } },
+          { name: 'Thursday',       startTime: '2026-04-16T06:00:00-05:00', endTime: '2026-04-16T18:00:00-05:00', isDaytime: true,  temperature: 65, shortForecast: 'Sunny',        icon: 'https://api.weather.gov/icons/land/day/few?size=medium',   probabilityOfPrecipitation: { value: 0 } },
+          { name: 'Thursday Night', startTime: '2026-04-16T18:00:00-05:00', endTime: '2026-04-17T06:00:00-05:00', isDaytime: false, temperature: 48, shortForecast: 'Cloudy',       icon: 'https://api.weather.gov/icons/land/night/bkn?size=medium', probabilityOfPrecipitation: { value: 10 } },
+          { name: 'Friday',         startTime: '2026-04-17T06:00:00-05:00', endTime: '2026-04-17T18:00:00-05:00', isDaytime: true,  temperature: 70, shortForecast: 'Sunny',        icon: 'https://api.weather.gov/icons/land/day/few?size=medium',   probabilityOfPrecipitation: { value: 5 } },
+          { name: 'Friday Night',   startTime: '2026-04-17T18:00:00-05:00', endTime: '2026-04-18T06:00:00-05:00', isDaytime: false, temperature: 52, shortForecast: 'Clear',        icon: 'https://api.weather.gov/icons/land/night/skc?size=medium', probabilityOfPrecipitation: { value: 0 } },
+        ],
+      },
+    };
+
+    // Late-evening case: NWS serves "Tonight" first, dated today, but the
+    // next period is the NEXT day. Different dates → orphan must be PRESERVED
+    // so the user sees the rest-of-tonight as today's row.
+    const FIXTURE_FORECAST_LATE_EVENING = {
+      properties: {
+        periods: [
+          { name: 'Tonight',      startTime: '2026-04-16T22:00:00-05:00', endTime: '2026-04-17T06:00:00-05:00', isDaytime: false, temperature: 47, shortForecast: 'Clear', icon: 'https://api.weather.gov/icons/land/night/skc?size=medium', probabilityOfPrecipitation: { value: 0 } },
+          { name: 'Friday',       startTime: '2026-04-17T06:00:00-05:00', endTime: '2026-04-17T18:00:00-05:00', isDaytime: true,  temperature: 70, shortForecast: 'Sunny', icon: 'https://api.weather.gov/icons/land/day/few?size=medium',   probabilityOfPrecipitation: { value: 5 } },
+          { name: 'Friday Night', startTime: '2026-04-17T18:00:00-05:00', endTime: '2026-04-18T06:00:00-05:00', isDaytime: false, temperature: 52, shortForecast: 'Clear', icon: 'https://api.weather.gov/icons/land/night/skc?size=medium', probabilityOfPrecipitation: { value: 0 } },
+        ],
+      },
+    };
+
+    function mockForecast(forecast: typeof FIXTURE_FORECAST_OVERNIGHT) {
+      vi.spyOn(client, 'fetchNws').mockImplementation(async (path: string) => {
+        if (path.includes('/points/')) return FIXTURE_POINT as never;
+        if (path.includes('/forecast/hourly')) return FIXTURE_HOURLY as never;
+        if (path.includes('/forecast')) return forecast as never;
+        if (path.includes('/observations/latest')) return FIXTURE_OBS_LATEST as never;
+        if (path.includes('/observations')) return FIXTURE_OBS_HISTORY as never;
+        throw new Error('Unexpected path: ' + path);
+      });
+    }
+
+    it('skips the overnight orphan when its date matches the next day period', async () => {
+      mockForecast(FIXTURE_FORECAST_OVERNIGHT);
+      const result = await normalizeWeather();
+
+      // Should produce 2 daily entries (Thursday day+night collapsed, Friday day+night collapsed).
+      // NOT 3 (which would mean the Overnight orphan was emitted as its own THU row).
+      expect(result.daily).toHaveLength(2);
+
+      // First entry should be the canonical Thursday from the day+night pair.
+      expect(result.daily[0]!.dateLabel).toBe('APR 16');
+      expect(result.daily[0]!.highF).toBe(65);
+      expect(result.daily[0]!.lowF).toBe(48);
+
+      // Second entry should be Friday.
+      expect(result.daily[1]!.dateLabel).toBe('APR 17');
+      expect(result.daily[1]!.highF).toBe(70);
+      expect(result.daily[1]!.lowF).toBe(52);
+    });
+
+    it('preserves the late-evening orphan when its date does NOT match the next day period', async () => {
+      mockForecast(FIXTURE_FORECAST_LATE_EVENING);
+      const result = await normalizeWeather();
+
+      // Should produce 2 entries: tonight (orphan), then Friday day+night.
+      expect(result.daily).toHaveLength(2);
+
+      // First entry is the orphan night — high == low == night temp.
+      expect(result.daily[0]!.dateLabel).toBe('APR 16');
+      expect(result.daily[0]!.highF).toBe(47);
+      expect(result.daily[0]!.lowF).toBe(47);
+
+      // Second entry is Friday.
+      expect(result.daily[1]!.dateLabel).toBe('APR 17');
+      expect(result.daily[1]!.highF).toBe(70);
+    });
+  });
 });

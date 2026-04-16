@@ -339,7 +339,16 @@ function collapseDailyPeriods(
       });
       i += 2;
     } else if (!a.isDaytime) {
-      // First period is a night (we're currently in evening) — use night temp as low, no high
+      // At late-night/early-morning, NWS serves an "Overnight" period that
+      // shares its local-timezone date with the next "Day" period (today's
+      // daytime). Skip it so the day+night pair below produces the canonical
+      // entry without a duplicate row.
+      if (b && b.isDaytime && formatDateISO(a.startTime, timeZone) === formatDateISO(b.startTime, timeZone)) {
+        i += 1;
+        continue;
+      }
+      // Otherwise: late-evening "Tonight" before tomorrow's day starts —
+      // emit standalone with night temp as both high and low.
       const nightProb = a.probabilityOfPrecipitation?.value ?? 0;
       daily.push({
         dateISO: formatDateISO(a.startTime, timeZone),
