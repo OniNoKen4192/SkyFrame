@@ -9,7 +9,9 @@
       "Bash(curl:*)",
       "Bash(ls:*)",
       "Bash(cat:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(python:*)",
+      "Bash(python3:*)"
     ],
     "deny": [
       "Bash(rm -rf *)",
