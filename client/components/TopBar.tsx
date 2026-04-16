@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import type { ViewKey } from '../App';
 
 const TIME_FORMAT = new Intl.DateTimeFormat('en-US', {
   timeZone: 'America/Chicago',
@@ -26,9 +27,18 @@ function partsToMap(parts: Intl.DateTimeFormatPart[]): Record<string, string> {
 interface TopBarProps {
   stationId: string | null;
   error: string | null;
+  activeView: ViewKey;
+  onViewChange: (view: ViewKey) => void;
 }
 
-export function TopBar({ stationId, error }: TopBarProps) {
+const TABS: Array<{ key: ViewKey; label: string }> = [
+  { key: 'current', label: 'CURRENT' },
+  { key: 'hourly',  label: 'HOURLY' },
+  { key: 'outlook', label: 'OUTLOOK' },
+  { key: 'all',     label: 'ALL' },
+];
+
+export function TopBar({ stationId, error, activeView, onViewChange }: TopBarProps) {
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
@@ -49,9 +59,24 @@ export function TopBar({ stationId, error }: TopBarProps) {
 
   return (
     <div className="hud-topbar">
-      <div className={locClass}>
-        ■ SKYFRAME &nbsp;·&nbsp; OAK CREEK 53154 &nbsp;·&nbsp;
-        <span className={linkClass}>{linkText}</span>
+      <div className="hud-topbar-left">
+        <div className={locClass}>
+          ■ SKYFRAME &nbsp;·&nbsp; OAK CREEK 53154 &nbsp;·&nbsp;
+          <span className={linkClass}>{linkText}</span>
+        </div>
+        <nav className="tabs" aria-label="View selector">
+          {TABS.map((tab) => (
+            <button
+              key={tab.key}
+              type="button"
+              className={tab.key === activeView ? 'tab tab-active' : 'tab'}
+              onClick={() => onViewChange(tab.key)}
+              aria-pressed={tab.key === activeView}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </nav>
       </div>
       <div className="clock">
         <div className="clock-time">

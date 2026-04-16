@@ -93,6 +93,42 @@
     transform: translateX(0);
   }
 }
+.hud-topbar-left {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.hud-topbar .tabs {
+  display: flex;
+  gap: 18px;
+  padding-top: 2px;
+}
+.hud-topbar .tabs .tab {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: #00e5d1;
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  cursor: pointer;
+  opacity: 0.55;
+  transition: opacity 120ms ease, text-shadow 120ms ease;
+}
+.hud-topbar .tabs .tab:hover {
+  opacity: 0.85;
+}
+.hud-topbar .tabs .tab.tab-active {
+  opacity: 1;
+  cursor: default;
+  text-shadow: 0 0 8px rgba(0, 229, 209, 0.6);
+}
+.hud-topbar .tabs .tab.tab-active::before {
+  content: '\25A0\00A0';
+}
+
 .hud-topbar .clock { text-align: right; }
 .hud-topbar .clock-time {
   font-size: 18px;
@@ -127,6 +163,16 @@
   margin-top: 40px;
   padding-top: 24px;
   border-top: 1px dashed rgba(0, 229, 209, 0.18);
+}
+
+/* When a section is the first thing under TopBar (single-panel view), the
+   section's own top border + extra margin would duplicate TopBar's bottom
+   border with empty space between. Collapse the redundant chrome. */
+.hud-topbar + .hud-hourly-section,
+.hud-topbar + .hud-outlook-section {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
 }
 
 .hud-section-label {
