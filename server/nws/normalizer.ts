@@ -1,11 +1,12 @@
 import type {
-  WeatherResponse, CurrentConditions, HourlyPeriod, DailyPeriod, Wind,
+  WeatherResponse, CurrentConditions, HourlyPeriod, DailyPeriod, Wind, Alert,
 } from '../../shared/types';
 import { CONFIG } from '../config';
 import { fetchNws } from './client';
 import { mapNwsIcon } from './icon-mapping';
 import { computeTrend, type TimedValue } from './trends';
 import { buildPrecipOutlook } from './precip';
+import { mapEventToTier, tierRank } from '../../shared/alert-tiers';
 
 // ========== Unit conversion helpers ==========
 
@@ -33,6 +34,18 @@ const parseWindSpeedString = (s: string | null | undefined): number => {
   const match = s.match(/(\d+(?:\.\d+)?)/);
   return match ? Math.round(parseFloat(match[1]!)) : 0;
 };
+
+// ========== Hourly period filtering ==========
+
+const HOUR_MS = 60 * 60 * 1000;
+
+// NWS hourly responses are generated on their own schedule and can lead with
+// periods whose hour has already ended. Drop those, keeping the period for the
+// current hour (whose endTime is still in the future).
+function dropPastHours<T extends { startTime: string }>(periods: T[], now: Date): T[] {
+  const nowMs = now.getTime();
+  return periods.filter((p) => Date.parse(p.startTime) + HOUR_MS > nowMs);
+}
 
 // ========== Time formatting ==========
 
@@ -123,6 +136,21 @@ interface NwsObsListResponse {
   features: Array<{ properties: NwsObsProperties }>;
 }
 
+interface NwsAlertsResponse {
+  features: Array<{
+    properties: {
+      id: string;
+      event: string;
+      severity: string;
+      headline: string;
+      description: string;
+      effective: string;
+      expires: string;
+      areaDesc: string;
+    };
+  }>;
+}
+
 // ========== Station fallback ==========
 
 const STALENESS_MS = CONFIG.stations.stalenessMinutes * 60 * 1000;
@@ -169,6 +197,53 @@ async function fetchObservationsWithFallback(now: Date): Promise<ObsFetchResult>
   return { obsLatest: secondaryLatest, obsHistory: secondaryHistory, stationId: stations.fallback, fellBack: true };
 }
 
+interface AlertsFetchResult {
+  data: NwsAlertsResponse;
+  failed: boolean;
+}
+
+async function fetchAlertsSafe(): Promise<AlertsFetchResult> {
+  const { location } = CONFIG;
+  try {
+    const data = await fetchNws<NwsAlertsResponse>(
+      `/alerts/active?point=${location.lat.toFixed(4)},${location.lon.toFixed(4)}`,
+    );
+    return { data, failed: false };
+  } catch (err) {
+    console.warn('NWS alerts fetch failed (non-fatal):', err);
+    return { data: { features: [] }, failed: true };
+  }
+}
+
+function normalizeAlerts(raw: NwsAlertsResponse): Alert[] {
+  const validSeverities = new Set(['Extreme', 'Severe', 'Moderate', 'Minor', 'Unknown']);
+  const result: Alert[] = [];
+
+  for (const f of raw.features) {
+    const tier = mapEventToTier(f.properties.event);
+    if (tier === null) continue;  // drop unmapped events
+
+    const severity = validSeverities.has(f.properties.severity)
+      ? f.properties.severity as Alert['severity']
+      : 'Unknown';
+
+    result.push({
+      id: f.properties.id,
+      event: f.properties.event,
+      tier,
+      severity,
+      headline: f.properties.headline,
+      description: f.properties.description,
+      effective: f.properties.effective,
+      expires: f.properties.expires,
+      areaDesc: f.properties.areaDesc,
+    });
+  }
+
+  result.sort((a, b) => tierRank(a.tier) - tierRank(b.tier));
+  return result;
+}
+
 // ========== Main normalizer ==========
 
 export async function normalizeWeather(): Promise<WeatherResponse> {
@@ -179,14 +254,17 @@ export async function normalizeWeather(): Promise<WeatherResponse> {
     `/points/${location.lat.toFixed(4)},${location.lon.toFixed(4)}`,
   );
 
-  // 2. Fetch forecast, hourly forecast, and observations (with fallback) in parallel
+  // 2. Fetch forecast, hourly forecast, observations (with fallback), and alerts in parallel
   const now = new Date();
-  const [forecast, hourly, obsResult] = await Promise.all([
+  const [forecast, hourly, obsResult, alertsResult] = await Promise.all([
     fetchNws<NwsForecastResponse>(`/gridpoints/${nws.forecastOffice}/${nws.gridX},${nws.gridY}/forecast`),
     fetchNws<NwsHourlyResponse>(`/gridpoints/${nws.forecastOffice}/${nws.gridX},${nws.gridY}/forecast/hourly`),
     fetchObservationsWithFallback(now),
+    fetchAlertsSafe(),
   ]);
   const { obsLatest, obsHistory, stationId: activeStationId, fellBack } = obsResult;
+  const alerts = normalizeAlerts(alertsResult.data);
+  const alertsFailed = alertsResult.failed;
 
   // 3. Normalize current conditions
   const current = normalizeCurrent(
@@ -198,12 +276,12 @@ export async function normalizeWeather(): Promise<WeatherResponse> {
     point,
   );
 
-  // 4. Normalize hourly (first 12 periods)
-  const hourlyPeriods: HourlyPeriod[] = hourly.properties.periods.slice(0, 12).map((p) => ({
+  // 4. Normalize hourly (first 12 periods, after dropping past hours)
+  const hourlyPeriods: HourlyPeriod[] = dropPastHours(hourly.properties.periods, now).slice(0, 12).map((p) => ({
     startTime: p.startTime,
     hourLabel: formatHourMinute(p.startTime, nws.timezone),
     tempF: p.temperature,
-    iconCode: mapNwsIcon(p.icon),
+    iconCode: mapNwsIcon(p.icon, p.probabilityOfPrecipitation?.value ?? null),
     precipProbPct: p.probabilityOfPrecipitation?.value ?? 0,
     wind: {
       speedMph: parseWindSpeedString(p.windSpeed),
@@ -217,15 +295,20 @@ export async function normalizeWeather(): Promise<WeatherResponse> {
   const dailyPeriods = collapseDailyPeriods(forecast.properties.periods, nws.timezone);
 
   // 6. Assemble meta
+  const metaError =
+    fellBack ? 'station_fallback' as const :
+    alertsFailed ? 'partial' as const :
+    undefined;
+
   const meta = {
     fetchedAt: now.toISOString(),
     nextRefreshAt: new Date(now.getTime() + CONFIG.cache.observationMs).toISOString(),
     cacheHit: false,
     stationId: activeStationId,
-    ...(fellBack ? { error: 'station_fallback' as const } : {}),
+    ...(metaError ? { error: metaError } : {}),
   };
 
-  return { current, hourly: hourlyPeriods, daily: dailyPeriods, meta };
+  return { current, hourly: hourlyPeriods, daily: dailyPeriods, alerts, meta };
 }
 
 function normalizeCurrent(
@@ -263,14 +346,15 @@ function normalizeCurrent(
     dewpoint:   computeTrend(toTimedValues((p) => p.dewpoint.value != null ? p.dewpoint.value * 9 / 5 + 32 : null), CONFIG.trendThresholds.dewpointF),
   };
 
-  // Precipitation outlook
+  // Precipitation outlook (filter past hours so "RAIN IN Xm" / "DRY THRU HH:MM" reflect the future)
+  const precipNow = new Date();
   const precipOutlook = buildPrecipOutlook({
-    hours: hourly.properties.periods.slice(0, 12).map((h) => ({
+    hours: dropPastHours(hourly.properties.periods, precipNow).slice(0, 12).map((h) => ({
       startTime: h.startTime,
       probabilityOfPrecipitation: h.probabilityOfPrecipitation?.value ?? null,
     })),
     currentTextDescription: obs.textDescription ?? '',
-    now: new Date(),
+    now: precipNow,
     timeZone,
   });
 
@@ -313,40 +397,52 @@ function collapseDailyPeriods(
 
     if (a.isDaytime && b && !b.isDaytime) {
       // Day + night pair
+      const pairProb = Math.max(a.probabilityOfPrecipitation?.value ?? 0, b.probabilityOfPrecipitation?.value ?? 0);
       daily.push({
         dateISO: formatDateISO(a.startTime, timeZone),
         dayOfWeek: formatDayOfWeek(a.startTime, timeZone),
         dateLabel: formatDateLabel(a.startTime, timeZone),
         highF: a.temperature,
         lowF: b.temperature,
-        iconCode: mapNwsIcon(a.icon),
-        precipProbPct: Math.max(a.probabilityOfPrecipitation?.value ?? 0, b.probabilityOfPrecipitation?.value ?? 0),
+        iconCode: mapNwsIcon(a.icon, pairProb),
+        precipProbPct: pairProb,
         shortDescription: a.shortForecast,
       });
       i += 2;
     } else if (!a.isDaytime) {
-      // First period is a night (we're currently in evening) — use night temp as low, no high
+      // At late-night/early-morning, NWS serves an "Overnight" period that
+      // shares its local-timezone date with the next "Day" period (today's
+      // daytime). Skip it so the day+night pair below produces the canonical
+      // entry without a duplicate row.
+      if (b && b.isDaytime && formatDateISO(a.startTime, timeZone) === formatDateISO(b.startTime, timeZone)) {
+        i += 1;
+        continue;
+      }
+      // Otherwise: late-evening "Tonight" before tomorrow's day starts —
+      // emit standalone with night temp as both high and low.
+      const nightProb = a.probabilityOfPrecipitation?.value ?? 0;
       daily.push({
         dateISO: formatDateISO(a.startTime, timeZone),
         dayOfWeek: formatDayOfWeek(a.startTime, timeZone),
         dateLabel: formatDateLabel(a.startTime, timeZone),
         highF: a.temperature,
         lowF: a.temperature,
-        iconCode: mapNwsIcon(a.icon),
-        precipProbPct: a.probabilityOfPrecipitation?.value ?? 0,
+        iconCode: mapNwsIcon(a.icon, nightProb),
+        precipProbPct: nightProb,
         shortDescription: a.shortForecast,
       });
       i += 1;
     } else {
       // Orphaned day period at the end of the forecast window
+      const dayProb = a.probabilityOfPrecipitation?.value ?? 0;
       daily.push({
         dateISO: formatDateISO(a.startTime, timeZone),
         dayOfWeek: formatDayOfWeek(a.startTime, timeZone),
         dateLabel: formatDateLabel(a.startTime, timeZone),
         highF: a.temperature,
         lowF: a.temperature,
-        iconCode: mapNwsIcon(a.icon),
-        precipProbPct: a.probabilityOfPrecipitation?.value ?? 0,
+        iconCode: mapNwsIcon(a.icon, dayProb),
+        precipProbPct: dayProb,
         shortDescription: a.shortForecast,
       });
       i += 1;

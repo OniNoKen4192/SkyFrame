@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
 import type { WeatherResponse } from '../shared/types';
+import { AlertBanner } from './components/AlertBanner';
 import { TopBar } from './components/TopBar';
 import { Footer } from './components/Footer';
 import { CurrentPanel } from './components/CurrentPanel';
 import { HourlyPanel } from './components/HourlyPanel';
 import { OutlookPanel } from './components/OutlookPanel';
+
+export type ViewKey = 'current' | 'hourly' | 'outlook' | 'all';
 
 // When the server's cache has expired and we need to retry, wait this long
 // before the next poll. Also used as the fallback if the response didn't
@@ -22,6 +25,8 @@ const ERROR_RETRY_MS = 30 * 1000;
 export default function App() {
   const [data, setData] = useState<WeatherResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [nextRetryAt, setNextRetryAt] = useState<string | null>(null);
+  const [activeView, setActiveView] = useState<ViewKey>('current');
 
   useEffect(() => {
     let cancelled = false;
@@ -41,6 +46,7 @@ export default function App() {
 
         setData(json);
         setError(null);
+        setNextRetryAt(null);
 
         // Schedule next poll based on the server's own expiration timestamp,
         // not a fixed client interval. This keeps the displayed "NEXT" time
@@ -53,6 +59,7 @@ export default function App() {
       } catch (e) {
         if (cancelled) return;
         setError((e as Error).message);
+        setNextRetryAt(new Date(Date.now() + ERROR_RETRY_MS).toISOString());
         scheduleNext(ERROR_RETRY_MS);
       }
     };
@@ -64,23 +71,44 @@ export default function App() {
     };
   }, []);
 
+  const loadingPlaceholder = (
+    <div style={{ padding: '40px 0', textAlign: 'center', opacity: 0.5, fontSize: 11, letterSpacing: '0.22em' }}>
+      ■ LOADING...
+    </div>
+  );
+
+  const renderView = () => {
+    if (!data) return loadingPlaceholder;
+    switch (activeView) {
+      case 'current': return <CurrentPanel current={data.current} />;
+      case 'hourly':  return <HourlyPanel hourly={data.hourly} />;
+      case 'outlook': return <OutlookPanel daily={data.daily} />;
+      case 'all': return (
+        <>
+          <CurrentPanel current={data.current} />
+          <HourlyPanel hourly={data.hourly} />
+          <OutlookPanel daily={data.daily} />
+        </>
+      );
+    }
+  };
+
+  const alerts = data?.alerts ?? [];
+  const primaryTier = alerts[0]?.tier;
+
   return (
-    <div className="hud-showcase">
-      <TopBar />
+    <div className="hud-showcase" data-alert-tier={primaryTier}>
+      {alerts.length > 0 && <AlertBanner alerts={alerts} />}
+      <TopBar
+        stationId={data?.meta?.stationId ?? null}
+        error={error}
+        activeView={activeView}
+        onViewChange={setActiveView}
+      />
 
-      {data ? (
-        <CurrentPanel current={data.current} />
-      ) : (
-        <div style={{ padding: '40px 0', textAlign: 'center', opacity: 0.5, fontSize: 11, letterSpacing: '0.22em' }}>
-          ■ LOADING...
-        </div>
-      )}
+      {renderView()}
 
-      {data && <HourlyPanel hourly={data.hourly} />}
-
-      {data && <OutlookPanel daily={data.daily} />}
-
-      <Footer meta={data?.meta ?? null} error={error} />
+      <Footer meta={data?.meta ?? null} error={error} nextRetryAt={nextRetryAt} />
     </div>
   );
 }

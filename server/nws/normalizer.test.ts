@@ -77,6 +77,7 @@ describe('normalizeWeather', () => {
       if (path.includes('/forecast')) return FIXTURE_FORECAST as never;
       if (path.includes('/observations/latest')) return FIXTURE_OBS_LATEST as never;
       if (path.includes('/observations')) return FIXTURE_OBS_HISTORY as never;
+      if (path.includes('/alerts/active')) return { features: [] } as never;
       throw new Error('Unexpected path: ' + path);
     });
   });
@@ -113,10 +114,50 @@ describe('normalizeWeather', () => {
   });
 
   it('populates 12 hourly periods', async () => {
+    // Pin now to before the fixture's first period so no past-hour filtering occurs.
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-04-15T14:00:00-05:00'));
     const result = await normalizeWeather();
     expect(result.hourly).toHaveLength(12);
     expect(result.hourly[0]!.tempF).toBe(63);
     expect(result.hourly[0]!.iconCode).toBe('partly-day');
+    vi.useRealTimers();
+  });
+
+  it('drops hourly periods whose hour has already ended, keeping the current hour', async () => {
+    // Fixture starts at 15:00 CDT. Pin now to 17:30 CDT.
+    // Period 0 (15:00) ends 16:00 — past, drop.
+    // Period 1 (16:00) ends 17:00 — past, drop.
+    // Period 2 (17:00) ends 18:00 — current hour (17:30 < 18:00), keep.
+    // Periods 3-11 — future, keep.
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-04-15T17:30:00-05:00'));
+    const result = await normalizeWeather();
+    expect(result.hourly).toHaveLength(10);
+    expect(Date.parse(result.hourly[0]!.startTime)).toBe(
+      Date.parse('2026-04-15T17:00:00-05:00'),
+    );
+    // Fixture period 2 has tempF = 63 - 2 = 61
+    expect(result.hourly[0]!.tempF).toBe(61);
+    vi.useRealTimers();
+  });
+
+  it('advances the first hourly period at the top of each hour boundary', async () => {
+    // At 17:59:59 — period 2 (17:00) is still the current hour.
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-04-15T17:59:59-05:00'));
+    let result = await normalizeWeather();
+    expect(Date.parse(result.hourly[0]!.startTime)).toBe(
+      Date.parse('2026-04-15T17:00:00-05:00'),
+    );
+
+    // At 18:00:00 sharp — period 2 just ended; period 3 (18:00) is the new current hour.
+    vi.setSystemTime(new Date('2026-04-15T18:00:00-05:00'));
+    result = await normalizeWeather();
+    expect(Date.parse(result.hourly[0]!.startTime)).toBe(
+      Date.parse('2026-04-15T18:00:00-05:00'),
+    );
+    vi.useRealTimers();
   });
 
   it('collapses 4 day+night periods into 2 DailyPeriod entries', async () => {
@@ -222,5 +263,224 @@ describe('normalizeWeather', () => {
     expect(result.meta.error).toBeUndefined();
 
     vi.useRealTimers();
+  });
+
+  describe('alerts', () => {
+    const FIXTURE_ALERTS_TWO_TIERS = {
+      features: [
+        {
+          properties: {
+            id: 'urn:oid:nws.alerts.1',
+            event: 'Tornado Watch',
+            severity: 'Severe',
+            headline: 'Tornado Watch issued April 16 at 2:00PM CDT until April 16 at 9:00PM CDT by NWS',
+            description: 'A Tornado Watch has been issued...',
+            effective: '2026-04-16T14:00:00-05:00',
+            expires:   '2026-04-16T21:00:00-05:00',
+            areaDesc:  'Milwaukee, WI; Waukesha, WI',
+          },
+        },
+        {
+          properties: {
+            id: 'urn:oid:nws.alerts.2',
+            event: 'Tornado Warning',
+            severity: 'Extreme',
+            headline: 'Tornado Warning issued April 16 at 4:30PM CDT until April 16 at 5:15PM CDT by NWS',
+            description: 'At 4:30PM, a confirmed tornado was located near Oak Creek...',
+            effective: '2026-04-16T16:30:00-05:00',
+            expires:   '2026-04-16T17:15:00-05:00',
+            areaDesc:  'Milwaukee, WI',
+          },
+        },
+      ],
+    };
+
+    // Pin time to 5 min after FIXTURE_OBS_LATEST so KMKE is fresh (not stale).
+    // Without this, real wall-clock time causes the 90-min staleness check to
+    // fire, making fellBack=true and metaError='station_fallback' instead of
+    // the alerts-specific value we want to assert.
+    const ALERTS_NOW = '2026-04-15T19:30:00+00:00';
+
+    function mockWithAlerts(alertsResponse: unknown) {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date(ALERTS_NOW));
+      vi.spyOn(client, 'fetchNws').mockImplementation(async (path: string) => {
+        if (path.includes('/points/')) return FIXTURE_POINT as never;
+        if (path.includes('/forecast/hourly')) return FIXTURE_HOURLY as never;
+        if (path.includes('/forecast')) return FIXTURE_FORECAST as never;
+        if (path.includes('/observations/latest')) return FIXTURE_OBS_LATEST as never;
+        if (path.includes('/observations')) return FIXTURE_OBS_HISTORY as never;
+        if (path.includes('/alerts/active')) return alertsResponse as never;
+        throw new Error('Unexpected path: ' + path);
+      });
+    }
+
+    it('exposes alerts sorted by tierRank (highest severity first)', async () => {
+      mockWithAlerts(FIXTURE_ALERTS_TWO_TIERS);
+      const result = await normalizeWeather();
+      vi.useRealTimers();
+
+      expect(result.alerts).toHaveLength(2);
+      expect(result.alerts[0]!.event).toBe('Tornado Warning');
+      expect(result.alerts[0]!.tier).toBe('tornado-warning');
+      expect(result.alerts[1]!.event).toBe('Tornado Watch');
+      expect(result.alerts[1]!.tier).toBe('watch');
+      expect(result.meta.error).toBeUndefined();
+    });
+
+    it('drops alerts whose event name is not in the v1.1 tier mapping', async () => {
+      mockWithAlerts({
+        features: [
+          { properties: { id: 'a', event: 'Wind Advisory',       severity: 'Minor',    headline: 'Wind',      description: '', effective: '2026-04-16T10:00:00Z', expires: '2026-04-16T20:00:00Z', areaDesc: 'WI' } },
+          { properties: { id: 'b', event: 'Tornado Warning',     severity: 'Extreme',  headline: 'Tornado',   description: '', effective: '2026-04-16T16:30:00Z', expires: '2026-04-16T17:15:00Z', areaDesc: 'WI' } },
+          { properties: { id: 'c', event: 'Frost Advisory',      severity: 'Minor',    headline: 'Frost',     description: '', effective: '2026-04-16T20:00:00Z', expires: '2026-04-17T08:00:00Z', areaDesc: 'WI' } },
+        ],
+      });
+      const result = await normalizeWeather();
+      vi.useRealTimers();
+
+      expect(result.alerts).toHaveLength(1);
+      expect(result.alerts[0]!.event).toBe('Tornado Warning');
+    });
+
+    it('returns empty alerts array when NWS alerts response is empty', async () => {
+      mockWithAlerts({ features: [] });
+      const result = await normalizeWeather();
+      vi.useRealTimers();
+      expect(result.alerts).toEqual([]);
+      expect(result.meta.error).toBeUndefined();
+    });
+
+    it('returns empty alerts array when NWS alerts fetch fails (non-fatal)', async () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date(ALERTS_NOW));
+      vi.spyOn(client, 'fetchNws').mockImplementation(async (path: string) => {
+        if (path.includes('/points/')) return FIXTURE_POINT as never;
+        if (path.includes('/forecast/hourly')) return FIXTURE_HOURLY as never;
+        if (path.includes('/forecast')) return FIXTURE_FORECAST as never;
+        if (path.includes('/observations/latest')) return FIXTURE_OBS_LATEST as never;
+        if (path.includes('/observations')) return FIXTURE_OBS_HISTORY as never;
+        if (path.includes('/alerts/active')) throw new Error('Network error');
+        throw new Error('Unexpected path: ' + path);
+      });
+
+      const result = await normalizeWeather();
+      vi.useRealTimers();
+      expect(result.alerts).toEqual([]);
+      // Other parts of the response are still populated
+      expect(result.current).toBeDefined();
+      expect(result.hourly).toBeDefined();
+      expect(result.meta.error).toBe('partial');
+    });
+
+    it('populates alert fields from NWS properties', async () => {
+      mockWithAlerts({
+        features: [
+          {
+            properties: {
+              id: 'urn:oid:nws.alerts.specific',
+              event: 'Tornado Warning',
+              severity: 'Extreme',
+              headline: 'Tornado Warning until 5:15PM',
+              description: 'A tornado was sighted near Oak Creek',
+              effective: '2026-04-16T16:30:00-05:00',
+              expires:   '2026-04-16T17:15:00-05:00',
+              areaDesc:  'Milwaukee, WI',
+            },
+          },
+        ],
+      });
+      const result = await normalizeWeather();
+      vi.useRealTimers();
+      const a = result.alerts[0]!;
+      expect(a.id).toBe('urn:oid:nws.alerts.specific');
+      expect(a.event).toBe('Tornado Warning');
+      expect(a.tier).toBe('tornado-warning');
+      expect(a.severity).toBe('Extreme');
+      expect(a.headline).toBe('Tornado Warning until 5:15PM');
+      expect(a.description).toBe('A tornado was sighted near Oak Creek');
+      expect(a.effective).toBe('2026-04-16T16:30:00-05:00');
+      expect(a.expires).toBe('2026-04-16T17:15:00-05:00');
+      expect(a.areaDesc).toBe('Milwaukee, WI');
+    });
+  });
+
+  describe('daily collapse — overnight orphan handling', () => {
+    // NWS at late-night/early-morning serves an "Overnight" period that shares
+    // its local-timezone date label with the next "Day" period. Without
+    // dedup, that produced two THU rows (one night-only orphan + one
+    // day+night pair). The collapse logic must skip the orphan in that case.
+    const FIXTURE_FORECAST_OVERNIGHT = {
+      properties: {
+        periods: [
+          { name: 'Overnight',      startTime: '2026-04-16T00:00:00-05:00', endTime: '2026-04-16T06:00:00-05:00', isDaytime: false, temperature: 50, shortForecast: 'Mostly Clear', icon: 'https://api.weather.gov/icons/land/night/few?size=medium', probabilityOfPrecipitation: { value: 5 } },
+          { name: 'Thursday',       startTime: '2026-04-16T06:00:00-05:00', endTime: '2026-04-16T18:00:00-05:00', isDaytime: true,  temperature: 65, shortForecast: 'Sunny',        icon: 'https://api.weather.gov/icons/land/day/few?size=medium',   probabilityOfPrecipitation: { value: 0 } },
+          { name: 'Thursday Night', startTime: '2026-04-16T18:00:00-05:00', endTime: '2026-04-17T06:00:00-05:00', isDaytime: false, temperature: 48, shortForecast: 'Cloudy',       icon: 'https://api.weather.gov/icons/land/night/bkn?size=medium', probabilityOfPrecipitation: { value: 10 } },
+          { name: 'Friday',         startTime: '2026-04-17T06:00:00-05:00', endTime: '2026-04-17T18:00:00-05:00', isDaytime: true,  temperature: 70, shortForecast: 'Sunny',        icon: 'https://api.weather.gov/icons/land/day/few?size=medium',   probabilityOfPrecipitation: { value: 5 } },
+          { name: 'Friday Night',   startTime: '2026-04-17T18:00:00-05:00', endTime: '2026-04-18T06:00:00-05:00', isDaytime: false, temperature: 52, shortForecast: 'Clear',        icon: 'https://api.weather.gov/icons/land/night/skc?size=medium', probabilityOfPrecipitation: { value: 0 } },
+        ],
+      },
+    };
+
+    // Late-evening case: NWS serves "Tonight" first, dated today, but the
+    // next period is the NEXT day. Different dates → orphan must be PRESERVED
+    // so the user sees the rest-of-tonight as today's row.
+    const FIXTURE_FORECAST_LATE_EVENING = {
+      properties: {
+        periods: [
+          { name: 'Tonight',      startTime: '2026-04-16T22:00:00-05:00', endTime: '2026-04-17T06:00:00-05:00', isDaytime: false, temperature: 47, shortForecast: 'Clear', icon: 'https://api.weather.gov/icons/land/night/skc?size=medium', probabilityOfPrecipitation: { value: 0 } },
+          { name: 'Friday',       startTime: '2026-04-17T06:00:00-05:00', endTime: '2026-04-17T18:00:00-05:00', isDaytime: true,  temperature: 70, shortForecast: 'Sunny', icon: 'https://api.weather.gov/icons/land/day/few?size=medium',   probabilityOfPrecipitation: { value: 5 } },
+          { name: 'Friday Night', startTime: '2026-04-17T18:00:00-05:00', endTime: '2026-04-18T06:00:00-05:00', isDaytime: false, temperature: 52, shortForecast: 'Clear', icon: 'https://api.weather.gov/icons/land/night/skc?size=medium', probabilityOfPrecipitation: { value: 0 } },
+        ],
+      },
+    };
+
+    function mockForecast(forecast: typeof FIXTURE_FORECAST_OVERNIGHT) {
+      vi.spyOn(client, 'fetchNws').mockImplementation(async (path: string) => {
+        if (path.includes('/points/')) return FIXTURE_POINT as never;
+        if (path.includes('/forecast/hourly')) return FIXTURE_HOURLY as never;
+        if (path.includes('/forecast')) return forecast as never;
+        if (path.includes('/observations/latest')) return FIXTURE_OBS_LATEST as never;
+        if (path.includes('/observations')) return FIXTURE_OBS_HISTORY as never;
+        if (path.includes('/alerts/active')) return { features: [] } as never;
+        throw new Error('Unexpected path: ' + path);
+      });
+    }
+
+    it('skips the overnight orphan when its date matches the next day period', async () => {
+      mockForecast(FIXTURE_FORECAST_OVERNIGHT);
+      const result = await normalizeWeather();
+
+      // Should produce 2 daily entries (Thursday day+night collapsed, Friday day+night collapsed).
+      // NOT 3 (which would mean the Overnight orphan was emitted as its own THU row).
+      expect(result.daily).toHaveLength(2);
+
+      // First entry should be the canonical Thursday from the day+night pair.
+      expect(result.daily[0]!.dateLabel).toBe('APR 16');
+      expect(result.daily[0]!.highF).toBe(65);
+      expect(result.daily[0]!.lowF).toBe(48);
+
+      // Second entry should be Friday.
+      expect(result.daily[1]!.dateLabel).toBe('APR 17');
+      expect(result.daily[1]!.highF).toBe(70);
+      expect(result.daily[1]!.lowF).toBe(52);
+    });
+
+    it('preserves the late-evening orphan when its date does NOT match the next day period', async () => {
+      mockForecast(FIXTURE_FORECAST_LATE_EVENING);
+      const result = await normalizeWeather();
+
+      // Should produce 2 entries: tonight (orphan), then Friday day+night.
+      expect(result.daily).toHaveLength(2);
+
+      // First entry is the orphan night — high == low == night temp.
+      expect(result.daily[0]!.dateLabel).toBe('APR 16');
+      expect(result.daily[0]!.highF).toBe(47);
+      expect(result.daily[0]!.lowF).toBe(47);
+
+      // Second entry is Friday.
+      expect(result.daily[1]!.dateLabel).toBe('APR 17');
+      expect(result.daily[1]!.highF).toBe(70);
+    });
   });
 });

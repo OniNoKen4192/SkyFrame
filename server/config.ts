@@ -30,6 +30,7 @@ export const CONFIG = {
     forecastMs: 5 * 60 * 1000,      // 5 min for forecast endpoints
     observationMs: 90 * 1000,        // 90 sec for observations
     pointMetadataMs: 24 * 60 * 60 * 1000, // 24 hours for /points (re-fetch daily for astronomicalData)
+    alertsMs: 5 * 60 * 1000,        // 5 minutes — alerts change faster than forecasts
   },
 
   // Trend computation thresholds (per hour) — see design doc §4.2
