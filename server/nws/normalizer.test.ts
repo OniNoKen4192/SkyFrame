@@ -113,10 +113,50 @@ describe('normalizeWeather', () => {
   });
 
   it('populates 12 hourly periods', async () => {
+    // Pin now to before the fixture's first period so no past-hour filtering occurs.
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-04-15T14:00:00-05:00'));
     const result = await normalizeWeather();
     expect(result.hourly).toHaveLength(12);
     expect(result.hourly[0]!.tempF).toBe(63);
     expect(result.hourly[0]!.iconCode).toBe('partly-day');
+    vi.useRealTimers();
+  });
+
+  it('drops hourly periods whose hour has already ended, keeping the current hour', async () => {
+    // Fixture starts at 15:00 CDT. Pin now to 17:30 CDT.
+    // Period 0 (15:00) ends 16:00 — past, drop.
+    // Period 1 (16:00) ends 17:00 — past, drop.
+    // Period 2 (17:00) ends 18:00 — current hour (17:30 < 18:00), keep.
+    // Periods 3-11 — future, keep.
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-04-15T17:30:00-05:00'));
+    const result = await normalizeWeather();
+    expect(result.hourly).toHaveLength(10);
+    expect(Date.parse(result.hourly[0]!.startTime)).toBe(
+      Date.parse('2026-04-15T17:00:00-05:00'),
+    );
+    // Fixture period 2 has tempF = 63 - 2 = 61
+    expect(result.hourly[0]!.tempF).toBe(61);
+    vi.useRealTimers();
+  });
+
+  it('advances the first hourly period at the top of each hour boundary', async () => {
+    // At 17:59:59 — period 2 (17:00) is still the current hour.
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-04-15T17:59:59-05:00'));
+    let result = await normalizeWeather();
+    expect(Date.parse(result.hourly[0]!.startTime)).toBe(
+      Date.parse('2026-04-15T17:00:00-05:00'),
+    );
+
+    // At 18:00:00 sharp — period 2 just ended; period 3 (18:00) is the new current hour.
+    vi.setSystemTime(new Date('2026-04-15T18:00:00-05:00'));
+    result = await normalizeWeather();
+    expect(Date.parse(result.hourly[0]!.startTime)).toBe(
+      Date.parse('2026-04-15T18:00:00-05:00'),
+    );
+    vi.useRealTimers();
   });
 
   it('collapses 4 day+night periods into 2 DailyPeriod entries', async () => {
