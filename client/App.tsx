@@ -6,6 +6,8 @@ import { CurrentPanel } from './components/CurrentPanel';
 import { HourlyPanel } from './components/HourlyPanel';
 import { OutlookPanel } from './components/OutlookPanel';
 
+export type ViewKey = 'current' | 'hourly' | 'outlook' | 'all';
+
 // When the server's cache has expired and we need to retry, wait this long
 // before the next poll. Also used as the fallback if the response didn't
 // include a meta.nextRefreshAt we could parse.
@@ -23,6 +25,7 @@ export default function App() {
   const [data, setData] = useState<WeatherResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [nextRetryAt, setNextRetryAt] = useState<string | null>(null);
+  const [activeView, setActiveView] = useState<ViewKey>('current');
 
   useEffect(() => {
     let cancelled = false;
@@ -67,21 +70,38 @@ export default function App() {
     };
   }, []);
 
+  const loadingPlaceholder = (
+    <div style={{ padding: '40px 0', textAlign: 'center', opacity: 0.5, fontSize: 11, letterSpacing: '0.22em' }}>
+      ■ LOADING...
+    </div>
+  );
+
+  const renderView = () => {
+    if (!data) return loadingPlaceholder;
+    switch (activeView) {
+      case 'current': return <CurrentPanel current={data.current} />;
+      case 'hourly':  return <HourlyPanel hourly={data.hourly} />;
+      case 'outlook': return <OutlookPanel daily={data.daily} />;
+      case 'all': return (
+        <>
+          <CurrentPanel current={data.current} />
+          <HourlyPanel hourly={data.hourly} />
+          <OutlookPanel daily={data.daily} />
+        </>
+      );
+    }
+  };
+
   return (
     <div className="hud-showcase">
-      <TopBar stationId={data?.meta?.stationId ?? null} error={error} />
+      <TopBar
+        stationId={data?.meta?.stationId ?? null}
+        error={error}
+        activeView={activeView}
+        onViewChange={setActiveView}
+      />
 
-      {data ? (
-        <CurrentPanel current={data.current} />
-      ) : (
-        <div style={{ padding: '40px 0', textAlign: 'center', opacity: 0.5, fontSize: 11, letterSpacing: '0.22em' }}>
-          ■ LOADING...
-        </div>
-      )}
-
-      {data && <HourlyPanel hourly={data.hourly} />}
-
-      {data && <OutlookPanel daily={data.daily} />}
+      {renderView()}
 
       <Footer meta={data?.meta ?? null} error={error} nextRetryAt={nextRetryAt} />
     </div>
