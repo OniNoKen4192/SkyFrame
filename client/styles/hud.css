@@ -51,6 +51,48 @@
   opacity: 0.6;
   padding-top: 6px;
 }
+.hud-topbar .loc.loc-offline {
+  opacity: 1;
+  color: rgba(0, 229, 209, 0.25);
+}
+.hud-topbar .loc .link-offline {
+  display: inline-block;
+  color: #ff4444;
+  opacity: 1;
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  text-shadow: 0 0 10px rgba(255, 68, 68, 0.9);
+  border-bottom: 1px solid rgba(255, 68, 68, 0.7);
+  padding-bottom: 1px;
+  animation: linkGlitch 5s linear infinite;
+}
+@keyframes linkGlitch {
+  0%, 92%, 100% {
+    text-shadow: 0 0 10px rgba(255, 68, 68, 0.9);
+    transform: translateX(0);
+  }
+  93% {
+    text-shadow:
+      0 0 10px rgba(255, 68, 68, 0.9),
+      2px 0 0 rgba(255, 0, 100, 0.85),
+      -2px 0 0 rgba(0, 200, 255, 0.6);
+    transform: translateX(-1px);
+  }
+  95% {
+    text-shadow:
+      0 0 10px rgba(255, 68, 68, 0.9),
+      -2px 0 0 rgba(255, 0, 100, 0.85),
+      2px 0 0 rgba(0, 200, 255, 0.6);
+    transform: translateX(1px);
+  }
+  97% {
+    text-shadow:
+      0 0 10px rgba(255, 68, 68, 0.9),
+      1px 0 0 rgba(255, 0, 100, 0.85),
+      -1px 0 0 rgba(0, 200, 255, 0.6);
+    transform: translateX(0);
+  }
+}
 .hud-topbar .clock { text-align: right; }
 .hud-topbar .clock-time {
   font-size: 18px;
