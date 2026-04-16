@@ -4,6 +4,7 @@ import { TopBar } from './components/TopBar';
 import { Footer } from './components/Footer';
 import { CurrentPanel } from './components/CurrentPanel';
 import { HourlyPanel } from './components/HourlyPanel';
+import { OutlookPanel } from './components/OutlookPanel';
 
 const REFRESH_INTERVAL_MS = 90 * 1000;
 
@@ -46,6 +47,8 @@ export default function App() {
       )}
 
       {data && <HourlyPanel hourly={data.hourly} />}
+
+      {data && <OutlookPanel daily={data.daily} />}
 
       <Footer meta={data?.meta ?? null} error={error} />
     </div>
