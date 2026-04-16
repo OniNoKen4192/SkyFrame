@@ -76,5 +76,29 @@ export interface WeatherResponse {
   current: CurrentConditions;
   hourly: HourlyPeriod[];
   daily: DailyPeriod[];
+  alerts: Alert[];
   meta: WeatherMeta;
+}
+
+export type AlertTier =
+  | 'tornado-emergency'
+  | 'tornado-warning'
+  | 'severe-warning'
+  | 'blizzard'
+  | 'winter-storm'
+  | 'flood'
+  | 'heat'
+  | 'special-weather-statement'
+  | 'watch';
+
+export interface Alert {
+  id: string;
+  event: string;
+  tier: AlertTier;
+  severity: 'Extreme' | 'Severe' | 'Moderate' | 'Minor' | 'Unknown';
+  headline: string;
+  description: string;
+  effective: string;
+  expires: string;
+  areaDesc: string;
 }

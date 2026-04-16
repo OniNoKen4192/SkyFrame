@@ -25,6 +25,7 @@ const FIXTURE_RESPONSE = {
   },
   hourly: [],
   daily: [],
+  alerts: [],
   meta: {
     fetchedAt: '2026-04-15T19:25:00Z',
     nextRefreshAt: '2026-04-15T19:26:30Z',

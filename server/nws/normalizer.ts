@@ -237,7 +237,7 @@ export async function normalizeWeather(): Promise<WeatherResponse> {
     ...(fellBack ? { error: 'station_fallback' as const } : {}),
   };
 
-  return { current, hourly: hourlyPeriods, daily: dailyPeriods, meta };
+  return { current, hourly: hourlyPeriods, daily: dailyPeriods, alerts: [], meta };
 }
 
 function normalizeCurrent(
