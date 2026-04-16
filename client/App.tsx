@@ -3,6 +3,7 @@ import type { WeatherResponse } from '../shared/types';
 import { TopBar } from './components/TopBar';
 import { Footer } from './components/Footer';
 import { CurrentPanel } from './components/CurrentPanel';
+import { HourlyPanel } from './components/HourlyPanel';
 
 const REFRESH_INTERVAL_MS = 90 * 1000;
 
@@ -43,6 +44,8 @@ export default function App() {
           ■ LOADING...
         </div>
       )}
+
+      {data && <HourlyPanel hourly={data.hourly} />}
 
       <Footer meta={data?.meta ?? null} error={error} />
     </div>
