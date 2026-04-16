@@ -22,8 +22,12 @@ export function AlertBanner({ alerts }: AlertBannerProps) {
 
   return (
     <div className="alert-banner" data-tier={primary.tier} role="status" aria-live="polite">
-      <span className="alert-banner-glyph">▲</span>
-      <span className="alert-banner-headline">{headline}</span>
+      <div className="alert-banner-stripes alert-banner-stripes-left" aria-hidden="true" />
+      <div className="alert-banner-content">
+        <span className="alert-banner-glyph">▲</span>
+        <span className="alert-banner-headline">{headline}</span>
+      </div>
+      <div className="alert-banner-stripes alert-banner-stripes-right" aria-hidden="true" />
     </div>
   );
 }

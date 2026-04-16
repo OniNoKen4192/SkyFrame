@@ -581,18 +581,26 @@
 
 /* ============================================================
    ALERT BANNER (v1.1 Step 3)
+   Layout: [stripes-left] [content] [stripes-right]
    ============================================================ */
 
 .alert-banner {
   display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 14px;
+  align-items: stretch;
   margin: 0 0 14px;
   border-bottom: 1px dashed rgba(var(--accent-rgb), 0.18);
+  min-height: 40px;
   font-size: 11px;
   letter-spacing: 0.18em;
   font-weight: 700;
+}
+
+.alert-banner-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 18px;
+  white-space: nowrap;
 }
 
 .alert-banner-glyph {
@@ -600,20 +608,138 @@
   line-height: 1;
 }
 
-.alert-banner-headline {
+.alert-banner-stripes {
   flex: 1;
+  background-size: 28px 28px;
+  background-repeat: repeat;
 }
 
-/* Per-tier banner colors — text + glyph color matches the tier base */
-.alert-banner[data-tier="tornado-emergency"]         { color: #9400D3; text-shadow: 0 0 8px rgba(148, 0, 211, 0.7); }
-.alert-banner[data-tier="tornado-warning"]           { color: #ff4444; text-shadow: 0 0 8px rgba(255, 68, 68, 0.7); }
-.alert-banner[data-tier="severe-warning"]            { color: #ff8800; text-shadow: 0 0 8px rgba(255, 136, 0, 0.7); }
-.alert-banner[data-tier="blizzard"]                  { color: #ffffff; text-shadow: 0 0 8px rgba(255, 255, 255, 0.7); }
-.alert-banner[data-tier="winter-storm"]              { color: #4488ff; text-shadow: 0 0 8px rgba(68, 136, 255, 0.7); }
-.alert-banner[data-tier="flood"]                     { color: #22cc66; text-shadow: 0 0 8px rgba(34, 204, 102, 0.7); }
-.alert-banner[data-tier="heat"]                      { color: #ff5533; text-shadow: 0 0 8px rgba(255, 85, 51, 0.7); }
-.alert-banner[data-tier="special-weather-statement"] { color: #ee82ee; text-shadow: 0 0 8px rgba(238, 130, 238, 0.7); }
-.alert-banner[data-tier="watch"]                     { color: #ffdd33; text-shadow: 0 0 8px rgba(255, 221, 51, 0.7); }
+.alert-banner-stripes-left {
+  /* Forward-leaning ///, animates rightward (toward center) */
+  animation: alert-stripe-flow-right 5s linear infinite;
+}
+
+.alert-banner-stripes-right {
+  /* Back-leaning \\\, animates leftward (toward center) */
+  animation: alert-stripe-flow-left 5s linear infinite;
+}
+
+@keyframes alert-stripe-flow-right {
+  from { background-position: 0 0; }
+  to   { background-position: 28px 0; }
+}
+
+@keyframes alert-stripe-flow-left {
+  from { background-position: 0 0; }
+  to   { background-position: -28px 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alert-banner-stripes-left,
+  .alert-banner-stripes-right {
+    animation: none;
+  }
+}
+
+/* Per-tier text + stripe colors. Stripes use a base+dark gradient. */
+.alert-banner[data-tier="tornado-emergency"] {
+  color: #9400D3;
+  text-shadow: 0 0 8px rgba(148, 0, 211, 0.7);
+}
+.alert-banner[data-tier="tornado-emergency"] .alert-banner-stripes-left {
+  background-image: repeating-linear-gradient(45deg,  #9400D3 0 14px, #5a007e 14px 28px);
+}
+.alert-banner[data-tier="tornado-emergency"] .alert-banner-stripes-right {
+  background-image: repeating-linear-gradient(-45deg, #9400D3 0 14px, #5a007e 14px 28px);
+}
+
+.alert-banner[data-tier="tornado-warning"] {
+  color: #ff4444;
+  text-shadow: 0 0 8px rgba(255, 68, 68, 0.7);
+}
+.alert-banner[data-tier="tornado-warning"] .alert-banner-stripes-left {
+  background-image: repeating-linear-gradient(45deg,  #ff4444 0 14px, #a02828 14px 28px);
+}
+.alert-banner[data-tier="tornado-warning"] .alert-banner-stripes-right {
+  background-image: repeating-linear-gradient(-45deg, #ff4444 0 14px, #a02828 14px 28px);
+}
+
+.alert-banner[data-tier="severe-warning"] {
+  color: #ff8800;
+  text-shadow: 0 0 8px rgba(255, 136, 0, 0.7);
+}
+.alert-banner[data-tier="severe-warning"] .alert-banner-stripes-left {
+  background-image: repeating-linear-gradient(45deg,  #ff8800 0 14px, #a05500 14px 28px);
+}
+.alert-banner[data-tier="severe-warning"] .alert-banner-stripes-right {
+  background-image: repeating-linear-gradient(-45deg, #ff8800 0 14px, #a05500 14px 28px);
+}
+
+.alert-banner[data-tier="blizzard"] {
+  color: #ffffff;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.7);
+}
+.alert-banner[data-tier="blizzard"] .alert-banner-stripes-left {
+  background-image: repeating-linear-gradient(45deg,  #ffffff 0 14px, #bbbbbb 14px 28px);
+}
+.alert-banner[data-tier="blizzard"] .alert-banner-stripes-right {
+  background-image: repeating-linear-gradient(-45deg, #ffffff 0 14px, #bbbbbb 14px 28px);
+}
+
+.alert-banner[data-tier="winter-storm"] {
+  color: #4488ff;
+  text-shadow: 0 0 8px rgba(68, 136, 255, 0.7);
+}
+.alert-banner[data-tier="winter-storm"] .alert-banner-stripes-left {
+  background-image: repeating-linear-gradient(45deg,  #4488ff 0 14px, #2a55a0 14px 28px);
+}
+.alert-banner[data-tier="winter-storm"] .alert-banner-stripes-right {
+  background-image: repeating-linear-gradient(-45deg, #4488ff 0 14px, #2a55a0 14px 28px);
+}
+
+.alert-banner[data-tier="flood"] {
+  color: #22cc66;
+  text-shadow: 0 0 8px rgba(34, 204, 102, 0.7);
+}
+.alert-banner[data-tier="flood"] .alert-banner-stripes-left {
+  background-image: repeating-linear-gradient(45deg,  #22cc66 0 14px, #147a3d 14px 28px);
+}
+.alert-banner[data-tier="flood"] .alert-banner-stripes-right {
+  background-image: repeating-linear-gradient(-45deg, #22cc66 0 14px, #147a3d 14px 28px);
+}
+
+.alert-banner[data-tier="heat"] {
+  color: #ff5533;
+  text-shadow: 0 0 8px rgba(255, 85, 51, 0.7);
+}
+.alert-banner[data-tier="heat"] .alert-banner-stripes-left {
+  background-image: repeating-linear-gradient(45deg,  #ff5533 0 14px, #a0331c 14px 28px);
+}
+.alert-banner[data-tier="heat"] .alert-banner-stripes-right {
+  background-image: repeating-linear-gradient(-45deg, #ff5533 0 14px, #a0331c 14px 28px);
+}
+
+.alert-banner[data-tier="special-weather-statement"] {
+  color: #ee82ee;
+  text-shadow: 0 0 8px rgba(238, 130, 238, 0.7);
+}
+.alert-banner[data-tier="special-weather-statement"] .alert-banner-stripes-left {
+  background-image: repeating-linear-gradient(45deg,  #ee82ee 0 14px, #9d539d 14px 28px);
+}
+.alert-banner[data-tier="special-weather-statement"] .alert-banner-stripes-right {
+  background-image: repeating-linear-gradient(-45deg, #ee82ee 0 14px, #9d539d 14px 28px);
+}
+
+.alert-banner[data-tier="watch"] {
+  color: #ffdd33;
+  text-shadow: 0 0 8px rgba(255, 221, 51, 0.7);
+}
+.alert-banner[data-tier="watch"] .alert-banner-stripes-left {
+  background-image: repeating-linear-gradient(45deg,  #ffdd33 0 14px, #a08820 14px 28px);
+}
+.alert-banner[data-tier="watch"] .alert-banner-stripes-right {
+  background-image: repeating-linear-gradient(-45deg, #ffdd33 0 14px, #a08820 14px 28px);
+}
 
 /* ============================================================
    UI ACCENT COLOR OVERRIDE (v1.1 Step 4)
