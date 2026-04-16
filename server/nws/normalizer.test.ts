@@ -149,7 +149,78 @@ describe('normalizeWeather', () => {
   });
 
   it('populates meta.stationId', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-04-15T19:30:00+00:00'));
     const result = await normalizeWeather();
     expect(result.meta.stationId).toBe('KMKE');
+    vi.useRealTimers();
+  });
+
+  it('falls back to KRAC when KMKE observation is older than 90 minutes', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-04-15T19:30:00+00:00'));
+
+    vi.spyOn(client, 'fetchNws').mockImplementation(async (path: string) => {
+      if (path.includes('/points/')) return FIXTURE_POINT as never;
+      if (path.includes('/forecast/hourly')) return FIXTURE_HOURLY as never;
+      if (path.includes('/forecast')) return FIXTURE_FORECAST as never;
+      if (path.includes('KMKE/observations/latest')) {
+        return {
+          properties: {
+            ...FIXTURE_OBS_LATEST.properties,
+            timestamp: '2026-04-15T12:00:00+00:00', // stale: 7.5 hours ago
+          },
+        } as never;
+      }
+      if (path.includes('KRAC/observations/latest')) return FIXTURE_OBS_LATEST as never;
+      if (path.includes('KRAC/observations')) return FIXTURE_OBS_HISTORY as never;
+      if (path.includes('/observations/latest')) return FIXTURE_OBS_LATEST as never;
+      if (path.includes('/observations')) return FIXTURE_OBS_HISTORY as never;
+      throw new Error('Unexpected path: ' + path);
+    });
+
+    const result = await normalizeWeather();
+    expect(result.meta.stationId).toBe('KRAC');
+    expect(result.meta.error).toBe('station_fallback');
+    expect(result.current.stationId).toBe('KRAC');
+
+    vi.useRealTimers();
+  });
+
+  it('falls back to KRAC when KMKE observation has null temperature', async () => {
+    vi.spyOn(client, 'fetchNws').mockImplementation(async (path: string) => {
+      if (path.includes('/points/')) return FIXTURE_POINT as never;
+      if (path.includes('/forecast/hourly')) return FIXTURE_HOURLY as never;
+      if (path.includes('/forecast')) return FIXTURE_FORECAST as never;
+      if (path.includes('KMKE/observations/latest')) {
+        return {
+          properties: {
+            ...FIXTURE_OBS_LATEST.properties,
+            temperature: { value: null, unitCode: 'wmoUnit:degC' },
+          },
+        } as never;
+      }
+      if (path.includes('KRAC/observations/latest')) return FIXTURE_OBS_LATEST as never;
+      if (path.includes('KRAC/observations')) return FIXTURE_OBS_HISTORY as never;
+      if (path.includes('/observations/latest')) return FIXTURE_OBS_LATEST as never;
+      if (path.includes('/observations')) return FIXTURE_OBS_HISTORY as never;
+      throw new Error('Unexpected path: ' + path);
+    });
+
+    const result = await normalizeWeather();
+    expect(result.meta.stationId).toBe('KRAC');
+    expect(result.meta.error).toBe('station_fallback');
+  });
+
+  it('uses KMKE without error flag when primary is fresh and complete', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-04-15T19:30:00+00:00'));
+
+    // FIXTURE_OBS_LATEST.timestamp is '2026-04-15T19:25:00+00:00' — only 5 min old
+    const result = await normalizeWeather();
+    expect(result.meta.stationId).toBe('KMKE');
+    expect(result.meta.error).toBeUndefined();
+
+    vi.useRealTimers();
   });
 });

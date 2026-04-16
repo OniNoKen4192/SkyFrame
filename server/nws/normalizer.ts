@@ -123,30 +123,77 @@ interface NwsObsListResponse {
   features: Array<{ properties: NwsObsProperties }>;
 }
 
+// ========== Station fallback ==========
+
+const STALENESS_MS = CONFIG.stations.stalenessMinutes * 60 * 1000;
+
+interface ObsFetchResult {
+  obsLatest: NwsObsResponse;
+  obsHistory: NwsObsListResponse;
+  stationId: string;
+  fellBack: boolean;
+}
+
+function isObservationUsable(obs: NwsObsProperties, now: Date): boolean {
+  const ageMs = now.getTime() - Date.parse(obs.timestamp);
+  if (ageMs > STALENESS_MS) return false;
+  if (obs.temperature.value == null) return false;
+  if (obs.windSpeed.value == null) return false;
+  if (!obs.textDescription || obs.textDescription.trim() === '') return false;
+  return true;
+}
+
+async function fetchObservationsWithFallback(now: Date): Promise<ObsFetchResult> {
+  const { stations } = CONFIG;
+
+  try {
+    const primaryLatest = await fetchNws<NwsObsResponse>(
+      `/stations/${stations.primary}/observations/latest`,
+    );
+    if (isObservationUsable(primaryLatest.properties, now)) {
+      const primaryHistory = await fetchNws<NwsObsListResponse>(
+        `/stations/${stations.primary}/observations?limit=6`,
+      );
+      return { obsLatest: primaryLatest, obsHistory: primaryHistory, stationId: stations.primary, fellBack: false };
+    }
+  } catch {
+    // Swallow; fall through to secondary
+  }
+
+  const secondaryLatest = await fetchNws<NwsObsResponse>(
+    `/stations/${stations.fallback}/observations/latest`,
+  );
+  const secondaryHistory = await fetchNws<NwsObsListResponse>(
+    `/stations/${stations.fallback}/observations?limit=6`,
+  );
+  return { obsLatest: secondaryLatest, obsHistory: secondaryHistory, stationId: stations.fallback, fellBack: true };
+}
+
 // ========== Main normalizer ==========
 
 export async function normalizeWeather(): Promise<WeatherResponse> {
-  const { nws, location, stations } = CONFIG;
+  const { nws, location } = CONFIG;
 
   // 1. Fetch point metadata (sunrise/sunset mainly)
   const point = await fetchNws<NwsPointResponse>(
     `/points/${location.lat.toFixed(4)},${location.lon.toFixed(4)}`,
   );
 
-  // 2. Fetch forecast, hourly forecast, latest observation, and observation history in parallel
-  const [forecast, hourly, obsLatest, obsHistory] = await Promise.all([
+  // 2. Fetch forecast, hourly forecast, and observations (with fallback) in parallel
+  const now = new Date();
+  const [forecast, hourly, obsResult] = await Promise.all([
     fetchNws<NwsForecastResponse>(`/gridpoints/${nws.forecastOffice}/${nws.gridX},${nws.gridY}/forecast`),
     fetchNws<NwsHourlyResponse>(`/gridpoints/${nws.forecastOffice}/${nws.gridX},${nws.gridY}/forecast/hourly`),
-    fetchNws<NwsObsResponse>(`/stations/${stations.primary}/observations/latest`),
-    fetchNws<NwsObsListResponse>(`/stations/${stations.primary}/observations?limit=6`),
+    fetchObservationsWithFallback(now),
   ]);
+  const { obsLatest, obsHistory, stationId: activeStationId, fellBack } = obsResult;
 
   // 3. Normalize current conditions
   const current = normalizeCurrent(
     obsLatest.properties,
     obsHistory,
     hourly,
-    stations.primary,
+    activeStationId,
     nws.timezone,
     point,
   );
@@ -170,12 +217,12 @@ export async function normalizeWeather(): Promise<WeatherResponse> {
   const dailyPeriods = collapseDailyPeriods(forecast.properties.periods, nws.timezone);
 
   // 6. Assemble meta
-  const now = new Date();
   const meta = {
     fetchedAt: now.toISOString(),
     nextRefreshAt: new Date(now.getTime() + CONFIG.cache.observationMs).toISOString(),
     cacheHit: false,
-    stationId: stations.primary,
+    stationId: activeStationId,
+    ...(fellBack ? { error: 'station_fallback' as const } : {}),
   };
 
   return { current, hourly: hourlyPeriods, daily: dailyPeriods, meta };
