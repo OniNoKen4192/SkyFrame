@@ -97,7 +97,7 @@ export default function App() {
   const primaryTier = alerts[0]?.tier;
 
   return (
-    <div className="hud-showcase" {...(primaryTier ? { 'data-alert-tier': primaryTier } : {})}>
+    <div className="hud-showcase" data-alert-tier={primaryTier}>
       {alerts.length > 0 && <AlertBanner alerts={alerts} />}
       <TopBar
         stationId={data?.meta?.stationId ?? null}
