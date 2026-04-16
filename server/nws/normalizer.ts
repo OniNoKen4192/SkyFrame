@@ -111,7 +111,7 @@ interface NwsObsProperties {
   relativeHumidity: { value: number | null };
   heatIndex: { value: number | null };
   windChill: { value: number | null };
-  textDescription: string;
+  textDescription: string | null;
   icon: string;
 }
 
@@ -222,7 +222,7 @@ function normalizeCurrent(
       startTime: h.startTime,
       probabilityOfPrecipitation: h.probabilityOfPrecipitation?.value ?? null,
     })),
-    currentTextDescription: obs.textDescription,
+    currentTextDescription: obs.textDescription ?? '',
     now: new Date(),
     timeZone,
   });
@@ -237,7 +237,7 @@ function normalizeCurrent(
     stationDistanceKm: 7, // KMKE is ~7 km from 53154; future: compute from station metadata
     tempF,
     feelsLikeF,
-    conditionText: obs.textDescription.toUpperCase(),
+    conditionText: (obs.textDescription ?? '').toUpperCase(),
     iconCode: mapNwsIcon(obs.icon),
     precipOutlook,
     humidityPct: Math.round(obs.relativeHumidity.value ?? 0),
