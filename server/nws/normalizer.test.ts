@@ -264,6 +264,128 @@ describe('normalizeWeather', () => {
     vi.useRealTimers();
   });
 
+  describe('alerts', () => {
+    const FIXTURE_ALERTS_TWO_TIERS = {
+      features: [
+        {
+          properties: {
+            id: 'urn:oid:nws.alerts.1',
+            event: 'Tornado Watch',
+            severity: 'Severe',
+            headline: 'Tornado Watch issued April 16 at 2:00PM CDT until April 16 at 9:00PM CDT by NWS',
+            description: 'A Tornado Watch has been issued...',
+            effective: '2026-04-16T14:00:00-05:00',
+            expires:   '2026-04-16T21:00:00-05:00',
+            areaDesc:  'Milwaukee, WI; Waukesha, WI',
+          },
+        },
+        {
+          properties: {
+            id: 'urn:oid:nws.alerts.2',
+            event: 'Tornado Warning',
+            severity: 'Extreme',
+            headline: 'Tornado Warning issued April 16 at 4:30PM CDT until April 16 at 5:15PM CDT by NWS',
+            description: 'At 4:30PM, a confirmed tornado was located near Oak Creek...',
+            effective: '2026-04-16T16:30:00-05:00',
+            expires:   '2026-04-16T17:15:00-05:00',
+            areaDesc:  'Milwaukee, WI',
+          },
+        },
+      ],
+    };
+
+    function mockWithAlerts(alertsResponse: unknown) {
+      vi.spyOn(client, 'fetchNws').mockImplementation(async (path: string) => {
+        if (path.includes('/points/')) return FIXTURE_POINT as never;
+        if (path.includes('/forecast/hourly')) return FIXTURE_HOURLY as never;
+        if (path.includes('/forecast')) return FIXTURE_FORECAST as never;
+        if (path.includes('/observations/latest')) return FIXTURE_OBS_LATEST as never;
+        if (path.includes('/observations')) return FIXTURE_OBS_HISTORY as never;
+        if (path.includes('/alerts/active')) return alertsResponse as never;
+        throw new Error('Unexpected path: ' + path);
+      });
+    }
+
+    it('exposes alerts sorted by tierRank (highest severity first)', async () => {
+      mockWithAlerts(FIXTURE_ALERTS_TWO_TIERS);
+      const result = await normalizeWeather();
+
+      expect(result.alerts).toHaveLength(2);
+      expect(result.alerts[0]!.event).toBe('Tornado Warning');
+      expect(result.alerts[0]!.tier).toBe('tornado-warning');
+      expect(result.alerts[1]!.event).toBe('Tornado Watch');
+      expect(result.alerts[1]!.tier).toBe('watch');
+    });
+
+    it('drops alerts whose event name is not in the v1.1 tier mapping', async () => {
+      mockWithAlerts({
+        features: [
+          { properties: { id: 'a', event: 'Wind Advisory',       severity: 'Minor',    headline: 'Wind',      description: '', effective: '2026-04-16T10:00:00Z', expires: '2026-04-16T20:00:00Z', areaDesc: 'WI' } },
+          { properties: { id: 'b', event: 'Tornado Warning',     severity: 'Extreme',  headline: 'Tornado',   description: '', effective: '2026-04-16T16:30:00Z', expires: '2026-04-16T17:15:00Z', areaDesc: 'WI' } },
+          { properties: { id: 'c', event: 'Frost Advisory',      severity: 'Minor',    headline: 'Frost',     description: '', effective: '2026-04-16T20:00:00Z', expires: '2026-04-17T08:00:00Z', areaDesc: 'WI' } },
+        ],
+      });
+      const result = await normalizeWeather();
+
+      expect(result.alerts).toHaveLength(1);
+      expect(result.alerts[0]!.event).toBe('Tornado Warning');
+    });
+
+    it('returns empty alerts array when NWS alerts response is empty', async () => {
+      mockWithAlerts({ features: [] });
+      const result = await normalizeWeather();
+      expect(result.alerts).toEqual([]);
+    });
+
+    it('returns empty alerts array when NWS alerts fetch fails (non-fatal)', async () => {
+      vi.spyOn(client, 'fetchNws').mockImplementation(async (path: string) => {
+        if (path.includes('/points/')) return FIXTURE_POINT as never;
+        if (path.includes('/forecast/hourly')) return FIXTURE_HOURLY as never;
+        if (path.includes('/forecast')) return FIXTURE_FORECAST as never;
+        if (path.includes('/observations/latest')) return FIXTURE_OBS_LATEST as never;
+        if (path.includes('/observations')) return FIXTURE_OBS_HISTORY as never;
+        if (path.includes('/alerts/active')) throw new Error('Network error');
+        throw new Error('Unexpected path: ' + path);
+      });
+
+      const result = await normalizeWeather();
+      expect(result.alerts).toEqual([]);
+      // Other parts of the response are still populated
+      expect(result.current).toBeDefined();
+      expect(result.hourly).toBeDefined();
+    });
+
+    it('populates alert fields from NWS properties', async () => {
+      mockWithAlerts({
+        features: [
+          {
+            properties: {
+              id: 'urn:oid:nws.alerts.specific',
+              event: 'Tornado Warning',
+              severity: 'Extreme',
+              headline: 'Tornado Warning until 5:15PM',
+              description: 'A tornado was sighted near Oak Creek',
+              effective: '2026-04-16T16:30:00-05:00',
+              expires:   '2026-04-16T17:15:00-05:00',
+              areaDesc:  'Milwaukee, WI',
+            },
+          },
+        ],
+      });
+      const result = await normalizeWeather();
+      const a = result.alerts[0]!;
+      expect(a.id).toBe('urn:oid:nws.alerts.specific');
+      expect(a.event).toBe('Tornado Warning');
+      expect(a.tier).toBe('tornado-warning');
+      expect(a.severity).toBe('Extreme');
+      expect(a.headline).toBe('Tornado Warning until 5:15PM');
+      expect(a.description).toBe('A tornado was sighted near Oak Creek');
+      expect(a.effective).toBe('2026-04-16T16:30:00-05:00');
+      expect(a.expires).toBe('2026-04-16T17:15:00-05:00');
+      expect(a.areaDesc).toBe('Milwaukee, WI');
+    });
+  });
+
   describe('daily collapse — overnight orphan handling', () => {
     // NWS at late-night/early-morning serves an "Overnight" period that shares
     // its local-timezone date label with the next "Day" period. Without

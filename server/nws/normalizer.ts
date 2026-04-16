@@ -1,11 +1,12 @@
 import type {
-  WeatherResponse, CurrentConditions, HourlyPeriod, DailyPeriod, Wind,
+  WeatherResponse, CurrentConditions, HourlyPeriod, DailyPeriod, Wind, Alert,
 } from '../../shared/types';
 import { CONFIG } from '../config';
 import { fetchNws } from './client';
 import { mapNwsIcon } from './icon-mapping';
 import { computeTrend, type TimedValue } from './trends';
 import { buildPrecipOutlook } from './precip';
+import { mapEventToTier, tierRank } from '../../shared/alert-tiers';
 
 // ========== Unit conversion helpers ==========
 
@@ -135,6 +136,21 @@ interface NwsObsListResponse {
   features: Array<{ properties: NwsObsProperties }>;
 }
 
+interface NwsAlertsResponse {
+  features: Array<{
+    properties: {
+      id: string;
+      event: string;
+      severity: string;
+      headline: string;
+      description: string;
+      effective: string;
+      expires: string;
+      areaDesc: string;
+    };
+  }>;
+}
+
 // ========== Station fallback ==========
 
 const STALENESS_MS = CONFIG.stations.stalenessMinutes * 60 * 1000;
@@ -181,6 +197,47 @@ async function fetchObservationsWithFallback(now: Date): Promise<ObsFetchResult>
   return { obsLatest: secondaryLatest, obsHistory: secondaryHistory, stationId: stations.fallback, fellBack: true };
 }
 
+async function fetchAlertsSafe(): Promise<NwsAlertsResponse> {
+  const { location } = CONFIG;
+  try {
+    return await fetchNws<NwsAlertsResponse>(
+      `/alerts/active?point=${location.lat.toFixed(4)},${location.lon.toFixed(4)}`,
+    );
+  } catch {
+    // Alerts are non-essential — a fetch failure must not break /api/weather.
+    return { features: [] };
+  }
+}
+
+function normalizeAlerts(raw: NwsAlertsResponse): Alert[] {
+  const validSeverities = new Set(['Extreme', 'Severe', 'Moderate', 'Minor', 'Unknown']);
+  const result: Alert[] = [];
+
+  for (const f of raw.features) {
+    const tier = mapEventToTier(f.properties.event);
+    if (tier === null) continue;  // drop unmapped events
+
+    const severity = validSeverities.has(f.properties.severity)
+      ? f.properties.severity as Alert['severity']
+      : 'Unknown';
+
+    result.push({
+      id: f.properties.id,
+      event: f.properties.event,
+      tier,
+      severity,
+      headline: f.properties.headline,
+      description: f.properties.description,
+      effective: f.properties.effective,
+      expires: f.properties.expires,
+      areaDesc: f.properties.areaDesc,
+    });
+  }
+
+  result.sort((a, b) => tierRank(a.tier) - tierRank(b.tier));
+  return result;
+}
+
 // ========== Main normalizer ==========
 
 export async function normalizeWeather(): Promise<WeatherResponse> {
@@ -191,14 +248,16 @@ export async function normalizeWeather(): Promise<WeatherResponse> {
     `/points/${location.lat.toFixed(4)},${location.lon.toFixed(4)}`,
   );
 
-  // 2. Fetch forecast, hourly forecast, and observations (with fallback) in parallel
+  // 2. Fetch forecast, hourly forecast, observations (with fallback), and alerts in parallel
   const now = new Date();
-  const [forecast, hourly, obsResult] = await Promise.all([
+  const [forecast, hourly, obsResult, alertsRaw] = await Promise.all([
     fetchNws<NwsForecastResponse>(`/gridpoints/${nws.forecastOffice}/${nws.gridX},${nws.gridY}/forecast`),
     fetchNws<NwsHourlyResponse>(`/gridpoints/${nws.forecastOffice}/${nws.gridX},${nws.gridY}/forecast/hourly`),
     fetchObservationsWithFallback(now),
+    fetchAlertsSafe(),
   ]);
   const { obsLatest, obsHistory, stationId: activeStationId, fellBack } = obsResult;
+  const alerts = normalizeAlerts(alertsRaw);
 
   // 3. Normalize current conditions
   const current = normalizeCurrent(
@@ -237,7 +296,7 @@ export async function normalizeWeather(): Promise<WeatherResponse> {
     ...(fellBack ? { error: 'station_fallback' as const } : {}),
   };
 
-  return { current, hourly: hourlyPeriods, daily: dailyPeriods, alerts: [], meta };
+  return { current, hourly: hourlyPeriods, daily: dailyPeriods, alerts, meta };
 }
 
 function normalizeCurrent(
