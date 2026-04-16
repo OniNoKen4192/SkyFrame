@@ -34,6 +34,18 @@ const parseWindSpeedString = (s: string | null | undefined): number => {
   return match ? Math.round(parseFloat(match[1]!)) : 0;
 };
 
+// ========== Hourly period filtering ==========
+
+const HOUR_MS = 60 * 60 * 1000;
+
+// NWS hourly responses are generated on their own schedule and can lead with
+// periods whose hour has already ended. Drop those, keeping the period for the
+// current hour (whose endTime is still in the future).
+function dropPastHours<T extends { startTime: string }>(periods: T[], now: Date): T[] {
+  const nowMs = now.getTime();
+  return periods.filter((p) => Date.parse(p.startTime) + HOUR_MS > nowMs);
+}
+
 // ========== Time formatting ==========
 
 function formatHourMinute(iso: string, timeZone: string): string {
@@ -198,8 +210,8 @@ export async function normalizeWeather(): Promise<WeatherResponse> {
     point,
   );
 
-  // 4. Normalize hourly (first 12 periods)
-  const hourlyPeriods: HourlyPeriod[] = hourly.properties.periods.slice(0, 12).map((p) => ({
+  // 4. Normalize hourly (first 12 periods, after dropping past hours)
+  const hourlyPeriods: HourlyPeriod[] = dropPastHours(hourly.properties.periods, now).slice(0, 12).map((p) => ({
     startTime: p.startTime,
     hourLabel: formatHourMinute(p.startTime, nws.timezone),
     tempF: p.temperature,
@@ -263,14 +275,15 @@ function normalizeCurrent(
     dewpoint:   computeTrend(toTimedValues((p) => p.dewpoint.value != null ? p.dewpoint.value * 9 / 5 + 32 : null), CONFIG.trendThresholds.dewpointF),
   };
 
-  // Precipitation outlook
+  // Precipitation outlook (filter past hours so "RAIN IN Xm" / "DRY THRU HH:MM" reflect the future)
+  const precipNow = new Date();
   const precipOutlook = buildPrecipOutlook({
-    hours: hourly.properties.periods.slice(0, 12).map((h) => ({
+    hours: dropPastHours(hourly.properties.periods, precipNow).slice(0, 12).map((h) => ({
       startTime: h.startTime,
       probabilityOfPrecipitation: h.probabilityOfPrecipitation?.value ?? null,
     })),
     currentTextDescription: obs.textDescription ?? '',
-    now: new Date(),
+    now: precipNow,
     timeZone,
   });
 
