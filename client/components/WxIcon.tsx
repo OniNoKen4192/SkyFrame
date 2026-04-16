@@ -14,7 +14,7 @@ export function WxIcon({ code, size = 64, className }: WxIconProps) {
       className={className}
       aria-hidden="true"
     >
-      <use href={`/icons.svg#wxicon-${code}`} />
+      <use href={`#wxicon-${code}`} />
     </svg>
   );
 }

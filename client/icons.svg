@@ -1,87 +1,204 @@
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none">
   <symbol id="wxicon-sun" viewBox="0 0 64 64">
-    <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="32" cy="32" r="11" />
-      <line x1="32" y1="6"  x2="32" y2="13" />
-      <line x1="32" y1="51" x2="32" y2="58" />
-      <line x1="6"  y1="32" x2="13" y2="32" />
-      <line x1="51" y1="32" x2="58" y2="32" />
-      <line x1="14" y1="14" x2="19" y2="19" />
-      <line x1="45" y1="45" x2="50" y2="50" />
-      <line x1="45" y1="14" x2="50" y2="19" />
-      <line x1="14" y1="50" x2="19" y2="45" />
+    <g stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter" fill="none">
+      <circle cx="24" cy="20" r="8"/>
+      <path d="M24 6V10"/>
+      <path d="M24 30V34"/>
+      <path d="M10 20H14"/>
+      <path d="M34 20H38"/>
+      <path d="M14.5 10.5L17.5 13.5"/>
+      <path d="M30.5 26.5L33.5 29.5"/>
+      <path d="M33.5 10.5L30.5 13.5"/>
+      <path d="M17.5 26.5L14.5 29.5"/>
     </g>
   </symbol>
+
   <symbol id="wxicon-moon" viewBox="0 0 64 64">
-    <path d="M 44 10 A 22 22 0 1 0 44 54 A 17 17 0 1 1 44 10 Z"
-      fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+    <g stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter" fill="none">
+      <path d="M34 10C27.2 11.7 22.5 17.7 22.5 25C22.5 33.1 29 39.7 37.2 39.7C38.8 39.7 40.3 39.5 41.7 39C38.9 42.4 34.7 44.5 30 44.5C20.9 44.5 13.5 37.1 13.5 28C13.5 19.7 19.6 12.7 27.7 11.1C29.8 10.7 31.9 10.6 34 10Z"/>
+    </g>
   </symbol>
+
   <symbol id="wxicon-cloud" viewBox="0 0 64 64">
-    <path d="M 14 46 L 14 38 Q 14 30 22 30 Q 24 22 32 22 Q 42 22 44 30 Q 52 30 52 38 L 52 46 Z"
-      fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+    <g stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter" fill="none">
+      <path d="M16 36H47.5C51.09 36 54 33.09 54 29.5C54 25.91 51.09 23 47.5 23C46.83 23 46.18 23.1 45.57 23.3C43.93 18.49 39.36 15 34 15C29.97 15 26.38 16.98 24.18 20.03C23.3 19.69 22.34 19.5 21.33 19.5C17.01 19.5 13.5 23.01 13.5 27.33C13.5 27.83 13.55 28.32 13.64 28.79C10.92 29.77 9 32.38 9 35.45C9 39.36 12.14 42.5 16 42.5"/>
+      <path d="M14 36L20 30H30L36 24H45"/>
+      <path d="M16 42.5H47"/>
+    </g>
   </symbol>
+
   <symbol id="wxicon-partly-day" viewBox="0 0 64 64">
-    <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="22" cy="20" r="7" />
-      <line x1="22" y1="6"  x2="22" y2="10" />
-      <line x1="8"  y1="20" x2="12" y2="20" />
-      <line x1="12" y1="10" x2="15" y2="13" />
-      <line x1="32" y1="10" x2="29" y2="13" />
+    <defs>
+      <mask id="sf-cloud-mask-day">
+        <rect width="64" height="64" fill="white"/>
+        <path d="M16 36H47.5C51.09 36 54 33.09 54 29.5C54 25.91 51.09 23 47.5 23C46.83 23 46.18 23.1 45.57 23.3C43.93 18.49 39.36 15 34 15C29.97 15 26.38 16.98 24.18 20.03C23.3 19.69 22.34 19.5 21.33 19.5C17.01 19.5 13.5 23.01 13.5 27.33C13.5 27.83 13.55 28.32 13.64 28.79C10.92 29.77 9 32.38 9 35.45C9 39.36 12.14 42.5 16 42.5" fill="black"/>
+      </mask>
+    </defs>
+    <g mask="url(#sf-cloud-mask-day)">
+      <g stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter" fill="none">
+        <circle cx="24" cy="20" r="8"/>
+        <path d="M24 8V12"/>
+        <path d="M24 28V32"/>
+        <path d="M12 20H16"/>
+        <path d="M32 20H36"/>
+        <path d="M15.5 11.5L18.5 14.5"/>
+        <path d="M29.5 25.5L32.5 28.5"/>
+        <path d="M32.5 11.5L29.5 14.5"/>
+        <path d="M18.5 25.5L15.5 28.5"/>
+        <animateTransform attributeName="transform" type="translate" values="0 0; 1.5 0; 0 0" keyTimes="0;0.5;1" calcMode="spline" keySplines="0.4 0 0.6 1; 0.4 0 0.6 1" dur="5.5s" repeatCount="indefinite"/>
+      </g>
     </g>
-    <path d="M 16 52 L 16 44 Q 16 36 24 36 Q 26 30 34 30 Q 42 30 44 36 Q 52 36 52 44 L 52 52 Z"
-      fill="#000d10" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+    <g stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter" fill="none">
+      <path d="M16 36H47.5C51.09 36 54 33.09 54 29.5C54 25.91 51.09 23 47.5 23C46.83 23 46.18 23.1 45.57 23.3C43.93 18.49 39.36 15 34 15C29.97 15 26.38 16.98 24.18 20.03C23.3 19.69 22.34 19.5 21.33 19.5C17.01 19.5 13.5 23.01 13.5 27.33C13.5 27.83 13.55 28.32 13.64 28.79C10.92 29.77 9 32.38 9 35.45C9 39.36 12.14 42.5 16 42.5"/>
+      <path d="M14 36L20 30H30L36 24H45"/>
+      <path d="M16 42.5H47"/>
+    </g>
   </symbol>
+
   <symbol id="wxicon-partly-night" viewBox="0 0 64 64">
-    <path d="M 30 8 A 16 16 0 1 0 30 40 A 12 12 0 1 1 30 8 Z"
-      fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
-    <path d="M 16 52 L 16 44 Q 16 36 24 36 Q 26 30 34 30 Q 42 30 44 36 Q 52 36 52 44 L 52 52 Z"
-      fill="#000d10" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+    <defs>
+      <mask id="sf-cloud-mask-night">
+        <rect width="64" height="64" fill="white"/>
+        <path d="M16 36H47.5C51.09 36 54 33.09 54 29.5C54 25.91 51.09 23 47.5 23C46.83 23 46.18 23.1 45.57 23.3C43.93 18.49 39.36 15 34 15C29.97 15 26.38 16.98 24.18 20.03C23.3 19.69 22.34 19.5 21.33 19.5C17.01 19.5 13.5 23.01 13.5 27.33C13.5 27.83 13.55 28.32 13.64 28.79C10.92 29.77 9 32.38 9 35.45C9 39.36 12.14 42.5 16 42.5" fill="black"/>
+      </mask>
+    </defs>
+    <g mask="url(#sf-cloud-mask-night)">
+      <g stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter" fill="none">
+        <path d="M34 10C27.2 11.7 22.5 17.7 22.5 25C22.5 33.1 29 39.7 37.2 39.7C38.8 39.7 40.3 39.5 41.7 39C38.9 42.4 34.7 44.5 30 44.5C20.9 44.5 13.5 37.1 13.5 28C13.5 19.7 19.6 12.7 27.7 11.1C29.8 10.7 31.9 10.6 34 10Z"/>
+        <animateTransform attributeName="transform" type="translate" values="0 0; 1.5 0; 0 0" keyTimes="0;0.5;1" calcMode="spline" keySplines="0.4 0 0.6 1; 0.4 0 0.6 1" dur="5.5s" repeatCount="indefinite"/>
+      </g>
+    </g>
+    <g stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter" fill="none">
+      <path d="M16 36H47.5C51.09 36 54 33.09 54 29.5C54 25.91 51.09 23 47.5 23C46.83 23 46.18 23.1 45.57 23.3C43.93 18.49 39.36 15 34 15C29.97 15 26.38 16.98 24.18 20.03C23.3 19.69 22.34 19.5 21.33 19.5C17.01 19.5 13.5 23.01 13.5 27.33C13.5 27.83 13.55 28.32 13.64 28.79C10.92 29.77 9 32.38 9 35.45C9 39.36 12.14 42.5 16 42.5"/>
+      <path d="M14 36L20 30H30L36 24H45"/>
+      <path d="M16 42.5H47"/>
+    </g>
   </symbol>
+
   <symbol id="wxicon-rain" viewBox="0 0 64 64">
-    <path d="M 12 36 L 12 28 Q 12 20 20 20 Q 22 12 30 12 Q 40 12 42 20 Q 50 20 50 28 L 50 36 Z"
-      fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
-    <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-      <line x1="18" y1="44" x2="14" y2="54" />
-      <line x1="30" y1="44" x2="26" y2="54" />
-      <line x1="42" y1="44" x2="38" y2="54" />
+    <g stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter" fill="none">
+      <path d="M16 36H47.5C51.09 36 54 33.09 54 29.5C54 25.91 51.09 23 47.5 23C46.83 23 46.18 23.1 45.57 23.3C43.93 18.49 39.36 15 34 15C29.97 15 26.38 16.98 24.18 20.03C23.3 19.69 22.34 19.5 21.33 19.5C17.01 19.5 13.5 23.01 13.5 27.33C13.5 27.83 13.55 28.32 13.64 28.79C10.92 29.77 9 32.38 9 35.45C9 39.36 12.14 42.5 16 42.5"/>
+      <path d="M14 36L20 30H30L36 24H45"/>
+      <path d="M16 42.5H47"/>
+      <path d="M18 46L16 50">
+        <animateTransform attributeName="transform" type="translate" values="0 0; 0 5" dur="1.8s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.15;0.75;1" dur="1.8s" repeatCount="indefinite"/>
+      </path>
+      <path d="M28 48L26 52">
+        <animateTransform attributeName="transform" type="translate" values="0 0; 0 5" dur="1.8s" begin="0.45s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.15;0.75;1" dur="1.8s" begin="0.45s" repeatCount="indefinite"/>
+      </path>
+      <path d="M38 46L36 50">
+        <animateTransform attributeName="transform" type="translate" values="0 0; 0 5" dur="1.8s" begin="0.9s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.15;0.75;1" dur="1.8s" begin="0.9s" repeatCount="indefinite"/>
+      </path>
+      <path d="M48 46L46 50">
+        <animateTransform attributeName="transform" type="translate" values="0 0; 0 5" dur="1.8s" begin="1.35s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.15;0.75;1" dur="1.8s" begin="1.35s" repeatCount="indefinite"/>
+      </path>
     </g>
   </symbol>
+
   <symbol id="wxicon-snow" viewBox="0 0 64 64">
-    <path d="M 12 36 L 12 28 Q 12 20 20 20 Q 22 12 30 12 Q 40 12 42 20 Q 50 20 50 28 L 50 36 Z"
-      fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
-    <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-      <g transform="translate(18,48)">
-        <line x1="-4" y1="0"  x2="4"  y2="0" />
-        <line x1="0"  y1="-4" x2="0"  y2="4" />
-        <line x1="-3" y1="-3" x2="3"  y2="3" />
-        <line x1="-3" y1="3"  x2="3"  y2="-3" />
+    <g stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter" fill="none">
+      <path d="M16 36H47.5C51.09 36 54 33.09 54 29.5C54 25.91 51.09 23 47.5 23C46.83 23 46.18 23.1 45.57 23.3C43.93 18.49 39.36 15 34 15C29.97 15 26.38 16.98 24.18 20.03C23.3 19.69 22.34 19.5 21.33 19.5C17.01 19.5 13.5 23.01 13.5 27.33C13.5 27.83 13.55 28.32 13.64 28.79C10.92 29.77 9 32.38 9 35.45C9 39.36 12.14 42.5 16 42.5"/>
+      <path d="M14 36L20 30H30L36 24H45"/>
+      <path d="M16 42.5H47"/>
+      <g>
+        <path d="M18 47V53">
+          <animateTransform attributeName="transform" type="translate" values="0 0; 1 6" dur="3.2s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.12;0.78;1" dur="3.2s" repeatCount="indefinite"/>
+        </path>
+        <path d="M15 50H21">
+          <animateTransform attributeName="transform" type="translate" values="0 0; 1 6" dur="3.2s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.12;0.78;1" dur="3.2s" repeatCount="indefinite"/>
+        </path>
+        <path d="M16 48L20 52">
+          <animateTransform attributeName="transform" type="translate" values="0 0; 1 6" dur="3.2s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.12;0.78;1" dur="3.2s" repeatCount="indefinite"/>
+        </path>
+        <path d="M20 48L16 52">
+          <animateTransform attributeName="transform" type="translate" values="0 0; 1 6" dur="3.2s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.12;0.78;1" dur="3.2s" repeatCount="indefinite"/>
+        </path>
       </g>
-      <g transform="translate(32,52)">
-        <line x1="-4" y1="0"  x2="4"  y2="0" />
-        <line x1="0"  y1="-4" x2="0"  y2="4" />
-        <line x1="-3" y1="-3" x2="3"  y2="3" />
-        <line x1="-3" y1="3"  x2="3"  y2="-3" />
+      <g>
+        <path d="M30 46V52">
+          <animateTransform attributeName="transform" type="translate" values="0 0; -1 6" dur="3.6s" begin="0.8s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.12;0.78;1" dur="3.6s" begin="0.8s" repeatCount="indefinite"/>
+        </path>
+        <path d="M27 49H33">
+          <animateTransform attributeName="transform" type="translate" values="0 0; -1 6" dur="3.6s" begin="0.8s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.12;0.78;1" dur="3.6s" begin="0.8s" repeatCount="indefinite"/>
+        </path>
+        <path d="M28 47L32 51">
+          <animateTransform attributeName="transform" type="translate" values="0 0; -1 6" dur="3.6s" begin="0.8s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.12;0.78;1" dur="3.6s" begin="0.8s" repeatCount="indefinite"/>
+        </path>
+        <path d="M32 47L28 51">
+          <animateTransform attributeName="transform" type="translate" values="0 0; -1 6" dur="3.6s" begin="0.8s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.12;0.78;1" dur="3.6s" begin="0.8s" repeatCount="indefinite"/>
+        </path>
       </g>
-      <g transform="translate(46,48)">
-        <line x1="-4" y1="0"  x2="4"  y2="0" />
-        <line x1="0"  y1="-4" x2="0"  y2="4" />
-        <line x1="-3" y1="-3" x2="3"  y2="3" />
-        <line x1="-3" y1="3"  x2="3"  y2="-3" />
+      <g>
+        <path d="M42 47V53">
+          <animateTransform attributeName="transform" type="translate" values="0 0; 1 6" dur="3.4s" begin="1.6s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.12;0.78;1" dur="3.4s" begin="1.6s" repeatCount="indefinite"/>
+        </path>
+        <path d="M39 50H45">
+          <animateTransform attributeName="transform" type="translate" values="0 0; 1 6" dur="3.4s" begin="1.6s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.12;0.78;1" dur="3.4s" begin="1.6s" repeatCount="indefinite"/>
+        </path>
+        <path d="M40 48L44 52">
+          <animateTransform attributeName="transform" type="translate" values="0 0; 1 6" dur="3.4s" begin="1.6s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.12;0.78;1" dur="3.4s" begin="1.6s" repeatCount="indefinite"/>
+        </path>
+        <path d="M44 48L40 52">
+          <animateTransform attributeName="transform" type="translate" values="0 0; 1 6" dur="3.4s" begin="1.6s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.12;0.78;1" dur="3.4s" begin="1.6s" repeatCount="indefinite"/>
+        </path>
       </g>
     </g>
   </symbol>
+
   <symbol id="wxicon-thunder" viewBox="0 0 64 64">
-    <path d="M 12 36 L 12 28 Q 12 20 20 20 Q 22 12 30 12 Q 40 12 42 20 Q 50 20 50 28 L 50 36 Z"
-      fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
-    <path d="M 34 38 L 24 50 L 31 50 L 25 60"
-      fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+    <g stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter" fill="none">
+      <path d="M16 36H47.5C51.09 36 54 33.09 54 29.5C54 25.91 51.09 23 47.5 23C46.83 23 46.18 23.1 45.57 23.3C43.93 18.49 39.36 15 34 15C29.97 15 26.38 16.98 24.18 20.03C23.3 19.69 22.34 19.5 21.33 19.5C17.01 19.5 13.5 23.01 13.5 27.33C13.5 27.83 13.55 28.32 13.64 28.79C10.92 29.77 9 32.38 9 35.45C9 39.36 12.14 42.5 16 42.5"/>
+      <path d="M14 36L20 30H30L36 24H45"/>
+      <path d="M16 42.5H47"/>
+      <path d="M18 46L16 50">
+        <animateTransform attributeName="transform" type="translate" values="0 0; 0 5" dur="1.8s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.15;0.75;1" dur="1.8s" repeatCount="indefinite"/>
+      </path>
+      <path d="M28 48L26 52">
+        <animateTransform attributeName="transform" type="translate" values="0 0; 0 5" dur="1.8s" begin="0.45s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.15;0.75;1" dur="1.8s" begin="0.45s" repeatCount="indefinite"/>
+      </path>
+      <path d="M46 46L44 50">
+        <animateTransform attributeName="transform" type="translate" values="0 0; 0 5" dur="1.8s" begin="0.9s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.15;0.75;1" dur="1.8s" begin="0.9s" repeatCount="indefinite"/>
+      </path>
+      <path d="M33 42L28 49H33L30 56L40 46H35L38 42H33Z"/>
+      <path d="M33 42L28 49H33L30 56L40 46H35L38 42H33Z" stroke="#B8FCFF" stroke-width="4" opacity="0">
+        <animate attributeName="opacity" values="0;0;0.95;0;1;0;0" keyTimes="0;0.82;0.84;0.86;0.88;0.9;1" dur="4.5s" repeatCount="indefinite"/>
+      </path>
+    </g>
   </symbol>
+
   <symbol id="wxicon-fog" viewBox="0 0 64 64">
-    <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M 10 20 Q 20 14 32 20 T 54 20" />
-      <path d="M 10 30 Q 20 24 32 30 T 54 30" />
-      <path d="M 10 40 Q 20 34 32 40 T 54 40" />
-      <path d="M 10 50 Q 20 44 32 50 T 54 50" />
+    <g stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter" fill="none">
+      <path d="M12 18H28L32 14H52">
+        <animateTransform attributeName="transform" type="translate" values="0 0; 2 0; 0 0" dur="4.8s" repeatCount="indefinite"/>
+      </path>
+      <path d="M8 28H24L28 24H48L52 20H56">
+        <animateTransform attributeName="transform" type="translate" values="0 0; -2 0; 0 0" dur="5.4s" begin="0.4s" repeatCount="indefinite"/>
+      </path>
+      <path d="M12 38H34L38 34H56">
+        <animateTransform attributeName="transform" type="translate" values="0 0; 2 0; 0 0" dur="5.1s" begin="0.8s" repeatCount="indefinite"/>
+      </path>
+      <path d="M8 48H20L24 44H44L48 40H56">
+        <animateTransform attributeName="transform" type="translate" values="0 0; -2 0; 0 0" dur="5.8s" begin="1.2s" repeatCount="indefinite"/>
+      </path>
     </g>
   </symbol>
 </svg>
