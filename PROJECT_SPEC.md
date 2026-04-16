@@ -3,10 +3,10 @@
 ## 1. Overview
 
 ### Project Name
-WxDeck
+SkyFrame
 
 ### One-Sentence Summary
-WxDeck is a local web app that provides fast, no-ad, low-friction weather information for ZIP code `53154`.
+SkyFrame is a local web app that provides fast, no-ad, low-friction weather information for ZIP code `53154`.
 
 ### Problem Statement
 Most weather websites are cluttered with ads, autoplay media, tracking, and unnecessary content. The primary user wants immediate access to accurate weather data in a clean local interface without the bloat of commercial weather sites.
@@ -17,8 +17,8 @@ Most weather websites are cluttered with ads, autoplay media, tracking, and unne
 - Use authoritative public weather data sources, ideally NOAA/NWS, with minimal processing overhead.
 
 ### Non-Goals
-- WxDeck v1 will not attempt to replicate the full feature set of commercial weather platforms.
-- WxDeck v1 will not include ads, analytics tracking, social features, account systems, or heavy personalization.
+- SkyFrame v1 will not attempt to replicate the full feature set of commercial weather platforms.
+- SkyFrame v1 will not include ads, analytics tracking, social features, account systems, or heavy personalization.
 
 ## 2. Users
 
@@ -142,7 +142,7 @@ Most weather websites are cluttered with ads, autoplay media, tracking, and unne
 ### Metrics
 - Time to useful weather view on local startup.
 - Successful forecast fetch rate.
-- Manual satisfaction metric: the user prefers WxDeck over existing weather sites for routine checks.
+- Manual satisfaction metric: the user prefers SkyFrame over existing weather sites for routine checks.
 
 ## 9. Delivery Plan
 

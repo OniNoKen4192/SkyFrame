@@ -1,4 +1,4 @@
-/* WxDeck HUD styles — assembled from docs/mockups/ (Task 6)
+/* SkyFrame HUD styles — assembled from docs/mockups/ (Task 6)
    Sources: current-conditions.html, hourly.html, outlook.html
    !important flags removed; error-dot variant added.
 */
@@ -79,6 +79,13 @@
 /* ============================================================
    SECTION LABEL (used in hourly + outlook views)
    ============================================================ */
+
+.hud-hourly-section,
+.hud-outlook-section {
+  margin-top: 40px;
+  padding-top: 24px;
+  border-top: 1px dashed rgba(0, 229, 209, 0.18);
+}
 
 .hud-section-label {
   display: flex;

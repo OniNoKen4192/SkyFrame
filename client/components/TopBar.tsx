@@ -40,7 +40,7 @@ export function TopBar() {
 
   return (
     <div className="hud-topbar">
-      <div className="loc">■ WXDECK &nbsp;·&nbsp; OAK CREEK 53154 &nbsp;·&nbsp; KMKE LINK</div>
+      <div className="loc">■ SKYFRAME &nbsp;·&nbsp; OAK CREEK 53154 &nbsp;·&nbsp; KMKE LINK</div>
       <div className="clock">
         <div className="clock-time">
           <span className="clock-digits">{digits}</span>

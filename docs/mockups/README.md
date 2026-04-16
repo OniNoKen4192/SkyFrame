@@ -1,6 +1,6 @@
-# WxDeck Mockups
+# SkyFrame Mockups
 
-Static HTML mockups for WxDeck v1. These are the *locked* visual designs for each view, produced during the design brainstorming session on 2026-04-15.
+Static HTML mockups for SkyFrame v1. These are the *locked* visual designs for each view, produced during the design brainstorming session on 2026-04-15.
 
 ## Files
 

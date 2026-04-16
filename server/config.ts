@@ -14,7 +14,7 @@ export const CONFIG = {
     gridY: 58,
     timezone: 'America/Chicago',
     forecastZone: 'WIZ066',
-    userAgent: 'WxDeck/0.1 (ken.culver@gmail.com)',
+    userAgent: 'SkyFrame/0.1 (ken.culver@gmail.com)',
     baseUrl: 'https://api.weather.gov',
   },
 

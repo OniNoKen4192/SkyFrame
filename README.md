@@ -1,8 +1,8 @@
-# WxDeck
+# SkyFrame
 
 Local ad-free weather dashboard for ZIP 53154 (Oak Creek, WI). Single-purpose utility that pulls directly from NOAA/NWS and renders the data as a cyan-on-black HUD-style dashboard in your browser.
 
-See [PROJECT_SPEC.md](PROJECT_SPEC.md) for product context, [WEATHER_PROVIDER_RESEARCH.md](WEATHER_PROVIDER_RESEARCH.md) for the NWS evaluation, and [docs/superpowers/specs/2026-04-15-wxdeck-design.md](docs/superpowers/specs/2026-04-15-wxdeck-design.md) for the implementation design.
+See [PROJECT_SPEC.md](PROJECT_SPEC.md) for product context, [WEATHER_PROVIDER_RESEARCH.md](WEATHER_PROVIDER_RESEARCH.md) for the NWS evaluation, and [docs/superpowers/specs/2026-04-15-skyframe-design.md](docs/superpowers/specs/2026-04-15-skyframe-design.md) for the implementation design.
 
 ## Setup
 
@@ -10,7 +10,7 @@ Requires Node.js 20+ and npm.
 
 ```bash
 git clone <repo>
-cd WxDeck
+cd SkyFrame
 npm install
 ```
 
@@ -53,4 +53,4 @@ npm run typecheck  # TypeScript check without building
 
 ## Why a backend at all?
 
-NWS requires a `User-Agent` header identifying your app and contact email. Browsers forbid `fetch()` from setting `User-Agent` (it's on the forbidden headers list), so a pure client-side WxDeck couldn't comply with NWS terms. The Fastify backend acts as a thin local proxy: browser calls `/api/weather`, the server calls NWS with the required headers, normalizes the response, and returns a single clean JSON shape.
+NWS requires a `User-Agent` header identifying your app and contact email. Browsers forbid `fetch()` from setting `User-Agent` (it's on the forbidden headers list), so a pure client-side SkyFrame couldn't comply with NWS terms. The Fastify backend acts as a thin local proxy: browser calls `/api/weather`, the server calls NWS with the required headers, normalizes the response, and returns a single clean JSON shape.

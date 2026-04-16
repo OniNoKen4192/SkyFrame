@@ -1,4 +1,4 @@
-# WxDeck
+# SkyFrame
 
 Local, ad-free weather dashboard for ZIP `53154`. Single user. Serves on localhost.
 
@@ -30,7 +30,7 @@ These were derived from live NOAA/NWS queries and confirmed by the user. They ar
   - Current conditions: `https://api.weather.gov/stations/{stationId}/observations/latest`
   - Alerts: `https://api.weather.gov/alerts/active?point=42.8939,-87.9261`
 - **Observation station:** primary `KMKE` (Milwaukee Mitchell Intl, ~7 km N — first-class ASOS, same side of Lake Michigan at similar distance from shore). Fallback `KRAC` (Racine Batten Intl, ~17 km S) when the latest KMKE observation is older than ~90 min or has null core fields.
-- **User-Agent** (required by NWS on every request): `WxDeck/0.1 (ken.culver@gmail.com)`
+- **User-Agent** (required by NWS on every request): `SkyFrame/0.1 (ken.culver@gmail.com)`
 
 ## Collaboration style
 

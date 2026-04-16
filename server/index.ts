@@ -26,7 +26,7 @@ async function main() {
   }
 
   await app.listen({ port: CONFIG.server.port, host: CONFIG.server.host });
-  app.log.info(`WxDeck listening on http://${CONFIG.server.host}:${CONFIG.server.port}`);
+  app.log.info(`SkyFrame listening on http://${CONFIG.server.host}:${CONFIG.server.port}`);
 }
 
 main().catch((err) => {
