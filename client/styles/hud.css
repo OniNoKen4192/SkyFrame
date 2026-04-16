@@ -3,6 +3,12 @@
    !important flags removed; error-dot variant added.
 */
 
+:root {
+  --accent: #00e5d1;
+  --accent-glow-strong: rgba(0, 229, 209, 0.9);
+  --accent-glow-soft:   rgba(0, 229, 209, 0.5);
+}
+
 /* ============================================================
    SCAFFOLD / CONTAINER
    ============================================================ */
@@ -16,7 +22,7 @@
   min-height: 560px;
   position: relative;
   overflow: hidden;
-  color: #00e5d1;
+  color: var(--accent);
 }
 .hud-showcase::before {
   content: '';
@@ -110,7 +116,7 @@
   padding: 0;
   margin: 0;
   font: inherit;
-  color: #00e5d1;
+  color: var(--accent);
   font-size: 10px;
   letter-spacing: 0.22em;
   cursor: pointer;
@@ -134,8 +140,8 @@
   font-size: 18px;
   font-weight: 500;
   letter-spacing: 0.08em;
-  color: #00e5d1;
-  text-shadow: 0 0 8px rgba(0,229,209,0.5);
+  color: var(--accent);
+  text-shadow: 0 0 8px var(--accent-glow-soft);
   font-variant-numeric: tabular-nums;
   line-height: 1;
 }
@@ -147,7 +153,7 @@
 }
 .hud-topbar .clock-date {
   font-size: 10px;
-  color: #00e5d1;
+  color: var(--accent);
   opacity: 0.55;
   letter-spacing: 0.2em;
   margin-top: 6px;
@@ -205,7 +211,7 @@
 .hud-readout .corner {
   position: absolute;
   width: 14px; height: 14px;
-  border: 2px solid #00e5d1;
+  border: 2px solid var(--accent);
 }
 .hud-readout .corner.tl { top: 0; left: 0;  border-right: 0; border-bottom: 0; }
 .hud-readout .corner.tr { top: 0; right: 0; border-left: 0;  border-bottom: 0; }
@@ -247,8 +253,8 @@
 }
 
 .hud-hero-icon {
-  color: #00e5d1;
-  filter: drop-shadow(0 0 8px rgba(0,229,209,0.5));
+  color: var(--accent);
+  filter: drop-shadow(0 0 8px var(--accent-glow-soft));
   flex-shrink: 0;
 }
 .hud-hero-icon svg {
@@ -311,9 +317,9 @@
 .hud-footer .dot {
   display: inline-block;
   width: 6px; height: 6px;
-  background: #00e5d1;
+  background: var(--accent);
   border-radius: 50%;
-  box-shadow: 0 0 6px rgba(0,229,209,0.9);
+  box-shadow: 0 0 6px var(--accent-glow-strong);
   margin-right: 8px;
   vertical-align: middle;
   animation: hudBlink 1.8s ease-in-out infinite;
@@ -351,14 +357,14 @@
 }
 .hud-palette .palette-item {
   text-align: center;
-  color: #00e5d1;
+  color: var(--accent);
 }
 .hud-palette .palette-item svg {
   width: 48px;
   height: 48px;
   display: block;
   margin: 0 auto 6px;
-  filter: drop-shadow(0 0 3px rgba(0,229,209,0.5));
+  filter: drop-shadow(0 0 3px var(--accent-glow-soft));
 }
 .hud-palette .palette-item .lbl {
   font-size: 8px;
@@ -387,18 +393,18 @@
 }
 .hl-line {
   fill: none;
-  stroke: #00e5d1;
+  stroke: var(--accent);
   stroke-width: 1.5;
   filter: drop-shadow(0 0 4px rgba(0,229,209,0.7));
 }
 .hl-point {
-  fill: #00e5d1;
+  fill: var(--accent);
   stroke: #000d10;
   stroke-width: 1.5;
-  filter: drop-shadow(0 0 3px rgba(0,229,209,0.9));
+  filter: drop-shadow(0 0 3px var(--accent-glow-strong));
 }
 .hl-temp-label {
-  fill: #00e5d1;
+  fill: var(--accent);
   opacity: 0.9;
   font-size: 11px;
   font-family: 'SF Mono','Consolas',monospace;
@@ -417,7 +423,7 @@
   margin: 0 0 12px;
 }
 .hourly-icons > .col {
-  color: #00e5d1;
+  color: var(--accent);
   opacity: 0.8;
   text-align: center;
   filter: drop-shadow(0 0 2px rgba(0,229,209,0.4));
@@ -446,7 +452,7 @@
 }
 .hourly-precip .bar {
   width: 14px;
-  background: #00e5d1;
+  background: var(--accent);
   box-shadow: 0 0 4px rgba(0,229,209,0.6);
 }
 .hourly-precip .bar.low  { opacity: 0.25; }
@@ -456,7 +462,7 @@
   position: absolute;
   top: -2px;
   font-size: 8px;
-  color: #00e5d1;
+  color: var(--accent);
   opacity: 0.75;
   letter-spacing: 0.05em;
   font-variant-numeric: tabular-nums;
@@ -467,7 +473,7 @@
   grid-template-columns: repeat(12, 1fr);
   font-size: 9px;
   letter-spacing: 0.1em;
-  color: #00e5d1;
+  color: var(--accent);
   opacity: 0.55;
   font-variant-numeric: tabular-nums;
   padding-top: 10px;
@@ -500,9 +506,9 @@
 .outlook .date .dt  { opacity: 0.55; }
 
 .outlook .icon {
-  color: #00e5d1;
+  color: var(--accent);
   opacity: 0.85;
-  filter: drop-shadow(0 0 3px rgba(0,229,209,0.5));
+  filter: drop-shadow(0 0 3px var(--accent-glow-soft));
 }
 .outlook .icon svg {
   width: 30px;
@@ -531,7 +537,7 @@
 .outlook .range .seg {
   position: absolute;
   top: 2px; bottom: 2px;
-  background: #00e5d1;
+  background: var(--accent);
   opacity: 1;
   box-shadow:
     0 0 6px rgba(0,229,209,0.85),
@@ -541,8 +547,8 @@
   position: absolute;
   top: -2px; bottom: -2px;
   width: 1px;
-  background: #00e5d1;
-  box-shadow: 0 0 3px rgba(0,229,209,0.9);
+  background: var(--accent);
+  box-shadow: 0 0 3px var(--accent-glow-strong);
 }
 
 .outlook .lh {
