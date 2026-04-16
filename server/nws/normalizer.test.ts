@@ -77,6 +77,7 @@ describe('normalizeWeather', () => {
       if (path.includes('/forecast')) return FIXTURE_FORECAST as never;
       if (path.includes('/observations/latest')) return FIXTURE_OBS_LATEST as never;
       if (path.includes('/observations')) return FIXTURE_OBS_HISTORY as never;
+      if (path.includes('/alerts/active')) return { features: [] } as never;
       throw new Error('Unexpected path: ' + path);
     });
   });
@@ -294,7 +295,15 @@ describe('normalizeWeather', () => {
       ],
     };
 
+    // Pin time to 5 min after FIXTURE_OBS_LATEST so KMKE is fresh (not stale).
+    // Without this, real wall-clock time causes the 90-min staleness check to
+    // fire, making fellBack=true and metaError='station_fallback' instead of
+    // the alerts-specific value we want to assert.
+    const ALERTS_NOW = '2026-04-15T19:30:00+00:00';
+
     function mockWithAlerts(alertsResponse: unknown) {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date(ALERTS_NOW));
       vi.spyOn(client, 'fetchNws').mockImplementation(async (path: string) => {
         if (path.includes('/points/')) return FIXTURE_POINT as never;
         if (path.includes('/forecast/hourly')) return FIXTURE_HOURLY as never;
@@ -309,12 +318,14 @@ describe('normalizeWeather', () => {
     it('exposes alerts sorted by tierRank (highest severity first)', async () => {
       mockWithAlerts(FIXTURE_ALERTS_TWO_TIERS);
       const result = await normalizeWeather();
+      vi.useRealTimers();
 
       expect(result.alerts).toHaveLength(2);
       expect(result.alerts[0]!.event).toBe('Tornado Warning');
       expect(result.alerts[0]!.tier).toBe('tornado-warning');
       expect(result.alerts[1]!.event).toBe('Tornado Watch');
       expect(result.alerts[1]!.tier).toBe('watch');
+      expect(result.meta.error).toBeUndefined();
     });
 
     it('drops alerts whose event name is not in the v1.1 tier mapping', async () => {
@@ -326,6 +337,7 @@ describe('normalizeWeather', () => {
         ],
       });
       const result = await normalizeWeather();
+      vi.useRealTimers();
 
       expect(result.alerts).toHaveLength(1);
       expect(result.alerts[0]!.event).toBe('Tornado Warning');
@@ -334,10 +346,14 @@ describe('normalizeWeather', () => {
     it('returns empty alerts array when NWS alerts response is empty', async () => {
       mockWithAlerts({ features: [] });
       const result = await normalizeWeather();
+      vi.useRealTimers();
       expect(result.alerts).toEqual([]);
+      expect(result.meta.error).toBeUndefined();
     });
 
     it('returns empty alerts array when NWS alerts fetch fails (non-fatal)', async () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date(ALERTS_NOW));
       vi.spyOn(client, 'fetchNws').mockImplementation(async (path: string) => {
         if (path.includes('/points/')) return FIXTURE_POINT as never;
         if (path.includes('/forecast/hourly')) return FIXTURE_HOURLY as never;
@@ -349,10 +365,12 @@ describe('normalizeWeather', () => {
       });
 
       const result = await normalizeWeather();
+      vi.useRealTimers();
       expect(result.alerts).toEqual([]);
       // Other parts of the response are still populated
       expect(result.current).toBeDefined();
       expect(result.hourly).toBeDefined();
+      expect(result.meta.error).toBe('partial');
     });
 
     it('populates alert fields from NWS properties', async () => {
@@ -373,6 +391,7 @@ describe('normalizeWeather', () => {
         ],
       });
       const result = await normalizeWeather();
+      vi.useRealTimers();
       const a = result.alerts[0]!;
       expect(a.id).toBe('urn:oid:nws.alerts.specific');
       expect(a.event).toBe('Tornado Warning');

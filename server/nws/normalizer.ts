@@ -197,15 +197,21 @@ async function fetchObservationsWithFallback(now: Date): Promise<ObsFetchResult>
   return { obsLatest: secondaryLatest, obsHistory: secondaryHistory, stationId: stations.fallback, fellBack: true };
 }
 
-async function fetchAlertsSafe(): Promise<NwsAlertsResponse> {
+interface AlertsFetchResult {
+  data: NwsAlertsResponse;
+  failed: boolean;
+}
+
+async function fetchAlertsSafe(): Promise<AlertsFetchResult> {
   const { location } = CONFIG;
   try {
-    return await fetchNws<NwsAlertsResponse>(
+    const data = await fetchNws<NwsAlertsResponse>(
       `/alerts/active?point=${location.lat.toFixed(4)},${location.lon.toFixed(4)}`,
     );
-  } catch {
-    // Alerts are non-essential — a fetch failure must not break /api/weather.
-    return { features: [] };
+    return { data, failed: false };
+  } catch (err) {
+    console.warn('NWS alerts fetch failed (non-fatal):', err);
+    return { data: { features: [] }, failed: true };
   }
 }
 
@@ -250,14 +256,15 @@ export async function normalizeWeather(): Promise<WeatherResponse> {
 
   // 2. Fetch forecast, hourly forecast, observations (with fallback), and alerts in parallel
   const now = new Date();
-  const [forecast, hourly, obsResult, alertsRaw] = await Promise.all([
+  const [forecast, hourly, obsResult, alertsResult] = await Promise.all([
     fetchNws<NwsForecastResponse>(`/gridpoints/${nws.forecastOffice}/${nws.gridX},${nws.gridY}/forecast`),
     fetchNws<NwsHourlyResponse>(`/gridpoints/${nws.forecastOffice}/${nws.gridX},${nws.gridY}/forecast/hourly`),
     fetchObservationsWithFallback(now),
     fetchAlertsSafe(),
   ]);
   const { obsLatest, obsHistory, stationId: activeStationId, fellBack } = obsResult;
-  const alerts = normalizeAlerts(alertsRaw);
+  const alerts = normalizeAlerts(alertsResult.data);
+  const alertsFailed = alertsResult.failed;
 
   // 3. Normalize current conditions
   const current = normalizeCurrent(
@@ -288,12 +295,17 @@ export async function normalizeWeather(): Promise<WeatherResponse> {
   const dailyPeriods = collapseDailyPeriods(forecast.properties.periods, nws.timezone);
 
   // 6. Assemble meta
+  const metaError =
+    fellBack ? 'station_fallback' as const :
+    alertsFailed ? 'partial' as const :
+    undefined;
+
   const meta = {
     fetchedAt: now.toISOString(),
     nextRefreshAt: new Date(now.getTime() + CONFIG.cache.observationMs).toISOString(),
     cacheHit: false,
     stationId: activeStationId,
-    ...(fellBack ? { error: 'station_fallback' as const } : {}),
+    ...(metaError ? { error: metaError } : {}),
   };
 
   return { current, hourly: hourlyPeriods, daily: dailyPeriods, alerts, meta };
