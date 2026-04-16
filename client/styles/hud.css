@@ -578,3 +578,83 @@
   display: flex;
   justify-content: space-between;
 }
+
+/* ============================================================
+   ALERT BANNER (v1.1 Step 3)
+   ============================================================ */
+
+.alert-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  margin: 0 0 14px;
+  border-bottom: 1px dashed rgba(var(--accent-rgb), 0.18);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  font-weight: 700;
+}
+
+.alert-banner-glyph {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.alert-banner-headline {
+  flex: 1;
+}
+
+/* Per-tier banner colors — text + glyph color matches the tier base */
+.alert-banner[data-tier="tornado-emergency"]         { color: #9400D3; text-shadow: 0 0 8px rgba(148, 0, 211, 0.7); }
+.alert-banner[data-tier="tornado-warning"]           { color: #ff4444; text-shadow: 0 0 8px rgba(255, 68, 68, 0.7); }
+.alert-banner[data-tier="severe-warning"]            { color: #ff8800; text-shadow: 0 0 8px rgba(255, 136, 0, 0.7); }
+.alert-banner[data-tier="blizzard"]                  { color: #ffffff; text-shadow: 0 0 8px rgba(255, 255, 255, 0.7); }
+.alert-banner[data-tier="winter-storm"]              { color: #4488ff; text-shadow: 0 0 8px rgba(68, 136, 255, 0.7); }
+.alert-banner[data-tier="flood"]                     { color: #22cc66; text-shadow: 0 0 8px rgba(34, 204, 102, 0.7); }
+.alert-banner[data-tier="heat"]                      { color: #ff5533; text-shadow: 0 0 8px rgba(255, 85, 51, 0.7); }
+.alert-banner[data-tier="special-weather-statement"] { color: #ee82ee; text-shadow: 0 0 8px rgba(238, 130, 238, 0.7); }
+.alert-banner[data-tier="watch"]                     { color: #ffdd33; text-shadow: 0 0 8px rgba(255, 221, 51, 0.7); }
+
+/* ============================================================
+   UI ACCENT COLOR OVERRIDE (v1.1 Step 4)
+   When the root .hud-showcase has data-alert-tier set, --accent and
+   --accent-rgb flip to the tier color. Every CSS rule that uses
+   var(--accent) or rgba(var(--accent-rgb), X) repaints automatically.
+   ============================================================ */
+
+.hud-showcase[data-alert-tier="tornado-emergency"] {
+  --accent: #9400D3;
+  --accent-rgb: 148, 0, 211;
+}
+.hud-showcase[data-alert-tier="tornado-warning"] {
+  --accent: #ff4444;
+  --accent-rgb: 255, 68, 68;
+}
+.hud-showcase[data-alert-tier="severe-warning"] {
+  --accent: #ff8800;
+  --accent-rgb: 255, 136, 0;
+}
+.hud-showcase[data-alert-tier="blizzard"] {
+  --accent: #ffffff;
+  --accent-rgb: 255, 255, 255;
+}
+.hud-showcase[data-alert-tier="winter-storm"] {
+  --accent: #4488ff;
+  --accent-rgb: 68, 136, 255;
+}
+.hud-showcase[data-alert-tier="flood"] {
+  --accent: #22cc66;
+  --accent-rgb: 34, 204, 102;
+}
+.hud-showcase[data-alert-tier="heat"] {
+  --accent: #ff5533;
+  --accent-rgb: 255, 85, 51;
+}
+.hud-showcase[data-alert-tier="special-weather-statement"] {
+  --accent: #ee82ee;
+  --accent-rgb: 238, 130, 238;
+}
+.hud-showcase[data-alert-tier="watch"] {
+  --accent: #ffdd33;
+  --accent-rgb: 255, 221, 51;
+}

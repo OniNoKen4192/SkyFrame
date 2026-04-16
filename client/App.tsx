@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { WeatherResponse } from '../shared/types';
+import { AlertBanner } from './components/AlertBanner';
 import { TopBar } from './components/TopBar';
 import { Footer } from './components/Footer';
 import { CurrentPanel } from './components/CurrentPanel';
@@ -92,8 +93,12 @@ export default function App() {
     }
   };
 
+  const alerts = data?.alerts ?? [];
+  const primaryTier = alerts[0]?.tier;
+
   return (
-    <div className="hud-showcase">
+    <div className="hud-showcase" {...(primaryTier ? { 'data-alert-tier': primaryTier } : {})}>
+      {alerts.length > 0 && <AlertBanner alerts={alerts} />}
       <TopBar
         stationId={data?.meta?.stationId ?? null}
         error={error}
