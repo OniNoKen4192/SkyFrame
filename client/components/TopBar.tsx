@@ -63,7 +63,7 @@ export function TopBar({ stationId, error, locationName, activeView, onViewChang
     <div className="hud-topbar">
       <div className="hud-topbar-left">
         <div className={locClass}>
-          ■ SKYFRAME &nbsp;·&nbsp;
+          <span className="loc-brand">■ SKYFRAME\\</span> &nbsp;·&nbsp;
           <span className="loc-link" onClick={onLocationClick} role="button" tabIndex={0}>
             {locationName || 'SET LOCATION'} ✎
           </span>

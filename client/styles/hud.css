@@ -55,8 +55,12 @@
 .hud-topbar .loc {
   font-size: 10px;
   letter-spacing: 0.22em;
-  opacity: 0.6;
+  color: rgba(var(--accent-rgb), 0.6);
   padding-top: 6px;
+}
+.hud-topbar .loc .loc-brand {
+  color: var(--accent);
+  text-shadow: 0 0 8px var(--accent-glow-soft);
 }
 .hud-topbar .loc.loc-offline {
   opacity: 1;
@@ -825,14 +829,26 @@
 }
 
 .setup-modal {
+  position: relative;
   width: 420px;
   max-width: 90vw;
   padding: 32px;
-  border: 1px solid rgba(var(--accent-rgb), 0.25);
   background: #000d10;
   font-size: 11px;
   letter-spacing: 0.18em;
 }
+
+.setup-modal .corner {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--accent);
+  filter: drop-shadow(0 0 4px var(--accent-glow-soft));
+}
+.setup-modal .corner.tl { top: 0; left: 0;  border-right: 0; border-bottom: 0; }
+.setup-modal .corner.tr { top: 0; right: 0; border-left: 0;  border-bottom: 0; }
+.setup-modal .corner.bl { bottom: 0; left: 0;  border-right: 0; border-top: 0; }
+.setup-modal .corner.br { bottom: 0; right: 0; border-left: 0;  border-top: 0; }
 
 .setup-title {
   font-size: 13px;

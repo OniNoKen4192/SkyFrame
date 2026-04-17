@@ -38,6 +38,10 @@ export function LocationSetup({ onComplete, onCancel }: LocationSetupProps) {
   return (
     <div className="setup-overlay">
       <div className="setup-modal">
+        <span className="corner tl"></span>
+        <span className="corner tr"></span>
+        <span className="corner bl"></span>
+        <span className="corner br"></span>
         <div className="setup-title">■ SKYFRAME SETUP</div>
 
         <label className="setup-label">
