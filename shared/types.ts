@@ -26,10 +26,10 @@ export interface CurrentConditions {
   conditionText: string;
   iconCode: IconCode;
   precipOutlook: string;
-  humidityPct: number;
-  pressureInHg: number;
-  visibilityMi: number;
-  dewpointF: number;
+  humidityPct: number | null;
+  pressureInHg: number | null;
+  visibilityMi: number | null;
+  dewpointF: number | null;
   wind: Wind;
   trends: {
     temp: Trend;

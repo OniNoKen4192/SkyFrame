@@ -17,11 +17,11 @@ const cToF = (c: number | null | undefined): number =>
 const kmhToMph = (kmh: number | null | undefined): number =>
   kmh == null ? NaN : Math.round(kmh * 0.6213711922);
 
-const paToInHg = (pa: number | null | undefined): number =>
-  pa == null ? NaN : Math.round(pa * 0.000295299830714 * 100) / 100;
+const paToInHg = (pa: number | null | undefined): number | null =>
+  pa == null ? null : Math.round(pa * 0.000295299830714 * 100) / 100;
 
-const mToMi = (m: number | null | undefined): number =>
-  m == null ? NaN : Math.round(m * 0.0006213711922);
+const mToMi = (m: number | null | undefined): number | null =>
+  m == null ? null : Math.round(m * 0.0006213711922);
 
 const degToCardinal = (deg: number | null | undefined): string => {
   if (deg == null) return '';
@@ -325,7 +325,7 @@ function normalizeCurrent(
   point: NwsPointResponse,
 ): CurrentConditions {
   const tempF = cToF(obs.temperature.value);
-  const dewpointF = cToF(obs.dewpoint.value);
+  const dewpointF = obs.dewpoint.value != null ? cToF(obs.dewpoint.value) : null;
   const feelsLikeF = obs.heatIndex.value != null
     ? cToF(obs.heatIndex.value)
     : obs.windChill.value != null
@@ -376,7 +376,7 @@ function normalizeCurrent(
     conditionText: (obs.textDescription ?? '').toUpperCase(),
     iconCode: mapNwsIcon(obs.icon),
     precipOutlook,
-    humidityPct: Math.round(obs.relativeHumidity.value ?? 0),
+    humidityPct: obs.relativeHumidity.value != null ? Math.round(obs.relativeHumidity.value) : null,
     pressureInHg: paToInHg(obs.barometricPressure.value),
     visibilityMi: mToMi(obs.visibility.value),
     dewpointF,

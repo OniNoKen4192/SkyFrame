@@ -62,10 +62,10 @@ export function CurrentPanel({ current }: CurrentPanelProps) {
 
       <div className="bars">
         <BarRow label="WIND" value={`${current.wind.speedMph} ${current.wind.cardinal}`} fill={fillPercent('wind', current.wind.speedMph)} trend={current.trends.wind} />
-        <BarRow label="HUM"  value={`${current.humidityPct} %`} fill={fillPercent('humidity', current.humidityPct)} trend={current.trends.humidity} />
-        <BarRow label="PRES" value={`${current.pressureInHg.toFixed(2)} "`} fill={fillPercent('pressure', current.pressureInHg)} trend={current.trends.pressure} />
-        <BarRow label="VIS"  value={`${current.visibilityMi} MI`} fill={fillPercent('visibility', current.visibilityMi)} trend={current.trends.visibility} />
-        <BarRow label="DEW"  value={`${Math.round(current.dewpointF)} °F`} fill={fillPercent('dewpoint', current.dewpointF)} trend={current.trends.dewpoint} />
+        <BarRow label="HUM"  value={current.humidityPct != null ? `${current.humidityPct} %` : '--'} fill={fillPercent('humidity', current.humidityPct ?? 0)} trend={current.trends.humidity} />
+        <BarRow label="PRES" value={current.pressureInHg != null ? `${current.pressureInHg.toFixed(2)} "` : '--'} fill={fillPercent('pressure', current.pressureInHg ?? 0)} trend={current.trends.pressure} />
+        <BarRow label="VIS"  value={current.visibilityMi != null ? `${current.visibilityMi} MI` : '--'} fill={fillPercent('visibility', current.visibilityMi ?? 0)} trend={current.trends.visibility} />
+        <BarRow label="DEW"  value={current.dewpointF != null ? `${Math.round(current.dewpointF)} °F` : '--'} fill={fillPercent('dewpoint', current.dewpointF ?? 0)} trend={current.trends.dewpoint} />
       </div>
     </>
   );
