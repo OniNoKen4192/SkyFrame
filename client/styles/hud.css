@@ -763,9 +763,14 @@
   color: #ffdd33;
   text-shadow: 0 0 8px rgba(255, 221, 51, 0.7);
 }
-/* Watch stripes use solid currentColor base + animated overlay like all other tiers.
-   A previous version layered a static gradient here too, but the two stripe patterns
-   created a blurry moiré effect in motion. */
+/* Watch needs heavier dark bands — yellow is too bright for the default 0.35 overlay
+   to create visible stripe contrast. Keep the base bright, darken the overlay. */
+.alert-banner[data-tier="watch"] .alert-banner-stripes-left::before {
+  background: repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(0,0,0,0.55) 5px, rgba(0,0,0,0.55) 10px);
+}
+.alert-banner[data-tier="watch"] .alert-banner-stripes-right::before {
+  background: repeating-linear-gradient(-45deg, transparent, transparent 5px, rgba(0,0,0,0.55) 5px, rgba(0,0,0,0.55) 10px);
+}
 
 /* ============================================================
    UI ACCENT COLOR OVERRIDE (v1.1 Step 4)
