@@ -1,6 +1,6 @@
 # SkyFrame — Project Status
 
-**Last updated:** 2026-04-16
+**Last updated:** 2026-04-17
 
 ## What is SkyFrame
 
@@ -77,13 +77,13 @@ shared/
 - **Step 2** ✅ Tabbed view switcher (CURRENT | HOURLY | OUTLOOK | ALL)
 - **Steps 3+4** ✅ NWS alerts + UI color override (9-tier system, hazard-stripe banner, expand/collapse, dismissal)
 - **Step 5** — Settings gear (°F/°C toggle, color picker) — pending
-- **Step 6** — Location change — in progress (env-var config, then UI later)
+- **Step 6** ✅ Location setup — first-run modal (ZIP or lat/lon), NWS auto-resolve (office, grid, timezone, stations), persistent skyframe.config.json, re-configurable via clickable TopBar location
 - **Bug fixes:** hourly past-hour filtering, icon occlusion, range bar glow, precip icon threshold, overnight orphan dedup, stripe rendering
 
 ## What's pending
 
 ### v1.1 remaining
-- **Step 5 — Settings gear:** °F/°C toggle + curated color picker. Per spec: `docs/superpowers/specs/2026-04-15-v1.1-roadmap-design.md`
+- **Step 5 — Settings gear:** °F/°C toggle + curated color picker (no alert-color overlap). Per spec: `docs/superpowers/specs/2026-04-15-v1.1-roadmap-design.md`. This is the last v1.1 item.
 
 ### v1.2 candidates
 - See `docs/userInput/v1.2 ideas.txt`
