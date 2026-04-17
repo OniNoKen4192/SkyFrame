@@ -67,7 +67,7 @@ export function LocationSetup({ onComplete, onCancel }: LocationSetupProps) {
             onChange={(e) => setEmail(e.target.value)}
           />
           <span className="setup-hint">
-            Required by NWS for API access. Stored locally only — never sent to any server except weather.gov.
+            Required by NWS for API access. Sent only to weather.gov — never shared with other services.
           </span>
         </label>
 

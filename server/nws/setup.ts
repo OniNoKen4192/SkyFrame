@@ -50,14 +50,20 @@ interface NwsPointProps {
   };
 }
 
+export const GEOCODER_USER_AGENT = 'SkyFrame/0.1';
+
+export function buildNwsUserAgent(email: string): string {
+  return `SkyFrame/0.1 (${email})`;
+}
+
 export async function resolveSetup(input: SetupInput): Promise<SkyFrameLocationConfig> {
   const { location, email } = input;
-  const userAgent = `SkyFrame/0.1 (${email})`;
+  const nwsUserAgent = buildNwsUserAgent(email);
 
   // 1. Parse input → lat/lon
   let coords: ResolvedLocation;
   if (ZIP_RE.test(location.trim())) {
-    coords = await geocodeZip(location.trim(), userAgent);
+    coords = await geocodeZip(location.trim(), GEOCODER_USER_AGENT);
   } else {
     const parsed = parseLatLon(location);
     if (!parsed) throw new Error('Enter a 5-digit ZIP code or lat,lon coordinates.');
@@ -66,7 +72,7 @@ export async function resolveSetup(input: SetupInput): Promise<SkyFrameLocationC
 
   // 2. Call NWS /points to get grid metadata
   const pointsUrl = `${NWS_BASE}/points/${coords.lat.toFixed(4)},${coords.lon.toFixed(4)}`;
-  const pointsRes = await fetch(pointsUrl, { headers: { 'User-Agent': userAgent } });
+  const pointsRes = await fetch(pointsUrl, { headers: { 'User-Agent': nwsUserAgent } });
   if (!pointsRes.ok) throw new Error(`NWS /points returned ${pointsRes.status}. Check your coordinates.`);
   const pointsData = await pointsRes.json() as { properties: NwsPointProps };
   const props = pointsData.properties;
@@ -77,7 +83,7 @@ export async function resolveSetup(input: SetupInput): Promise<SkyFrameLocationC
 
   // 4. Get nearby observation stations
   const stationsRes = await fetch(props.observationStations, {
-    headers: { 'User-Agent': userAgent },
+    headers: { 'User-Agent': nwsUserAgent },
   });
   if (!stationsRes.ok) throw new Error(`NWS /stations returned ${stationsRes.status}`);
   const stationsData = await stationsRes.json() as {
