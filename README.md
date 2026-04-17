@@ -2,7 +2,7 @@
 
 Local, ad-free weather dashboard powered by NOAA/NWS. Runs on your own computer, works for any US location, and renders a cyan-on-black HUD-style display in your browser. No API keys, no accounts, no tracking.
 
-![SkyFrame dashboard](docs/screenshot.png)
+![SkyFrame dashboard](docs/Screenshot.png)
 
 ## Features
 

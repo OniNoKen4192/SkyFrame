@@ -39,7 +39,8 @@ yarn-error.log*
 # Superpowers brainstorming artifacts (mockups, session state)
 .superpowers/
 
-# Local-only scratch (personal notes, icon experiments)
+# Local-only scratch (personal notes, icon experiments, tickets)
 docs/userInput/
 icons/
+Tickets/
 .env-bak
