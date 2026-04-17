@@ -55,9 +55,10 @@ export function TopBar({ stationId, error, locationName, activeView, onViewChang
   const tz = t.timeZoneName ?? '';
   const dateStr = `${d.weekday?.toUpperCase() ?? ''} · ${d.month?.toUpperCase() ?? ''} ${d.day ?? ''} · ${d.year ?? ''}`;
 
-  const linkText = error ? 'LINK.OFFLINE' : `LINK.${stationId ?? 'KMKE'}`;
-  const linkClass = error ? 'link link-offline' : 'link';
-  const locClass = error ? 'loc loc-offline' : 'loc';
+  const linkText = error || !stationId ? 'LINK.OFFLINE' : `LINK.${stationId}`;
+  const offline = error || !stationId;
+  const linkClass = offline ? 'link link-offline' : 'link';
+  const locClass = offline ? 'loc loc-offline' : 'loc';
 
   return (
     <div className="hud-topbar">
