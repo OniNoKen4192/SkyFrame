@@ -31,6 +31,7 @@ const FIXTURE_RESPONSE = {
     nextRefreshAt: '2026-04-15T19:26:30Z',
     cacheHit: false,
     stationId: 'KMKE',
+    locationName: 'TEST LOCATION',
   },
 };
 

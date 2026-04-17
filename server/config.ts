@@ -34,6 +34,7 @@ export const CONFIG = {
   location: {
     lat: requireEnvNum('SKYFRAME_LAT'),
     lon: requireEnvNum('SKYFRAME_LON'),
+    name: process.env.SKYFRAME_LOCATION_NAME || 'SKYFRAME',
   },
 
   nws: {

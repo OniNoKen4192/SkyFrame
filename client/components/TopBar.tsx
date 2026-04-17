@@ -27,6 +27,7 @@ function partsToMap(parts: Intl.DateTimeFormatPart[]): Record<string, string> {
 interface TopBarProps {
   stationId: string | null;
   error: string | null;
+  locationName: string;
   activeView: ViewKey;
   onViewChange: (view: ViewKey) => void;
 }
@@ -38,7 +39,7 @@ const TABS: Array<{ key: ViewKey; label: string }> = [
   { key: 'all',     label: 'ALL' },
 ];
 
-export function TopBar({ stationId, error, activeView, onViewChange }: TopBarProps) {
+export function TopBar({ stationId, error, locationName, activeView, onViewChange }: TopBarProps) {
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
@@ -61,7 +62,7 @@ export function TopBar({ stationId, error, activeView, onViewChange }: TopBarPro
     <div className="hud-topbar">
       <div className="hud-topbar-left">
         <div className={locClass}>
-          ■ SKYFRAME &nbsp;·&nbsp;
+          ■ SKYFRAME &nbsp;·&nbsp; {locationName} &nbsp;·&nbsp;
           <span className={linkClass}>{linkText}</span>
         </div>
         <nav className="tabs" aria-label="View selector">

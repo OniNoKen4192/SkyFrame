@@ -173,6 +173,7 @@ export default function App() {
       <TopBar
         stationId={data?.meta?.stationId ?? null}
         error={error}
+        locationName={data?.meta?.locationName ?? 'SKYFRAME'}
         activeView={activeView}
         onViewChange={setActiveView}
       />

@@ -69,6 +69,7 @@ export interface WeatherMeta {
   nextRefreshAt: string;
   cacheHit: boolean;
   stationId: string;
+  locationName: string;
   error?: 'rate_limited' | 'upstream_malformed' | 'station_fallback' | 'partial';
 }
 

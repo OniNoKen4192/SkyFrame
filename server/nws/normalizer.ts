@@ -309,6 +309,7 @@ export async function normalizeWeather(): Promise<WeatherResponse> {
     nextRefreshAt: new Date(now.getTime() + CONFIG.cache.observationMs).toISOString(),
     cacheHit: false,
     stationId: activeStationId,
+    locationName: CONFIG.location.name,
     ...(metaError ? { error: metaError } : {}),
   };
 
