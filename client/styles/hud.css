@@ -227,7 +227,7 @@
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
-.hud-readout .temp .unit { font-size: 24px; opacity: 0.7; }
+.hud-readout .temp .unit { font-size: 24px; opacity: 0.7; vertical-align: super; }
 .hud-readout .temp .feel { font-size: 18px; opacity: 0.5; margin-left: 10px; }
 .hud-readout .temp .trend {
   font-size: 14px;
