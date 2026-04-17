@@ -1,150 +1,110 @@
 # SkyFrame
 
-Local ad-free weather dashboard for ZIP {ZIP} ({CITY, STATE}). Single-purpose utility that pulls directly from NOAA/NWS and renders the data as a cyan-on-black HUD-style dashboard in your browser.
+Local, ad-free weather dashboard powered by NOAA/NWS. Runs on your own computer, works for any US location, and renders a cyan-on-black HUD-style display in your browser. No API keys, no accounts, no tracking.
 
 ![SkyFrame dashboard](docs/screenshot.png)
 
-See [PROJECT_SPEC.md](PROJECT_SPEC.md) for product context, [WEATHER_PROVIDER_RESEARCH.md](WEATHER_PROVIDER_RESEARCH.md) for the NWS evaluation, and [docs/superpowers/specs/2026-04-15-skyframe-design.md](docs/superpowers/specs/2026-04-15-skyframe-design.md) for the implementation design.
+## Features
 
-## What this is (and isn't)
+- **Current conditions** — temperature, wind, humidity, pressure, visibility, dewpoint with trend arrows
+- **Hourly forecast** — scrollable 24-hour strip
+- **7-day outlook** — daily highs/lows with condition icons
+- **Weather alerts** — color-coded banners for active NWS alerts in your area
+- **First-run setup** — enter a city/ZIP and email; SkyFrame auto-resolves all NWS grid metadata for you
 
-- **NOAA/NWS only.** No API keys, no third-party weather providers, no accounts.
-- **Single-user, localhost-only.** No auth, no multi-tenancy, no cloud deploy story.
-- **No ads, no analytics, no telemetry.** No data leaves your machine beyond the NWS requests themselves.
-- **Hardcoded to one location** ({CITY, STATE} / ZIP {ZIP}) in v0.1. If you want to run it for a different area, see [Adapting to your location](#adapting-to-your-location-v01--manual) below.
+## Requirements
 
-## Setup
+- **Node.js 20+** and **npm**
+- A US location (NWS only covers the United States and its territories)
+- A contact email (NWS requires one in the User-Agent header — it is never sent anywhere else)
 
-Requires Node.js 20+ and npm.
+## Quick start
 
 ```bash
-git clone <repo>
+git clone https://github.com/kculver14/SkyFrame.git
 cd SkyFrame
 npm install
+npm run build
+npm run server
 ```
 
-## Run
+Open **http://localhost:3000** in your browser.
 
-**Production (what you want for daily use):**
+On first launch you will see a setup screen. Enter your location (city name, ZIP code, or city + state) and a contact email. SkyFrame calls the NWS `/points` API to resolve your forecast office, grid coordinates, timezone, observation stations, and forecast zone automatically. The result is saved to `skyframe.config.json` (gitignored) so you only do this once.
+
+## Usage
+
+### Production (daily use)
 
 ```bash
-npm run build    # Compiles the React client into dist/client
-npm run server   # Starts Fastify on http://localhost:3000
+npm run build    # compile the React client into dist/client
+npm run server   # start Fastify on http://localhost:3000
 ```
 
-Open http://localhost:3000 in your browser.
-
-**Development (with hot reload):**
+Or in one shot:
 
 ```bash
-npm run server   # Terminal 1: Fastify backend on :3000
-npm run dev      # Terminal 2: Vite dev server on :5173 with /api proxy
+npm run start:prod
 ```
 
-Open http://localhost:5173 — Vite handles the frontend with HMR, /api calls proxy to the backend.
-
-## Tests
+### Development (hot reload)
 
 ```bash
-npm test           # Run once
-npm run test:watch # Watch mode
+npm run server   # terminal 1 — Fastify backend on :3000
+npm run dev      # terminal 2 — Vite dev server on :5173 with /api proxy
+```
+
+Open **http://localhost:5173** — Vite handles the frontend with HMR; `/api` calls proxy to the backend.
+
+### Tests
+
+```bash
+npm test           # run once
+npm run test:watch # watch mode
 npm run typecheck  # TypeScript check without building
 ```
 
-## Adapting to your location (v0.1 — manual)
+## Configuration
 
-v0.1 is hardcoded to {CITY, STATE}. To run it for your own area you have to edit four files by hand. v1.1 will replace this with runtime configuration — treat the flow below as a temporary stopgap.
+All location data lives in `skyframe.config.json`, created automatically by the first-run setup. You can also configure via a `.env` file (copy `.env.example` to `.env`). The config file takes priority over `.env` values.
 
-You will need: a lat/lon for your location (e.g. from Google Maps — right-click → copy coordinates) and a contact email.
+To reconfigure your location, delete `skyframe.config.json` and restart the server — the setup screen will reappear.
 
-### Step 1 — Change the User-Agent email (required)
+### Advanced: manual `.env` setup
 
-NWS requires every request to identify the app and a contact email. Requests with a missing or generic User-Agent can be rate-limited or rejected outright.
-
-Edit [server/config.ts](server/config.ts) line 17:
-
-```ts
-userAgent: 'SkyFrame/0.1 (your-email@example.com)',
-```
-
-Replace `your-email@example.com` with your own email. The `SkyFrame/0.1` prefix is fine to keep or change.
-
-### Step 2 — Look up your NWS grid and nearby stations
-
-NWS doesn't expose weather by lat/lon directly — you resolve lat/lon to a grid point once, then use grid-based endpoints. Run:
+If you prefer to skip the browser setup flow, copy `.env.example` to `.env` and fill in the values manually. You will need your NWS grid metadata:
 
 ```bash
-curl -H "User-Agent: yourapp/0.1 (you@example.com)" \
+curl -H "User-Agent: SkyFrame/0.1 (you@example.com)" \
   "https://api.weather.gov/points/{lat},{lon}"
 ```
 
-Replace `{lat},{lon}` with your coordinates (e.g. `{lat},{lon}`). **Include the User-Agent header** — without it, NWS will reject the request.
+The response contains the forecast office, grid coordinates, timezone, and forecast zone. See the comments in `.env.example` for which fields map where.
 
-From the JSON response, note:
-- `properties.gridId` → this is the forecast office (e.g. `MKX`)
-- `properties.gridX`, `properties.gridY` → grid coordinates
-- `properties.timeZone` → e.g. `America/Chicago`
-- `properties.forecastZone` → ends in an ID like `WIZ066`
+## How it works
 
-Then fetch the nearby station list from the URL in `properties.observationStations`:
+NWS does not expose weather by ZIP code or lat/lon directly. Instead there is a two-step flow:
 
-```bash
-curl -H "User-Agent: yourapp/0.1 (you@example.com)" \
-  "https://api.weather.gov/gridpoints/{gridId}/{gridX},{gridY}/stations"
+1. **Resolve** your lat/lon to a grid point via `/points/{lat},{lon}` (done once during setup)
+2. **Fetch** forecasts, observations, and alerts using the grid-based endpoints
+
+The Fastify backend acts as a thin local proxy: your browser calls `/api/weather`, the server calls NWS with the required `User-Agent` header (browsers forbid setting it directly), normalizes the response, and returns a single clean JSON shape. An in-memory cache prevents redundant NWS requests.
+
+## Project structure
+
+```
+shared/types.ts  — WeatherResponse type contract (server + client)
+server/          — Fastify backend, NWS proxy, cache, setup flow
+client/          — React + Vite frontend (three HUD panels)
 ```
 
-Pick two stations: a **primary** (first-class ASOS site, typically at an airport, within ~15 km) and a **fallback** (second-closest ASOS, used when the primary's latest observation is stale or has null core fields). Note their four-letter IDs (e.g. `KMKE`, `KRAC`).
+## Privacy
 
-### Step 3 — Update `server/config.ts`
+- No ads, no analytics, no telemetry
+- No data leaves your machine beyond the NWS API requests themselves
+- Your email is only used in the `User-Agent` header sent to NWS (their terms of service require it)
+- All config stays local in `skyframe.config.json`
 
-Edit the `location`, `nws`, and `stations` blocks in [server/config.ts](server/config.ts):
+## License
 
-```ts
-location: {
-  lat: <your lat>,
-  lon: <your lon>,
-  zip: '<your ZIP>',
-  cityState: '<City, ST>',
-},
-nws: {
-  forecastOffice: '<gridId>',
-  gridX: <gridX>,
-  gridY: <gridY>,
-  timezone: '<timeZone>',
-  forecastZone: '<forecastZone id>',
-  userAgent: 'SkyFrame/0.1 (you@example.com)',  // already done in Step 1
-  baseUrl: 'https://api.weather.gov',
-},
-stations: {
-  primary: '<primary station ID>',
-  fallback: '<fallback station ID>',
-  stalenessMinutes: 90,
-},
-```
-
-Leave the `cache`, `trendThresholds`, and `server` blocks alone.
-
-### Step 4 — Update the hardcoded display strings in the client
-
-v0.1 has three display strings hardcoded in the React components. Update them to match your location:
-
-- [client/components/TopBar.tsx:43](client/components/TopBar.tsx#L43) — replace `{CITY} {ZIP} · KMKE LINK` with your city, ZIP, and primary station
-- [client/components/HourlyPanel.tsx:49](client/components/HourlyPanel.tsx#L49) — replace `MKX GRID 88,58` with your `{forecastOffice} GRID {gridX},{gridY}`
-- [client/components/OutlookPanel.tsx:36](client/components/OutlookPanel.tsx#L36) — replace `KMKE / MKX GRID 88,58 / WIZ066` with your primary station, grid, and forecast zone
-
-Rebuild and run (`npm run build && npm run server`) and you should see your area's weather.
-
-> **Note:** v1.1 will move all of this into a single config file or env vars and remove the hardcoded strings from the client. This manual flow only exists so v0.1 is usable by others before v1.1 lands.
-
-## Structure
-
-- `shared/types.ts` — WeatherResponse type contract, imported by both server and client
-- `server/` — Fastify backend, NWS proxy, in-memory cache
-- `client/` — React + Vite frontend with the three HUD views
-- `docs/mockups/` — static HTML mockups (source of truth for visual design)
-- `docs/superpowers/specs/` — design docs
-- `docs/superpowers/plans/` — implementation plans
-
-## Why a backend at all?
-
-NWS requires a `User-Agent` header identifying your app and contact email. Browsers forbid `fetch()` from setting `User-Agent` (it's on the forbidden headers list), so a pure client-side SkyFrame couldn't comply with NWS terms. The Fastify backend acts as a thin local proxy: browser calls `/api/weather`, the server calls NWS with the required headers, normalizes the response, and returns a single clean JSON shape.
+All rights reserved. See [LICENSE](LICENSE) when published.
