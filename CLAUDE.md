@@ -39,6 +39,23 @@ These were derived from live NOAA/NWS queries and confirmed by the user. They ar
 - **Don't narrate the obvious.** Educational ≠ exhaustive. Explain the non-obvious choice; skip the restatement of what the code plainly does.
 - **Stack is not yet chosen.** The spec proposes React + Node.js but nothing is committed. Discuss stack options with tradeoffs before scaffolding.
 
+## Dev tools
+
+### Debug alert injection (PR #3, 2026-04-16)
+
+Set `SKYFRAME_DEBUG_TIERS` to a comma-separated list of `AlertTier` values to replace the real NWS alerts fetch with synthetic alerts. Useful for visually verifying tier colors, banner dismiss/expand behavior, and multi-alert layout without waiting for real weather.
+
+```
+SKYFRAME_DEBUG_TIERS=tornado-warning npm run server          # single red banner
+SKYFRAME_DEBUG_TIERS=tornado-warning,flood,watch npm run server  # 3 alerts, expand toggle
+```
+
+Valid tier names: `tornado-emergency`, `tornado-warning`, `severe-warning`, `blizzard`, `winter-storm`, `flood`, `heat`, `special-weather-statement`, `watch`. Unknown names are silently dropped. When unset, production behavior is unchanged.
+
+A startup log line confirms when debug mode is active — safety net against leaving it set accidentally.
+
+Implementation: `server/nws/debug-alerts.ts` (parser + synthesizer), wired through `CONFIG.debug.injectTiers` in `server/config.ts`.
+
 ## Provider integration notes
 
 NWS is a point→grid→station flow, not a single-endpoint API. The `/points` call returns URLs for the forecast, hourly forecast, and nearby station list; we resolve it once and cache the result indefinitely. Current conditions come from a separate `/stations/{id}/observations/latest` call, which occasionally returns null for individual fields — that's why a fallback station exists.
