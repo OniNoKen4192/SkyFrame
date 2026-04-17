@@ -9,6 +9,33 @@ import { OutlookPanel } from './components/OutlookPanel';
 
 export type ViewKey = 'current' | 'hourly' | 'outlook' | 'all';
 
+// Dismissed-alerts persistence. Lives at App level (not AlertBanner) so the
+// root data-alert-tier and the banner always render from the same filtered
+// list — otherwise dismissing the highest-tier alert would leave the UI
+// painted in the dismissed alert's color while the banner shows a different,
+// lower-tier alert.
+const DISMISSED_KEY = 'skyframe.alerts.dismissed';
+
+function loadDismissed(): Set<string> {
+  try {
+    const raw = localStorage.getItem(DISMISSED_KEY);
+    if (!raw) return new Set();
+    const arr = JSON.parse(raw);
+    if (!Array.isArray(arr)) return new Set();
+    return new Set(arr.filter((x): x is string => typeof x === 'string'));
+  } catch {
+    return new Set();
+  }
+}
+
+function saveDismissed(set: Set<string>): void {
+  try {
+    localStorage.setItem(DISMISSED_KEY, JSON.stringify([...set]));
+  } catch {
+    // Quota exceeded or storage unavailable — silently degrade.
+  }
+}
+
 // When the server's cache has expired and we need to retry, wait this long
 // before the next poll. Also used as the fallback if the response didn't
 // include a meta.nextRefreshAt we could parse.
@@ -27,6 +54,7 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
   const [nextRetryAt, setNextRetryAt] = useState<string | null>(null);
   const [activeView, setActiveView] = useState<ViewKey>('current');
+  const [dismissed, setDismissed] = useState<Set<string>>(() => loadDismissed());
 
   useEffect(() => {
     let cancelled = false;
@@ -94,11 +122,54 @@ export default function App() {
   };
 
   const alerts = data?.alerts ?? [];
-  const primaryTier = alerts[0]?.tier;
+
+  // Prune dismissed ids to only those still in the active alerts list, so the
+  // Set doesn't grow unbounded across days/weeks. Re-runs only when the active
+  // id-set changes (the join('|') key collapses reference-equality churn).
+  useEffect(() => {
+    const activeIds = new Set(alerts.map((a) => a.id));
+    let changed = false;
+    const pruned = new Set<string>();
+    for (const id of dismissed) {
+      if (activeIds.has(id)) {
+        pruned.add(id);
+      } else {
+        changed = true;
+      }
+    }
+    if (changed) {
+      setDismissed(pruned);
+      saveDismissed(pruned);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [alerts.map((a) => a.id).join('|')]);
+
+  const visible = alerts.filter((a) => !dismissed.has(a.id));
+  const primaryTier = visible[0]?.tier;
+
+  const dismissAlert = (id: string) => {
+    const next = new Set(dismissed);
+    next.add(id);
+    setDismissed(next);
+    saveDismissed(next);
+  };
 
   return (
     <div className="hud-showcase" data-alert-tier={primaryTier}>
-      {alerts.length > 0 && <AlertBanner alerts={alerts} />}
+      {visible.length > 0 ? (
+        <AlertBanner alerts={visible} onDismiss={dismissAlert} />
+      ) : (
+        <div className="alert-banner alert-banner-brand" role="banner">
+          <div className="alert-banner-row">
+            <div className="alert-banner-stripes alert-banner-stripes-left" aria-hidden="true" />
+            <div className="alert-banner-content">
+              <span className="alert-banner-glyph">■</span>
+              <span className="alert-banner-headline">SKYFRAME</span>
+            </div>
+            <div className="alert-banner-stripes alert-banner-stripes-right" aria-hidden="true" />
+          </div>
+        </div>
+      )}
       <TopBar
         stationId={data?.meta?.stationId ?? null}
         error={error}

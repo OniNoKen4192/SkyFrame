@@ -597,7 +597,7 @@
 .alert-banner-row {
   display: flex;
   align-items: stretch;
-  min-height: 40px;
+  min-height: 12px;
 }
 
 .alert-banner-toggle {
@@ -661,8 +661,8 @@
 }
 
 /* Pause stripe animation while expanded so the dense bullet list reads cleanly */
-.alert-banner-expanded .alert-banner-stripes-left,
-.alert-banner-expanded .alert-banner-stripes-right {
+.alert-banner-expanded .alert-banner-stripes-left::before,
+.alert-banner-expanded .alert-banner-stripes-right::before {
   animation-play-state: paused;
 }
 
@@ -681,135 +681,95 @@
 
 .alert-banner-stripes {
   flex: 1;
-  background-size: 28px 28px;
-  background-repeat: repeat;
+  position: relative;
+  overflow: hidden;
+  background-color: currentColor;
 }
 
-.alert-banner-stripes-left {
-  /* Forward-leaning ///, animates rightward (toward center) */
-  animation: alert-stripe-flow-right 5s linear infinite;
+.alert-banner-stripes::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -20px;
+  width: calc(100% + 40px);
 }
 
-.alert-banner-stripes-right {
-  /* Back-leaning \\\, animates leftward (toward center) */
-  animation: alert-stripe-flow-left 5s linear infinite;
+.alert-banner-stripes-left::before {
+  background: repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(0,0,0,0.35) 5px, rgba(0,0,0,0.35) 10px);
+  animation: stripe-slide-right 2s linear infinite;
 }
 
-@keyframes alert-stripe-flow-right {
-  from { background-position: 0 0; }
-  to   { background-position: 28px 0; }
+.alert-banner-stripes-right::before {
+  background: repeating-linear-gradient(-45deg, transparent, transparent 5px, rgba(0,0,0,0.35) 5px, rgba(0,0,0,0.35) 10px);
+  animation: stripe-slide-left 2s linear infinite;
 }
 
-@keyframes alert-stripe-flow-left {
-  from { background-position: 0 0; }
-  to   { background-position: -28px 0; }
+@keyframes stripe-slide-right {
+  from { transform: translateX(0); }
+  to   { transform: translateX(14.14px); }
+}
+
+@keyframes stripe-slide-left {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-14.14px); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .alert-banner-stripes-left,
-  .alert-banner-stripes-right {
+  .alert-banner-stripes-left::before,
+  .alert-banner-stripes-right::before {
     animation: none;
   }
 }
 
-/* Per-tier text + stripe colors. Stripes use a base+dark gradient. */
+/* Default branding banner (no active alerts) */
+.alert-banner-brand {
+  color: var(--accent);
+  text-shadow: 0 0 8px var(--accent-glow-soft);
+}
+
+/* Per-tier text color + glow. Stripes auto-inherit via currentColor. */
 .alert-banner[data-tier="tornado-emergency"] {
   color: #9400D3;
   text-shadow: 0 0 8px rgba(148, 0, 211, 0.7);
 }
-.alert-banner[data-tier="tornado-emergency"] .alert-banner-stripes-left {
-  background-image: repeating-linear-gradient(45deg,  #9400D3 0 14px, #5a007e 14px 28px);
-}
-.alert-banner[data-tier="tornado-emergency"] .alert-banner-stripes-right {
-  background-image: repeating-linear-gradient(-45deg, #9400D3 0 14px, #5a007e 14px 28px);
-}
-
 .alert-banner[data-tier="tornado-warning"] {
   color: #ff4444;
   text-shadow: 0 0 8px rgba(255, 68, 68, 0.7);
 }
-.alert-banner[data-tier="tornado-warning"] .alert-banner-stripes-left {
-  background-image: repeating-linear-gradient(45deg,  #ff4444 0 14px, #a02828 14px 28px);
-}
-.alert-banner[data-tier="tornado-warning"] .alert-banner-stripes-right {
-  background-image: repeating-linear-gradient(-45deg, #ff4444 0 14px, #a02828 14px 28px);
-}
-
 .alert-banner[data-tier="severe-warning"] {
   color: #ff8800;
   text-shadow: 0 0 8px rgba(255, 136, 0, 0.7);
 }
-.alert-banner[data-tier="severe-warning"] .alert-banner-stripes-left {
-  background-image: repeating-linear-gradient(45deg,  #ff8800 0 14px, #a05500 14px 28px);
-}
-.alert-banner[data-tier="severe-warning"] .alert-banner-stripes-right {
-  background-image: repeating-linear-gradient(-45deg, #ff8800 0 14px, #a05500 14px 28px);
-}
-
 .alert-banner[data-tier="blizzard"] {
   color: #ffffff;
   text-shadow: 0 0 8px rgba(255, 255, 255, 0.7);
 }
-.alert-banner[data-tier="blizzard"] .alert-banner-stripes-left {
-  background-image: repeating-linear-gradient(45deg,  #ffffff 0 14px, #bbbbbb 14px 28px);
-}
-.alert-banner[data-tier="blizzard"] .alert-banner-stripes-right {
-  background-image: repeating-linear-gradient(-45deg, #ffffff 0 14px, #bbbbbb 14px 28px);
-}
-
 .alert-banner[data-tier="winter-storm"] {
   color: #4488ff;
   text-shadow: 0 0 8px rgba(68, 136, 255, 0.7);
 }
-.alert-banner[data-tier="winter-storm"] .alert-banner-stripes-left {
-  background-image: repeating-linear-gradient(45deg,  #4488ff 0 14px, #2a55a0 14px 28px);
-}
-.alert-banner[data-tier="winter-storm"] .alert-banner-stripes-right {
-  background-image: repeating-linear-gradient(-45deg, #4488ff 0 14px, #2a55a0 14px 28px);
-}
-
 .alert-banner[data-tier="flood"] {
   color: #22cc66;
   text-shadow: 0 0 8px rgba(34, 204, 102, 0.7);
 }
-.alert-banner[data-tier="flood"] .alert-banner-stripes-left {
-  background-image: repeating-linear-gradient(45deg,  #22cc66 0 14px, #147a3d 14px 28px);
-}
-.alert-banner[data-tier="flood"] .alert-banner-stripes-right {
-  background-image: repeating-linear-gradient(-45deg, #22cc66 0 14px, #147a3d 14px 28px);
-}
-
 .alert-banner[data-tier="heat"] {
   color: #ff5533;
   text-shadow: 0 0 8px rgba(255, 85, 51, 0.7);
 }
-.alert-banner[data-tier="heat"] .alert-banner-stripes-left {
-  background-image: repeating-linear-gradient(45deg,  #ff5533 0 14px, #a0331c 14px 28px);
-}
-.alert-banner[data-tier="heat"] .alert-banner-stripes-right {
-  background-image: repeating-linear-gradient(-45deg, #ff5533 0 14px, #a0331c 14px 28px);
-}
-
 .alert-banner[data-tier="special-weather-statement"] {
   color: #ee82ee;
   text-shadow: 0 0 8px rgba(238, 130, 238, 0.7);
 }
-.alert-banner[data-tier="special-weather-statement"] .alert-banner-stripes-left {
-  background-image: repeating-linear-gradient(45deg,  #ee82ee 0 14px, #9d539d 14px 28px);
-}
-.alert-banner[data-tier="special-weather-statement"] .alert-banner-stripes-right {
-  background-image: repeating-linear-gradient(-45deg, #ee82ee 0 14px, #9d539d 14px 28px);
-}
-
 .alert-banner[data-tier="watch"] {
   color: #ffdd33;
   text-shadow: 0 0 8px rgba(255, 221, 51, 0.7);
 }
 .alert-banner[data-tier="watch"] .alert-banner-stripes-left {
-  background-image: repeating-linear-gradient(45deg,  #ffdd33 0 14px, #a08820 14px 28px);
+  background-image: repeating-linear-gradient(45deg,  #ffdd33 0 6px, #a08820 6px 12px);
 }
 .alert-banner[data-tier="watch"] .alert-banner-stripes-right {
-  background-image: repeating-linear-gradient(-45deg, #ffdd33 0 14px, #a08820 14px 28px);
+  background-image: repeating-linear-gradient(-45deg, #ffdd33 0 6px, #a08820 6px 12px);
 }
 
 /* ============================================================

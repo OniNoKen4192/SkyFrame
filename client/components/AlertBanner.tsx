@@ -1,10 +1,16 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import type { Alert } from '../../shared/types';
+import { tierRank } from '../../shared/alert-tiers';
 
-const DISMISSED_KEY = 'skyframe.alerts.dismissed';
+// Tornado Emergency, Tornado Warning, Severe Thunderstorm Warning — top 3
+// imminent / short-duration threats. The user shouldn't be able to silence
+// these. Longer-duration alerts (blizzard, winter storm, flood, heat, SWS,
+// watches) remain dismissible so they don't nag for hours.
+const NON_DISMISSIBLE_RANK_THRESHOLD = 3;
 
 interface AlertBannerProps {
-  alerts: Alert[];
+  alerts: Alert[];                    // already filtered to visible by App
+  onDismiss: (id: string) => void;
 }
 
 function formatExpires(iso: string): string {
@@ -15,68 +21,18 @@ function formatExpires(iso: string): string {
   return fmt.format(new Date(iso)).toUpperCase();
 }
 
-function loadDismissed(): Set<string> {
-  try {
-    const raw = localStorage.getItem(DISMISSED_KEY);
-    if (!raw) return new Set();
-    const arr = JSON.parse(raw);
-    if (!Array.isArray(arr)) return new Set();
-    return new Set(arr.filter((x): x is string => typeof x === 'string'));
-  } catch {
-    return new Set();
-  }
-}
-
-function saveDismissed(set: Set<string>): void {
-  try {
-    localStorage.setItem(DISMISSED_KEY, JSON.stringify([...set]));
-  } catch {
-    // Quota exceeded or storage unavailable — silently degrade.
-  }
-}
-
-export function AlertBanner({ alerts }: AlertBannerProps) {
-  const [dismissed, setDismissed] = useState<Set<string>>(() => loadDismissed());
+export function AlertBanner({ alerts, onDismiss }: AlertBannerProps) {
   const [expanded, setExpanded] = useState(false);
 
-  // Prune dismissed ids to only include currently-active alerts so the list
-  // doesn't grow unbounded across days/weeks.
-  useEffect(() => {
-    const activeIds = new Set(alerts.map((a) => a.id));
-    let changed = false;
-    const pruned = new Set<string>();
-    for (const id of dismissed) {
-      if (activeIds.has(id)) {
-        pruned.add(id);
-      } else {
-        changed = true;
-      }
-    }
-    if (changed) {
-      setDismissed(pruned);
-      saveDismissed(pruned);
-    }
-    // Only re-run when the alert id set changes
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [alerts.map((a) => a.id).join('|')]);
+  if (alerts.length === 0) return null;
 
-  const visible = alerts.filter((a) => !dismissed.has(a.id));
-
-  if (visible.length === 0) return null;
-
-  const primary = visible[0]!;
-  const headline = visible.length === 1
+  const primary = alerts[0]!;
+  const headline = alerts.length === 1
     ? `${primary.event.toUpperCase()} · UNTIL ${formatExpires(primary.expires)}`
-    : `${visible.length} ACTIVE ALERTS · ${primary.event.toUpperCase()} UNTIL ${formatExpires(primary.expires)}`;
+    : `${alerts.length} ACTIVE ALERTS · ${primary.event.toUpperCase()} UNTIL ${formatExpires(primary.expires)}`;
 
-  const canExpand = visible.length > 1;
-
-  const dismissPrimary = () => {
-    const next = new Set(dismissed);
-    next.add(primary.id);
-    setDismissed(next);
-    saveDismissed(next);
-  };
+  const canExpand = alerts.length > 1;
+  const canDismiss = tierRank(primary.tier) > NON_DISMISSIBLE_RANK_THRESHOLD;
 
   return (
     <div
@@ -103,18 +59,20 @@ export function AlertBanner({ alerts }: AlertBannerProps) {
             {expanded ? '▴' : '▾'}
           </button>
         )}
-        <button
-          type="button"
-          className="alert-banner-dismiss"
-          onClick={dismissPrimary}
-          aria-label={`Dismiss ${primary.event}`}
-        >
-          ×
-        </button>
+        {canDismiss && (
+          <button
+            type="button"
+            className="alert-banner-dismiss"
+            onClick={() => onDismiss(primary.id)}
+            aria-label={`Dismiss ${primary.event}`}
+          >
+            ×
+          </button>
+        )}
       </div>
       {expanded && (
         <ul className="alert-banner-list">
-          {visible.map((a) => (
+          {alerts.map((a) => (
             <li key={a.id}>
               <span className="alert-banner-list-event">{a.event}</span>
               <span className="alert-banner-list-sep"> · </span>
