@@ -1,0 +1,452 @@
+<style>
+  .hud-showcase {
+    display: block !important;
+    aspect-ratio: auto !important;
+    background: #000d10;
+    padding: 28px 40px 36px;
+    font-family: 'SF Mono','Consolas','Courier New',monospace;
+    min-height: 560px;
+    position: relative;
+    overflow: hidden;
+    color: #00e5d1;
+  }
+  .hud-showcase::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(0,229,209,0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,209,0.06) 1px, transparent 1px);
+    background-size: 20px 20px;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .hud-showcase > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .hud-topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin: 0 0 24px;
+    padding-bottom: 14px;
+    border-bottom: 1px dashed rgba(0,229,209,0.18);
+  }
+  .hud-topbar .loc {
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    opacity: 0.6;
+    padding-top: 6px;
+  }
+  .hud-topbar .clock { text-align: right; }
+  .hud-topbar .clock-time {
+    font-size: 18px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    color: #00e5d1;
+    text-shadow: 0 0 8px rgba(0,229,209,0.5);
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+  .hud-topbar .clock-time .tz {
+    font-size: 10px;
+    opacity: 0.55;
+    margin-left: 6px;
+    letter-spacing: 0.2em;
+  }
+  .hud-topbar .clock-date {
+    font-size: 10px;
+    color: #00e5d1;
+    opacity: 0.55;
+    letter-spacing: 0.2em;
+    margin-top: 6px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .hud-hero {
+    display: flex;
+    align-items: center;
+    gap: 48px;
+    margin: 0 0 30px;
+  }
+  .hud-readout {
+    position: relative;
+    padding: 18px 22px 16px;
+    margin: 0;
+    display: inline-block;
+  }
+  .hud-readout .corner {
+    position: absolute;
+    width: 14px; height: 14px;
+    border: 2px solid #00e5d1;
+  }
+  .hud-readout .corner.tl { top: 0; left: 0;  border-right: 0; border-bottom: 0; }
+  .hud-readout .corner.tr { top: 0; right: 0; border-left: 0;  border-bottom: 0; }
+  .hud-readout .corner.bl { bottom: 0; left: 0;  border-right: 0; border-top: 0; }
+  .hud-readout .corner.br { bottom: 0; right: 0; border-left: 0;  border-top: 0; }
+  .hud-readout .tag {
+    font-size: 9px; letter-spacing: 0.22em; opacity: 0.6; margin-bottom: 2px;
+  }
+  .hud-readout .temp {
+    font-size: 56px; font-weight: 500; line-height: 1; letter-spacing: -0.01em;
+    text-shadow: 0 0 12px rgba(0,229,209,0.4);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .hud-readout .temp .unit { font-size: 24px; opacity: 0.7; }
+  .hud-readout .temp .feel { font-size: 18px; opacity: 0.5; margin-left: 10px; }
+  .hud-readout .temp .trend {
+    font-size: 14px;
+    font-weight: normal;
+    opacity: 0.75;
+    margin-left: 14px;
+    letter-spacing: 0.03em;
+    text-shadow: none;
+  }
+  .hud-readout .desc {
+    font-size: 11px;
+    opacity: 0.75;
+    margin-top: 8px;
+    letter-spacing: 0.08em;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .hud-readout .desc .sep {
+    opacity: 0.4;
+    margin: 0 8px;
+  }
+  .hud-readout .desc .suntime {
+    letter-spacing: 0.04em;
+  }
+
+  .hud-hero-icon {
+    color: #00e5d1;
+    filter: drop-shadow(0 0 8px rgba(0,229,209,0.5));
+    flex-shrink: 0;
+  }
+  .hud-hero-icon svg {
+    width: 112px;
+    height: 112px;
+    display: block;
+  }
+
+  .bars {
+    display: grid;
+    grid-template-columns: 44px 1fr 72px 92px;
+    gap: 11px 14px;
+    align-items: center;
+    max-width: 640px;
+    margin: 0;
+  }
+  .bars .lbl   { font-size: 10px; letter-spacing: 0.15em; opacity: 0.55; }
+  .bars .val   { font-size: 11px; letter-spacing: 0.05em; text-align: right; font-variant-numeric: tabular-nums; }
+  .bars .trend {
+    font-size: 10px;
+    letter-spacing: 0.05em;
+    text-align: right;
+    opacity: 0.75;
+    font-variant-numeric: tabular-nums;
+  }
+  .bars .trend.steady { opacity: 0.45; }
+
+  .sb { position: relative; height: 12px; }
+  .sb-off, .sb-on {
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      90deg,
+      currentColor 0 calc(5% - 0.6%),
+      transparent calc(5% - 0.6%) 5%
+    );
+  }
+  .sb-off { opacity: 0.14; }
+  .sb-on {
+    filter: drop-shadow(0 0 3px currentColor);
+    clip-path: inset(0 calc(100% - var(--fill, 50%)) 0 0);
+  }
+
+  .hud-footer {
+    font-size: 9px;
+    letter-spacing: 0.22em;
+    opacity: 0.55;
+    margin: 28px 0 0;
+    padding-top: 14px;
+    border-top: 1px dashed rgba(0,229,209,0.18);
+  }
+  .hud-footer .dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: #00e5d1;
+    border-radius: 50%;
+    box-shadow: 0 0 6px rgba(0,229,209,0.9);
+    margin-right: 8px;
+    vertical-align: middle;
+    animation: hudBlink 1.8s ease-in-out infinite;
+  }
+  @keyframes hudBlink {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.35; }
+  }
+
+  .hud-palette {
+    margin: 28px 0 0;
+    padding-top: 18px;
+    border-top: 1px dashed rgba(0,229,209,0.12);
+  }
+  .hud-palette .palette-label {
+    font-size: 9px;
+    letter-spacing: 0.22em;
+    opacity: 0.45;
+    margin-bottom: 14px;
+  }
+  .hud-palette .palette-row {
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    gap: 16px;
+    max-width: 780px;
+  }
+  .hud-palette .palette-item {
+    text-align: center;
+    color: #00e5d1;
+  }
+  .hud-palette .palette-item svg {
+    width: 48px;
+    height: 48px;
+    display: block;
+    margin: 0 auto 6px;
+    filter: drop-shadow(0 0 3px rgba(0,229,209,0.5));
+  }
+  .hud-palette .palette-item .lbl {
+    font-size: 8px;
+    letter-spacing: 0.15em;
+    opacity: 0.55;
+  }
+</style>
+
+<svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="wxicon-sun" viewBox="0 0 64 64">
+    <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="32" cy="32" r="11" />
+      <line x1="32" y1="6"  x2="32" y2="13" />
+      <line x1="32" y1="51" x2="32" y2="58" />
+      <line x1="6"  y1="32" x2="13" y2="32" />
+      <line x1="51" y1="32" x2="58" y2="32" />
+      <line x1="14" y1="14" x2="19" y2="19" />
+      <line x1="45" y1="45" x2="50" y2="50" />
+      <line x1="45" y1="14" x2="50" y2="19" />
+      <line x1="14" y1="50" x2="19" y2="45" />
+    </g>
+  </symbol>
+  <symbol id="wxicon-moon" viewBox="0 0 64 64">
+    <path d="M 44 10 A 22 22 0 1 0 44 54 A 17 17 0 1 1 44 10 Z"
+      fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+  </symbol>
+  <symbol id="wxicon-cloud" viewBox="0 0 64 64">
+    <path d="M 14 46 L 14 38 Q 14 30 22 30 Q 24 22 32 22 Q 42 22 44 30 Q 52 30 52 38 L 52 46 Z"
+      fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+  </symbol>
+  <symbol id="wxicon-partly-day" viewBox="0 0 64 64">
+    <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="22" cy="20" r="7" />
+      <line x1="22" y1="6"  x2="22" y2="10" />
+      <line x1="8"  y1="20" x2="12" y2="20" />
+      <line x1="12" y1="10" x2="15" y2="13" />
+      <line x1="32" y1="10" x2="29" y2="13" />
+    </g>
+    <path d="M 16 52 L 16 44 Q 16 36 24 36 Q 26 30 34 30 Q 42 30 44 36 Q 52 36 52 44 L 52 52 Z"
+      fill="#000d10" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+  </symbol>
+  <symbol id="wxicon-partly-night" viewBox="0 0 64 64">
+    <path d="M 30 8 A 16 16 0 1 0 30 40 A 12 12 0 1 1 30 8 Z"
+      fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+    <path d="M 16 52 L 16 44 Q 16 36 24 36 Q 26 30 34 30 Q 42 30 44 36 Q 52 36 52 44 L 52 52 Z"
+      fill="#000d10" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+  </symbol>
+  <symbol id="wxicon-rain" viewBox="0 0 64 64">
+    <path d="M 12 36 L 12 28 Q 12 20 20 20 Q 22 12 30 12 Q 40 12 42 20 Q 50 20 50 28 L 50 36 Z"
+      fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+    <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <line x1="18" y1="44" x2="14" y2="54" />
+      <line x1="30" y1="44" x2="26" y2="54" />
+      <line x1="42" y1="44" x2="38" y2="54" />
+    </g>
+  </symbol>
+  <symbol id="wxicon-snow" viewBox="0 0 64 64">
+    <path d="M 12 36 L 12 28 Q 12 20 20 20 Q 22 12 30 12 Q 40 12 42 20 Q 50 20 50 28 L 50 36 Z"
+      fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+    <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+      <g transform="translate(18,48)">
+        <line x1="-4" y1="0"  x2="4"  y2="0" />
+        <line x1="0"  y1="-4" x2="0"  y2="4" />
+        <line x1="-3" y1="-3" x2="3"  y2="3" />
+        <line x1="-3" y1="3"  x2="3"  y2="-3" />
+      </g>
+      <g transform="translate(32,52)">
+        <line x1="-4" y1="0"  x2="4"  y2="0" />
+        <line x1="0"  y1="-4" x2="0"  y2="4" />
+        <line x1="-3" y1="-3" x2="3"  y2="3" />
+        <line x1="-3" y1="3"  x2="3"  y2="-3" />
+      </g>
+      <g transform="translate(46,48)">
+        <line x1="-4" y1="0"  x2="4"  y2="0" />
+        <line x1="0"  y1="-4" x2="0"  y2="4" />
+        <line x1="-3" y1="-3" x2="3"  y2="3" />
+        <line x1="-3" y1="3"  x2="3"  y2="-3" />
+      </g>
+    </g>
+  </symbol>
+  <symbol id="wxicon-thunder" viewBox="0 0 64 64">
+    <path d="M 12 36 L 12 28 Q 12 20 20 20 Q 22 12 30 12 Q 40 12 42 20 Q 50 20 50 28 L 50 36 Z"
+      fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+    <path d="M 34 38 L 24 50 L 31 50 L 25 60"
+      fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+  </symbol>
+  <symbol id="wxicon-fog" viewBox="0 0 64 64">
+    <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M 10 20 Q 20 14 32 20 T 54 20" />
+      <path d="M 10 30 Q 20 24 32 30 T 54 30" />
+      <path d="M 10 40 Q 20 34 32 40 T 54 40" />
+      <path d="M 10 50 Q 20 44 32 50 T 54 50" />
+    </g>
+  </symbol>
+</svg>
+
+<h2>HUD / tactical — final pass</h2>
+<p class="subtitle">Description line is now: condition · precip outlook · sunrise/sunset. Three facts, all non-redundant with the bars.</p>
+
+<div class="cards">
+  <div class="card" data-choice="hud-final" onclick="toggleSelect(this)">
+    <div class="card-image hud-showcase">
+      <div class="hud-topbar">
+        <div class="loc">&#9632; SKYFRAME &nbsp;·&nbsp; {CITY} {ZIP} &nbsp;·&nbsp; KMKE LINK</div>
+        <div class="clock">
+          <div class="clock-time">
+            <span class="clock-digits">--:--:--</span><span class="tz clock-tz">---</span>
+          </div>
+          <div class="clock-date">--- · --- -- · ----</div>
+        </div>
+      </div>
+
+      <div class="hud-hero">
+        <div class="hud-readout">
+          <span class="corner tl"></span>
+          <span class="corner tr"></span>
+          <span class="corner bl"></span>
+          <span class="corner br"></span>
+          <div class="tag">TEMP / FEEL</div>
+          <div class="temp">62<span class="unit">°F</span><span class="feel">/ 58</span><span class="trend">&#9650; +1.2/h</span></div>
+          <div class="desc">MOSTLY CLOUDY<span class="sep">·</span>DRY THRU 19:00<span class="sep">·</span><span class="suntime">&#8593; 06:08 &#8595; 19:35</span></div>
+        </div>
+        <div class="hud-hero-icon">
+          <svg><use href="#wxicon-cloud" /></svg>
+        </div>
+      </div>
+
+      <div class="bars">
+        <div class="lbl">WIND</div>
+        <div class="sb">
+          <div class="sb-off"></div>
+          <div class="sb-on" style="--fill: 40%;"></div>
+        </div>
+        <div class="val">12 NW</div>
+        <div class="trend">&#9650; +0.7/h</div>
+
+        <div class="lbl">HUM</div>
+        <div class="sb">
+          <div class="sb-off"></div>
+          <div class="sb-on" style="--fill: 64%;"></div>
+        </div>
+        <div class="val">64 %</div>
+        <div class="trend">&#9660; &minus;1.3/h</div>
+
+        <div class="lbl">PRES</div>
+        <div class="sb">
+          <div class="sb-off"></div>
+          <div class="sb-on" style="--fill: 62%;"></div>
+        </div>
+        <div class="val">30.12 &#8243;</div>
+        <div class="trend">&#9650; +0.02/h</div>
+
+        <div class="lbl">VIS</div>
+        <div class="sb">
+          <div class="sb-off"></div>
+          <div class="sb-on" style="--fill: 100%;"></div>
+        </div>
+        <div class="val">10 MI</div>
+        <div class="trend steady">= steady</div>
+
+        <div class="lbl">DEW</div>
+        <div class="sb">
+          <div class="sb-off"></div>
+          <div class="sb-on" style="--fill: 49%;"></div>
+        </div>
+        <div class="val">49 °F</div>
+        <div class="trend">&#9660; &minus;0.3/h</div>
+      </div>
+
+      <div class="hud-footer">
+        <span class="dot"></span>LINK.KMKE &nbsp;·&nbsp; LAST PULL 14:31:34 &nbsp;·&nbsp; NEXT 14:33:04
+      </div>
+
+      <div class="hud-palette">
+        <div class="palette-label">&#9632; ICON SET · 9 CONDITIONS</div>
+        <div class="palette-row">
+          <div class="palette-item"><svg><use href="#wxicon-sun" /></svg><div class="lbl">CLEAR</div></div>
+          <div class="palette-item"><svg><use href="#wxicon-moon" /></svg><div class="lbl">CLEAR.N</div></div>
+          <div class="palette-item"><svg><use href="#wxicon-partly-day" /></svg><div class="lbl">PC.DAY</div></div>
+          <div class="palette-item"><svg><use href="#wxicon-partly-night" /></svg><div class="lbl">PC.NGT</div></div>
+          <div class="palette-item"><svg><use href="#wxicon-cloud" /></svg><div class="lbl">CLOUDY</div></div>
+          <div class="palette-item"><svg><use href="#wxicon-rain" /></svg><div class="lbl">RAIN</div></div>
+          <div class="palette-item"><svg><use href="#wxicon-snow" /></svg><div class="lbl">SNOW</div></div>
+          <div class="palette-item"><svg><use href="#wxicon-thunder" /></svg><div class="lbl">THNDR</div></div>
+          <div class="palette-item"><svg><use href="#wxicon-fog" /></svg><div class="lbl">FOG</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Description line: condition · precip · sunrise/sunset</h3>
+      <p>Click to confirm, or tell me if the density is too much and we should drop one fact.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var timeFmt = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Chicago',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hourCycle: 'h23',
+    timeZoneName: 'short'
+  });
+  var dateFmt = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Chicago',
+    weekday: 'short',
+    month: 'short',
+    day: '2-digit',
+    year: 'numeric'
+  });
+  function partsToMap(parts) {
+    var map = {};
+    for (var i = 0; i < parts.length; i++) map[parts[i].type] = parts[i].value;
+    return map;
+  }
+  function setAll(selector, value) {
+    var els = document.querySelectorAll(selector);
+    for (var i = 0; i < els.length; i++) els[i].textContent = value;
+  }
+  function tick() {
+    var now = new Date();
+    var t = partsToMap(timeFmt.formatToParts(now));
+    setAll('.clock-digits', t.hour + ':' + t.minute + ':' + t.second);
+    setAll('.clock-tz', t.timeZoneName || '');
+    var d = partsToMap(dateFmt.formatToParts(now));
+    var dateStr = ((d.weekday || '') + ' · ' + (d.month || '') + ' ' + (d.day || '') + ' · ' + (d.year || '')).toUpperCase();
+    setAll('.clock-date', dateStr);
+  }
+  tick();
+  setInterval(tick, 1000);
+})();
+</script>

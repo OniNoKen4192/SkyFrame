@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build output
+dist/
+build/
+out/
+*.tsbuildinfo
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Claude Code local overrides (keep .claude/settings.json committed)
+.claude/settings.local.json
+
+# Editor / OS cruft
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+
+# Optional local cache for NWS responses (if we add one later)
+.cache/
+
+# Superpowers brainstorming artifacts (mockups, session state)
+.superpowers/
+
+# Local-only scratch (personal notes, icon experiments)
+docs/userInput/
+icons/

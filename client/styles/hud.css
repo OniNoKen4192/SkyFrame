@@ -1,0 +1,817 @@
+/* SkyFrame HUD styles — assembled from docs/mockups/ (Task 6)
+   Sources: current-conditions.html, hourly.html, outlook.html
+   !important flags removed; error-dot variant added.
+*/
+
+:root {
+  --accent: #00e5d1;
+  --accent-rgb: 0, 229, 209;
+  --accent-glow-strong: rgba(var(--accent-rgb), 0.9);
+  --accent-glow-soft:   rgba(var(--accent-rgb), 0.5);
+}
+
+/* ============================================================
+   SCAFFOLD / CONTAINER
+   ============================================================ */
+
+.hud-showcase {
+  display: block;
+  aspect-ratio: auto;
+  background: #000d10;
+  padding: 28px 40px 36px;
+  font-family: 'SF Mono','Consolas','Courier New',monospace;
+  min-height: 560px;
+  position: relative;
+  overflow: hidden;
+  color: var(--accent);
+}
+.hud-showcase::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(var(--accent-rgb),0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(var(--accent-rgb),0.06) 1px, transparent 1px);
+  background-size: 20px 20px;
+  pointer-events: none;
+  z-index: 0;
+}
+.hud-showcase > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ============================================================
+   TOP BAR (clock + location)
+   ============================================================ */
+
+.hud-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin: 0 0 24px;
+  padding-bottom: 14px;
+  border-bottom: 1px dashed rgba(var(--accent-rgb),0.18);
+}
+.hud-topbar .loc {
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  opacity: 0.6;
+  padding-top: 6px;
+}
+.hud-topbar .loc.loc-offline {
+  opacity: 1;
+  color: rgba(var(--accent-rgb), 0.25);
+}
+.hud-topbar .loc .link-offline {
+  display: inline-block;
+  color: #ff4444;
+  opacity: 1;
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  text-shadow: 0 0 10px rgba(255, 68, 68, 0.9);
+  border-bottom: 1px solid rgba(255, 68, 68, 0.7);
+  padding-bottom: 1px;
+  animation: linkGlitch 5s linear infinite;
+}
+@keyframes linkGlitch {
+  0%, 92%, 100% {
+    text-shadow: 0 0 10px rgba(255, 68, 68, 0.9);
+    transform: translateX(0);
+  }
+  93% {
+    text-shadow:
+      0 0 10px rgba(255, 68, 68, 0.9),
+      2px 0 0 rgba(255, 0, 100, 0.85),
+      -2px 0 0 rgba(0, 200, 255, 0.6);
+    transform: translateX(-1px);
+  }
+  95% {
+    text-shadow:
+      0 0 10px rgba(255, 68, 68, 0.9),
+      -2px 0 0 rgba(255, 0, 100, 0.85),
+      2px 0 0 rgba(0, 200, 255, 0.6);
+    transform: translateX(1px);
+  }
+  97% {
+    text-shadow:
+      0 0 10px rgba(255, 68, 68, 0.9),
+      1px 0 0 rgba(255, 0, 100, 0.85),
+      -1px 0 0 rgba(0, 200, 255, 0.6);
+    transform: translateX(0);
+  }
+}
+.hud-topbar-left {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.hud-topbar .tabs {
+  display: flex;
+  gap: 18px;
+  padding-top: 2px;
+}
+.hud-topbar .tabs .tab {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: var(--accent);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  cursor: pointer;
+  opacity: 0.55;
+  transition: opacity 120ms ease, text-shadow 120ms ease;
+}
+.hud-topbar .tabs .tab:hover {
+  opacity: 0.85;
+}
+.hud-topbar .tabs .tab.tab-active {
+  opacity: 1;
+  cursor: default;
+  text-shadow: 0 0 8px rgba(var(--accent-rgb), 0.6);
+}
+.hud-topbar .tabs .tab.tab-active::before {
+  content: '\25A0\00A0';
+}
+
+.hud-topbar .clock { text-align: right; }
+.hud-topbar .clock-time {
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  text-shadow: 0 0 8px var(--accent-glow-soft);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.hud-topbar .clock-time .tz {
+  font-size: 10px;
+  opacity: 0.55;
+  margin-left: 6px;
+  letter-spacing: 0.2em;
+}
+.hud-topbar .clock-date {
+  font-size: 10px;
+  color: var(--accent);
+  opacity: 0.55;
+  letter-spacing: 0.2em;
+  margin-top: 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============================================================
+   SECTION LABEL (used in hourly + outlook views)
+   ============================================================ */
+
+.hud-hourly-section,
+.hud-outlook-section {
+  margin-top: 40px;
+  padding-top: 24px;
+  border-top: 1px dashed rgba(var(--accent-rgb), 0.18);
+}
+
+/* When a section is the first thing under TopBar (single-panel view), the
+   section's own top border + extra margin would duplicate TopBar's bottom
+   border with empty space between. Collapse the redundant chrome. */
+.hud-topbar + .hud-hourly-section,
+.hud-topbar + .hud-outlook-section {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+.hud-section-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  opacity: 0.6;
+  margin: 0 0 22px;
+}
+.hud-section-label .right { opacity: 0.55; }
+
+/* ============================================================
+   CURRENT CONDITIONS — hero readout
+   ============================================================ */
+
+.hud-hero {
+  display: flex;
+  align-items: center;
+  gap: 48px;
+  margin: 0 0 30px;
+}
+.hud-readout {
+  position: relative;
+  padding: 18px 22px 16px;
+  margin: 0;
+  display: inline-block;
+}
+.hud-readout .corner {
+  position: absolute;
+  width: 14px; height: 14px;
+  border: 2px solid var(--accent);
+}
+.hud-readout .corner.tl { top: 0; left: 0;  border-right: 0; border-bottom: 0; }
+.hud-readout .corner.tr { top: 0; right: 0; border-left: 0;  border-bottom: 0; }
+.hud-readout .corner.bl { bottom: 0; left: 0;  border-right: 0; border-top: 0; }
+.hud-readout .corner.br { bottom: 0; right: 0; border-left: 0;  border-top: 0; }
+.hud-readout .tag {
+  font-size: 9px; letter-spacing: 0.22em; opacity: 0.6; margin-bottom: 2px;
+}
+.hud-readout .temp {
+  font-size: 56px; font-weight: 500; line-height: 1; letter-spacing: -0.01em;
+  text-shadow: 0 0 12px rgba(var(--accent-rgb),0.4);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.hud-readout .temp .unit { font-size: 24px; opacity: 0.7; }
+.hud-readout .temp .feel { font-size: 18px; opacity: 0.5; margin-left: 10px; }
+.hud-readout .temp .trend {
+  font-size: 14px;
+  font-weight: normal;
+  opacity: 0.75;
+  margin-left: 14px;
+  letter-spacing: 0.03em;
+  text-shadow: none;
+}
+.hud-readout .desc {
+  font-size: 11px;
+  opacity: 0.75;
+  margin-top: 8px;
+  letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.hud-readout .desc .sep {
+  opacity: 0.4;
+  margin: 0 8px;
+}
+.hud-readout .desc .suntime {
+  letter-spacing: 0.04em;
+}
+
+.hud-hero-icon {
+  color: var(--accent);
+  filter: drop-shadow(0 0 8px var(--accent-glow-soft));
+  flex-shrink: 0;
+}
+.hud-hero-icon svg {
+  width: 112px;
+  height: 112px;
+  display: block;
+}
+
+/* ============================================================
+   CURRENT CONDITIONS — sensor bars
+   ============================================================ */
+
+.bars {
+  display: grid;
+  grid-template-columns: 44px 1fr 72px 92px;
+  gap: 11px 14px;
+  align-items: center;
+  max-width: 640px;
+  margin: 0;
+}
+.bars .lbl   { font-size: 10px; letter-spacing: 0.15em; opacity: 0.55; }
+.bars .val   { font-size: 11px; letter-spacing: 0.05em; text-align: right; font-variant-numeric: tabular-nums; }
+.bars .trend {
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  text-align: right;
+  opacity: 0.75;
+  font-variant-numeric: tabular-nums;
+}
+.bars .trend.steady { opacity: 0.45; }
+
+.sb { position: relative; height: 12px; }
+.sb-off, .sb-on {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    90deg,
+    currentColor 0 calc(5% - 0.6%),
+    transparent calc(5% - 0.6%) 5%
+  );
+}
+.sb-off { opacity: 0.14; }
+.sb-on {
+  filter: drop-shadow(0 0 3px currentColor);
+  clip-path: inset(0 calc(100% - var(--fill, 50%)) 0 0);
+}
+
+/* ============================================================
+   FOOTER (shared across all views)
+   ============================================================ */
+
+.hud-footer {
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  opacity: 0.55;
+  margin: 28px 0 0;
+  padding-top: 14px;
+  border-top: 1px dashed rgba(var(--accent-rgb),0.18);
+}
+.hud-footer .dot {
+  display: inline-block;
+  width: 6px; height: 6px;
+  background: var(--accent);
+  border-radius: 50%;
+  box-shadow: 0 0 6px var(--accent-glow-strong);
+  margin-right: 8px;
+  vertical-align: middle;
+  animation: hudBlink 1.8s ease-in-out infinite;
+}
+.hud-footer .dot.dot-error {
+  background: #ff4444;
+  box-shadow: 0 0 6px rgba(255, 68, 68, 0.9);
+  animation: none;
+}
+@keyframes hudBlink {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.35; }
+}
+
+/* ============================================================
+   ICON PALETTE (current-conditions showcase section)
+   ============================================================ */
+
+.hud-palette {
+  margin: 28px 0 0;
+  padding-top: 18px;
+  border-top: 1px dashed rgba(var(--accent-rgb),0.12);
+}
+.hud-palette .palette-label {
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  opacity: 0.45;
+  margin-bottom: 14px;
+}
+.hud-palette .palette-row {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  gap: 16px;
+  max-width: 780px;
+}
+.hud-palette .palette-item {
+  text-align: center;
+  color: var(--accent);
+}
+.hud-palette .palette-item svg {
+  width: 48px;
+  height: 48px;
+  display: block;
+  margin: 0 auto 6px;
+  filter: drop-shadow(0 0 3px var(--accent-glow-soft));
+}
+.hud-palette .palette-item .lbl {
+  font-size: 8px;
+  letter-spacing: 0.15em;
+  opacity: 0.55;
+}
+
+/* ============================================================
+   HOURLY FORECAST VIEW
+   ============================================================ */
+
+.hourly-wrap {
+  max-width: 760px;
+  margin: 0;
+}
+.hourly-chart {
+  width: 100%;
+  height: 110px;
+  margin: 0 0 10px;
+}
+.hourly-chart svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+}
+.hl-line {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.5;
+  filter: drop-shadow(0 0 4px rgba(var(--accent-rgb),0.7));
+}
+.hl-point {
+  fill: var(--accent);
+  stroke: #000d10;
+  stroke-width: 1.5;
+  filter: drop-shadow(0 0 3px var(--accent-glow-strong));
+}
+.hl-temp-label {
+  fill: var(--accent);
+  opacity: 0.9;
+  font-size: 11px;
+  font-family: 'SF Mono','Consolas',monospace;
+  text-anchor: middle;
+  font-variant-numeric: tabular-nums;
+}
+.hl-midline {
+  stroke: rgba(var(--accent-rgb),0.1);
+  stroke-width: 1;
+  stroke-dasharray: 2 4;
+}
+
+.hourly-icons {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  margin: 0 0 12px;
+}
+.hourly-icons > .col {
+  color: var(--accent);
+  opacity: 0.8;
+  text-align: center;
+  filter: drop-shadow(0 0 2px rgba(var(--accent-rgb),0.4));
+}
+.hourly-icons svg {
+  width: 26px;
+  height: 26px;
+  display: block;
+  margin: 0 auto;
+}
+
+.hourly-precip {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  height: 36px;
+  margin: 0 0 6px;
+  align-items: end;
+  position: relative;
+}
+.hourly-precip > .col {
+  display: flex;
+  align-items: end;
+  justify-content: center;
+  height: 100%;
+  position: relative;
+}
+.hourly-precip .bar {
+  width: 14px;
+  background: var(--accent);
+  box-shadow: 0 0 4px rgba(var(--accent-rgb),0.6);
+}
+.hourly-precip .bar.low  { opacity: 0.25; }
+.hourly-precip .bar.med  { opacity: 0.55; }
+.hourly-precip .bar.high { opacity: 0.9; }
+.hourly-precip .pct {
+  position: absolute;
+  top: -2px;
+  font-size: 8px;
+  color: var(--accent);
+  opacity: 0.75;
+  letter-spacing: 0.05em;
+  font-variant-numeric: tabular-nums;
+}
+
+.hourly-hours {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  opacity: 0.55;
+  font-variant-numeric: tabular-nums;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(var(--accent-rgb),0.14);
+}
+.hourly-hours > .col {
+  text-align: center;
+}
+
+/* ============================================================
+   7-DAY OUTLOOK VIEW
+   ============================================================ */
+
+.outlook {
+  max-width: 780px;
+  display: grid;
+  grid-template-columns: 112px 38px 52px 1fr 68px;
+  column-gap: 16px;
+  row-gap: 14px;
+  align-items: center;
+}
+
+.outlook .date {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  font-variant-numeric: tabular-nums;
+}
+.outlook .date .dow { opacity: 0.9; }
+.outlook .date .dot { opacity: 0.35; margin: 0 6px; }
+.outlook .date .dt  { opacity: 0.55; }
+
+.outlook .icon {
+  color: var(--accent);
+  opacity: 0.85;
+  filter: drop-shadow(0 0 3px var(--accent-glow-soft));
+}
+.outlook .icon svg {
+  width: 30px;
+  height: 30px;
+  display: block;
+}
+
+.outlook .precip {
+  font-size: 10px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.05em;
+}
+.outlook .precip.low  { opacity: 0.3; }
+.outlook .precip.med  { opacity: 0.65; }
+.outlook .precip.high { opacity: 0.95; }
+.outlook .precip.zero { opacity: 0.2; }
+
+.outlook .range {
+  position: relative;
+  height: 12px;
+  background: rgba(var(--accent-rgb),0.08);
+  border-left: 1px solid rgba(var(--accent-rgb),0.14);
+  border-right: 1px solid rgba(var(--accent-rgb),0.14);
+}
+.outlook .range .seg {
+  position: absolute;
+  top: 2px; bottom: 2px;
+  background: var(--accent);
+  opacity: 1;
+  box-shadow:
+    0 0 6px rgba(var(--accent-rgb),0.85),
+    0 0 14px rgba(var(--accent-rgb),0.35);
+}
+.outlook .range .tick {
+  position: absolute;
+  top: -2px; bottom: -2px;
+  width: 1px;
+  background: var(--accent);
+  box-shadow: 0 0 3px var(--accent-glow-strong);
+}
+
+.outlook .lh {
+  font-size: 11px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+.outlook .lh .h { opacity: 0.95; }
+.outlook .lh .sep { opacity: 0.35; margin: 0 4px; }
+.outlook .lh .l { opacity: 0.5; }
+
+.outlook-scale {
+  max-width: 780px;
+  display: grid;
+  grid-template-columns: 112px 38px 52px 1fr 68px;
+  column-gap: 16px;
+  margin: 0 0 10px;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  opacity: 0.45;
+  font-variant-numeric: tabular-nums;
+}
+.outlook-scale .scale-axis {
+  grid-column: 4;
+  display: flex;
+  justify-content: space-between;
+}
+
+/* ============================================================
+   ALERT BANNER (v1.1 Step 3)
+   Layout: [stripes-left] [content] [stripes-right]
+   ============================================================ */
+
+.alert-banner {
+  display: flex;
+  flex-direction: column;
+  margin: 0 0 14px;
+  border-bottom: 1px dashed rgba(var(--accent-rgb), 0.18);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  font-weight: 700;
+}
+
+.alert-banner-row {
+  display: flex;
+  align-items: stretch;
+  min-height: 12px;
+}
+
+.alert-banner-toggle {
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0 14px;
+  letter-spacing: 0;
+  text-shadow: inherit;
+}
+
+.alert-banner-toggle:hover {
+  filter: brightness(1.2);
+}
+
+.alert-banner-dismiss {
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 14px;
+  letter-spacing: 0;
+  text-shadow: inherit;
+}
+
+.alert-banner-dismiss:hover {
+  filter: brightness(1.2);
+}
+
+.alert-banner-list {
+  list-style: none;
+  padding: 8px 18px 12px;
+  margin: 0;
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  background: #000d10;
+  border-top: 1px dotted rgba(255, 255, 255, 0.08);
+}
+
+.alert-banner-list li {
+  padding: 3px 0;
+  opacity: 0.9;
+}
+
+.alert-banner-list li::before {
+  content: '\2022\00A0\00A0';
+  opacity: 0.7;
+}
+
+.alert-banner-list-sep {
+  opacity: 0.4;
+}
+
+.alert-banner-list-area {
+  opacity: 0.55;
+}
+
+/* Pause stripe animation while expanded so the dense bullet list reads cleanly */
+.alert-banner-expanded .alert-banner-stripes-left::before,
+.alert-banner-expanded .alert-banner-stripes-right::before {
+  animation-play-state: paused;
+}
+
+.alert-banner-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 18px;
+  white-space: nowrap;
+}
+
+.alert-banner-glyph {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.alert-banner-stripes {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background-color: currentColor;
+}
+
+.alert-banner-stripes::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -20px;
+  width: calc(100% + 40px);
+}
+
+.alert-banner-stripes-left::before {
+  background: repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(0,0,0,0.35) 5px, rgba(0,0,0,0.35) 10px);
+  animation: stripe-slide-right 2s linear infinite;
+}
+
+.alert-banner-stripes-right::before {
+  background: repeating-linear-gradient(-45deg, transparent, transparent 5px, rgba(0,0,0,0.35) 5px, rgba(0,0,0,0.35) 10px);
+  animation: stripe-slide-left 2s linear infinite;
+}
+
+@keyframes stripe-slide-right {
+  from { transform: translateX(0); }
+  to   { transform: translateX(14.14px); }
+}
+
+@keyframes stripe-slide-left {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-14.14px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alert-banner-stripes-left::before,
+  .alert-banner-stripes-right::before {
+    animation: none;
+  }
+}
+
+/* Default branding banner (no active alerts) */
+.alert-banner-brand {
+  color: var(--accent);
+  text-shadow: 0 0 8px var(--accent-glow-soft);
+}
+
+/* Per-tier text color + glow. Stripes auto-inherit via currentColor. */
+.alert-banner[data-tier="tornado-emergency"] {
+  color: #9400D3;
+  text-shadow: 0 0 8px rgba(148, 0, 211, 0.7);
+}
+.alert-banner[data-tier="tornado-warning"] {
+  color: #ff4444;
+  text-shadow: 0 0 8px rgba(255, 68, 68, 0.7);
+}
+.alert-banner[data-tier="severe-warning"] {
+  color: #ff8800;
+  text-shadow: 0 0 8px rgba(255, 136, 0, 0.7);
+}
+.alert-banner[data-tier="blizzard"] {
+  color: #ffffff;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.7);
+}
+.alert-banner[data-tier="winter-storm"] {
+  color: #4488ff;
+  text-shadow: 0 0 8px rgba(68, 136, 255, 0.7);
+}
+.alert-banner[data-tier="flood"] {
+  color: #22cc66;
+  text-shadow: 0 0 8px rgba(34, 204, 102, 0.7);
+}
+.alert-banner[data-tier="heat"] {
+  color: #ff5533;
+  text-shadow: 0 0 8px rgba(255, 85, 51, 0.7);
+}
+.alert-banner[data-tier="special-weather-statement"] {
+  color: #ee82ee;
+  text-shadow: 0 0 8px rgba(238, 130, 238, 0.7);
+}
+.alert-banner[data-tier="watch"] {
+  color: #ffdd33;
+  text-shadow: 0 0 8px rgba(255, 221, 51, 0.7);
+}
+.alert-banner[data-tier="watch"] .alert-banner-stripes-left {
+  background-image: repeating-linear-gradient(45deg,  #ffdd33 0 6px, #a08820 6px 12px);
+}
+.alert-banner[data-tier="watch"] .alert-banner-stripes-right {
+  background-image: repeating-linear-gradient(-45deg, #ffdd33 0 6px, #a08820 6px 12px);
+}
+
+/* ============================================================
+   UI ACCENT COLOR OVERRIDE (v1.1 Step 4)
+   When the root .hud-showcase has data-alert-tier set, --accent and
+   --accent-rgb flip to the tier color. Every CSS rule that uses
+   var(--accent) or rgba(var(--accent-rgb), X) repaints automatically.
+   ============================================================ */
+
+.hud-showcase[data-alert-tier="tornado-emergency"] {
+  --accent: #9400D3;
+  --accent-rgb: 148, 0, 211;
+}
+.hud-showcase[data-alert-tier="tornado-warning"] {
+  --accent: #ff4444;
+  --accent-rgb: 255, 68, 68;
+}
+.hud-showcase[data-alert-tier="severe-warning"] {
+  --accent: #ff8800;
+  --accent-rgb: 255, 136, 0;
+}
+.hud-showcase[data-alert-tier="blizzard"] {
+  --accent: #ffffff;
+  --accent-rgb: 255, 255, 255;
+}
+.hud-showcase[data-alert-tier="winter-storm"] {
+  --accent: #4488ff;
+  --accent-rgb: 68, 136, 255;
+}
+.hud-showcase[data-alert-tier="flood"] {
+  --accent: #22cc66;
+  --accent-rgb: 34, 204, 102;
+}
+.hud-showcase[data-alert-tier="heat"] {
+  --accent: #ff5533;
+  --accent-rgb: 255, 85, 51;
+}
+.hud-showcase[data-alert-tier="special-weather-statement"] {
+  --accent: #ee82ee;
+  --accent-rgb: 238, 130, 238;
+}
+.hud-showcase[data-alert-tier="watch"] {
+  --accent: #ffdd33;
+  --accent-rgb: 255, 221, 51;
+}

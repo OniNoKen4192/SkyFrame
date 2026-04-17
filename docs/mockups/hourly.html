@@ -1,0 +1,382 @@
+<style>
+  .hud-showcase {
+    display: block !important;
+    aspect-ratio: auto !important;
+    background: #000d10;
+    padding: 28px 40px 36px;
+    font-family: 'SF Mono','Consolas','Courier New',monospace;
+    min-height: 460px;
+    position: relative;
+    overflow: hidden;
+    color: #00e5d1;
+  }
+  .hud-showcase::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(0,229,209,0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,209,0.06) 1px, transparent 1px);
+    background-size: 20px 20px;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .hud-showcase > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .hud-topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin: 0 0 24px;
+    padding-bottom: 14px;
+    border-bottom: 1px dashed rgba(0,229,209,0.18);
+  }
+  .hud-topbar .loc { font-size: 10px; letter-spacing: 0.22em; opacity: 0.6; padding-top: 6px; }
+  .hud-topbar .clock { text-align: right; }
+  .hud-topbar .clock-time {
+    font-size: 18px; font-weight: 500; letter-spacing: 0.08em;
+    color: #00e5d1; text-shadow: 0 0 8px rgba(0,229,209,0.5);
+    font-variant-numeric: tabular-nums; line-height: 1;
+  }
+  .hud-topbar .clock-time .tz { font-size: 10px; opacity: 0.55; margin-left: 6px; letter-spacing: 0.2em; }
+  .hud-topbar .clock-date {
+    font-size: 10px; color: #00e5d1; opacity: 0.55; letter-spacing: 0.2em;
+    margin-top: 6px; font-variant-numeric: tabular-nums;
+  }
+
+  .hud-section-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    opacity: 0.6;
+    margin: 0 0 22px;
+  }
+  .hud-section-label .right { opacity: 0.55; }
+
+  /* ============ hourly chart ============ */
+  .hourly-wrap {
+    max-width: 760px;
+    margin: 0;
+  }
+  .hourly-chart {
+    width: 100%;
+    height: 110px;
+    margin: 0 0 10px;
+  }
+  .hourly-chart svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+    overflow: visible;
+  }
+  .hl-line {
+    fill: none;
+    stroke: #00e5d1;
+    stroke-width: 1.5;
+    filter: drop-shadow(0 0 4px rgba(0,229,209,0.7));
+  }
+  .hl-point {
+    fill: #00e5d1;
+    stroke: #000d10;
+    stroke-width: 1.5;
+    filter: drop-shadow(0 0 3px rgba(0,229,209,0.9));
+  }
+  .hl-temp-label {
+    fill: #00e5d1;
+    opacity: 0.9;
+    font-size: 11px;
+    font-family: 'SF Mono','Consolas',monospace;
+    text-anchor: middle;
+    font-variant-numeric: tabular-nums;
+  }
+  .hl-midline {
+    stroke: rgba(0,229,209,0.1);
+    stroke-width: 1;
+    stroke-dasharray: 2 4;
+  }
+
+  .hourly-icons {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    margin: 0 0 12px;
+  }
+  .hourly-icons > .col {
+    color: #00e5d1;
+    opacity: 0.8;
+    text-align: center;
+    filter: drop-shadow(0 0 2px rgba(0,229,209,0.4));
+  }
+  .hourly-icons svg {
+    width: 26px;
+    height: 26px;
+    display: block;
+    margin: 0 auto;
+  }
+
+  .hourly-precip {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    height: 36px;
+    margin: 0 0 6px;
+    align-items: end;
+    position: relative;
+  }
+  .hourly-precip > .col {
+    display: flex;
+    align-items: end;
+    justify-content: center;
+    height: 100%;
+    position: relative;
+  }
+  .hourly-precip .bar {
+    width: 14px;
+    background: #00e5d1;
+    box-shadow: 0 0 4px rgba(0,229,209,0.6);
+  }
+  .hourly-precip .bar.low  { opacity: 0.25; }
+  .hourly-precip .bar.med  { opacity: 0.55; }
+  .hourly-precip .bar.high { opacity: 0.9; }
+  .hourly-precip .pct {
+    position: absolute;
+    top: -2px;
+    font-size: 8px;
+    color: #00e5d1;
+    opacity: 0.75;
+    letter-spacing: 0.05em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .hourly-hours {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    color: #00e5d1;
+    opacity: 0.55;
+    font-variant-numeric: tabular-nums;
+    padding-top: 10px;
+    border-top: 1px dashed rgba(0,229,209,0.14);
+  }
+  .hourly-hours > .col {
+    text-align: center;
+  }
+
+  .hud-footer {
+    font-size: 9px;
+    letter-spacing: 0.22em;
+    opacity: 0.55;
+    margin: 32px 0 0;
+    padding-top: 14px;
+    border-top: 1px dashed rgba(0,229,209,0.18);
+  }
+  .hud-footer .dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: #00e5d1;
+    border-radius: 50%;
+    box-shadow: 0 0 6px rgba(0,229,209,0.9);
+    margin-right: 8px;
+    vertical-align: middle;
+    animation: hudBlink 1.8s ease-in-out infinite;
+  }
+  @keyframes hudBlink {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.35; }
+  }
+</style>
+
+<svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="wxicon-cloud" viewBox="0 0 64 64">
+    <path d="M 14 46 L 14 38 Q 14 30 22 30 Q 24 22 32 22 Q 42 22 44 30 Q 52 30 52 38 L 52 46 Z"
+      fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+  </symbol>
+  <symbol id="wxicon-partly-night" viewBox="0 0 64 64">
+    <path d="M 30 8 A 16 16 0 1 0 30 40 A 12 12 0 1 1 30 8 Z"
+      fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+    <path d="M 16 52 L 16 44 Q 16 36 24 36 Q 26 30 34 30 Q 42 30 44 36 Q 52 36 52 44 L 52 52 Z"
+      fill="#000d10" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+  </symbol>
+  <symbol id="wxicon-rain" viewBox="0 0 64 64">
+    <path d="M 12 36 L 12 28 Q 12 20 20 20 Q 22 12 30 12 Q 40 12 42 20 Q 50 20 50 28 L 50 36 Z"
+      fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+    <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <line x1="18" y1="44" x2="14" y2="54" />
+      <line x1="30" y1="44" x2="26" y2="54" />
+      <line x1="42" y1="44" x2="38" y2="54" />
+    </g>
+  </symbol>
+</svg>
+
+<h2>HUD / tactical — hourly forecast view</h2>
+<p class="subtitle">Temperature line chart across 12 hours, with condition icons, precipitation bars, and hour labels stacked below on the same x-axis.</p>
+
+<div class="cards">
+  <div class="card" data-choice="hud-hourly" onclick="toggleSelect(this)">
+    <div class="card-image hud-showcase">
+      <div class="hud-topbar">
+        <div class="loc">&#9632; SKYFRAME &nbsp;·&nbsp; {CITY} {ZIP} &nbsp;·&nbsp; KMKE LINK</div>
+        <div class="clock">
+          <div class="clock-time">
+            <span class="clock-digits">--:--:--</span><span class="tz clock-tz">---</span>
+          </div>
+          <div class="clock-date">--- · --- -- · ----</div>
+        </div>
+      </div>
+
+      <div class="hud-section-label">
+        <span>&#9632; HOURLY FORECAST &nbsp;·&nbsp; NEXT 12H &nbsp;·&nbsp; MKX GRID 88,58</span>
+        <span class="right">RANGE 47&deg; &mdash; 63&deg;F</span>
+      </div>
+
+      <div class="hourly-wrap">
+        <!-- temperature line chart -->
+        <div class="hourly-chart">
+          <svg viewBox="0 0 720 110" preserveAspectRatio="none">
+            <!-- faint midline for reference -->
+            <line class="hl-midline" x1="0" y1="55" x2="720" y2="55" />
+
+            <!-- temperature line (12 points: hours 15:00 through 02:00) -->
+            <!-- temp y formula: y = 20 + (65 - temp) * 4 -->
+            <!-- x = (i + 0.5) * 60 for i in 0..11 -->
+            <polyline class="hl-line" points="
+              30,28
+              90,32
+              150,36
+              210,40
+              270,48
+              330,60
+              390,68
+              450,72
+              510,76
+              570,84
+              630,88
+              690,92
+            " />
+
+            <!-- dots at each hour -->
+            <circle class="hl-point" cx="30"  cy="28" r="3.5" />
+            <circle class="hl-point" cx="90"  cy="32" r="3.5" />
+            <circle class="hl-point" cx="150" cy="36" r="3.5" />
+            <circle class="hl-point" cx="210" cy="40" r="3.5" />
+            <circle class="hl-point" cx="270" cy="48" r="3.5" />
+            <circle class="hl-point" cx="330" cy="60" r="3.5" />
+            <circle class="hl-point" cx="390" cy="68" r="3.5" />
+            <circle class="hl-point" cx="450" cy="72" r="3.5" />
+            <circle class="hl-point" cx="510" cy="76" r="3.5" />
+            <circle class="hl-point" cx="570" cy="84" r="3.5" />
+            <circle class="hl-point" cx="630" cy="88" r="3.5" />
+            <circle class="hl-point" cx="690" cy="92" r="3.5" />
+
+            <!-- temperature value labels above each dot -->
+            <text class="hl-temp-label" x="30"  y="18">63</text>
+            <text class="hl-temp-label" x="90"  y="22">62</text>
+            <text class="hl-temp-label" x="150" y="26">61</text>
+            <text class="hl-temp-label" x="210" y="30">60</text>
+            <text class="hl-temp-label" x="270" y="38">58</text>
+            <text class="hl-temp-label" x="330" y="50">55</text>
+            <text class="hl-temp-label" x="390" y="58">53</text>
+            <text class="hl-temp-label" x="450" y="62">52</text>
+            <text class="hl-temp-label" x="510" y="66">51</text>
+            <text class="hl-temp-label" x="570" y="74">49</text>
+            <text class="hl-temp-label" x="630" y="78">48</text>
+            <text class="hl-temp-label" x="690" y="82">47</text>
+          </svg>
+        </div>
+
+        <!-- condition icons per hour -->
+        <div class="hourly-icons">
+          <div class="col"><svg><use href="#wxicon-cloud" /></svg></div>
+          <div class="col"><svg><use href="#wxicon-cloud" /></svg></div>
+          <div class="col"><svg><use href="#wxicon-cloud" /></svg></div>
+          <div class="col"><svg><use href="#wxicon-cloud" /></svg></div>
+          <div class="col"><svg><use href="#wxicon-rain" /></svg></div>
+          <div class="col"><svg><use href="#wxicon-rain" /></svg></div>
+          <div class="col"><svg><use href="#wxicon-rain" /></svg></div>
+          <div class="col"><svg><use href="#wxicon-rain" /></svg></div>
+          <div class="col"><svg><use href="#wxicon-cloud" /></svg></div>
+          <div class="col"><svg><use href="#wxicon-partly-night" /></svg></div>
+          <div class="col"><svg><use href="#wxicon-partly-night" /></svg></div>
+          <div class="col"><svg><use href="#wxicon-partly-night" /></svg></div>
+        </div>
+
+        <!-- precipitation probability bars -->
+        <div class="hourly-precip">
+          <div class="col"><div class="bar low"  style="height: 10%"></div></div>
+          <div class="col"><div class="bar low"  style="height: 10%"></div></div>
+          <div class="col"><div class="bar low"  style="height: 15%"></div></div>
+          <div class="col"><div class="bar low"  style="height: 20%"></div></div>
+          <div class="col"><div class="bar med"  style="height: 45%"></div><div class="pct">45%</div></div>
+          <div class="col"><div class="bar high" style="height: 60%"></div><div class="pct">60%</div></div>
+          <div class="col"><div class="bar high" style="height: 70%"></div><div class="pct">70%</div></div>
+          <div class="col"><div class="bar med"  style="height: 50%"></div><div class="pct">50%</div></div>
+          <div class="col"><div class="bar low"  style="height: 20%"></div></div>
+          <div class="col"><div class="bar low"  style="height: 10%"></div></div>
+          <div class="col"><div class="bar low"  style="height: 5%"></div></div>
+          <div class="col"><div class="bar low"  style="height: 5%"></div></div>
+        </div>
+
+        <!-- hour labels -->
+        <div class="hourly-hours">
+          <div class="col">15:00</div>
+          <div class="col">16:00</div>
+          <div class="col">17:00</div>
+          <div class="col">18:00</div>
+          <div class="col">19:00</div>
+          <div class="col">20:00</div>
+          <div class="col">21:00</div>
+          <div class="col">22:00</div>
+          <div class="col">23:00</div>
+          <div class="col">00:00</div>
+          <div class="col">01:00</div>
+          <div class="col">02:00</div>
+        </div>
+      </div>
+
+      <div class="hud-footer">
+        <span class="dot"></span>LINK.KMKE &nbsp;·&nbsp; LAST PULL 14:31:34 &nbsp;·&nbsp; NEXT 14:33:04
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Hourly — how does it read?</h3>
+      <p>Things to evaluate: chart legibility, icon size (26px), precip bar intensity mapping, hour label format, whether 12h is the right span vs 24h.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var timeFmt = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Chicago',
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
+    hourCycle: 'h23', timeZoneName: 'short'
+  });
+  var dateFmt = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Chicago',
+    weekday: 'short', month: 'short', day: '2-digit', year: 'numeric'
+  });
+  function partsToMap(parts) {
+    var map = {};
+    for (var i = 0; i < parts.length; i++) map[parts[i].type] = parts[i].value;
+    return map;
+  }
+  function setAll(selector, value) {
+    var els = document.querySelectorAll(selector);
+    for (var i = 0; i < els.length; i++) els[i].textContent = value;
+  }
+  function tick() {
+    var now = new Date();
+    var t = partsToMap(timeFmt.formatToParts(now));
+    setAll('.clock-digits', t.hour + ':' + t.minute + ':' + t.second);
+    setAll('.clock-tz', t.timeZoneName || '');
+    var d = partsToMap(dateFmt.formatToParts(now));
+    var dateStr = ((d.weekday || '') + ' · ' + (d.month || '') + ' ' + (d.day || '') + ' · ' + (d.year || '')).toUpperCase();
+    setAll('.clock-date', dateStr);
+  }
+  tick();
+  setInterval(tick, 1000);
+})();
+</script>
