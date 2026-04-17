@@ -14,14 +14,14 @@ Local, ad-free weather dashboard powered by NOAA/NWS. Runs on your own computer,
 
 ## Requirements
 
-- **Node.js 20+** and **npm**
+- **[Node.js 20+](https://nodejs.org/)** and **npm** (npm is included with Node.js)
 - A US location (NWS only covers the United States and its territories)
 - A contact email (NWS requires one in the User-Agent header — it is never sent anywhere else)
 
 ## Quick start
 
 ```bash
-git clone https://github.com/kculver14/SkyFrame.git
+git clone https://github.com/OniNoKen4192/SkyFrame.git
 cd SkyFrame
 npm install
 npm run build
