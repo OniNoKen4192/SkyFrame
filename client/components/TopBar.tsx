@@ -30,6 +30,7 @@ interface TopBarProps {
   locationName: string;
   activeView: ViewKey;
   onViewChange: (view: ViewKey) => void;
+  onLocationClick: () => void;
 }
 
 const TABS: Array<{ key: ViewKey; label: string }> = [
@@ -39,7 +40,7 @@ const TABS: Array<{ key: ViewKey; label: string }> = [
   { key: 'all',     label: 'ALL' },
 ];
 
-export function TopBar({ stationId, error, locationName, activeView, onViewChange }: TopBarProps) {
+export function TopBar({ stationId, error, locationName, activeView, onViewChange, onLocationClick }: TopBarProps) {
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
@@ -62,7 +63,11 @@ export function TopBar({ stationId, error, locationName, activeView, onViewChang
     <div className="hud-topbar">
       <div className="hud-topbar-left">
         <div className={locClass}>
-          ■ SKYFRAME &nbsp;·&nbsp; {locationName} &nbsp;·&nbsp;
+          ■ SKYFRAME &nbsp;·&nbsp;
+          <span className="loc-link" onClick={onLocationClick} role="button" tabIndex={0}>
+            {locationName || 'SET LOCATION'} ✎
+          </span>
+          &nbsp;·&nbsp;
           <span className={linkClass}>{linkText}</span>
         </div>
         <nav className="tabs" aria-label="View selector">

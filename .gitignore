@@ -13,6 +13,7 @@ out/
 .env
 .env.*
 !.env.example
+skyframe.config.json
 
 # Claude Code local overrides (keep .claude/settings.json committed)
 .claude/settings.local.json
@@ -41,3 +42,4 @@ yarn-error.log*
 # Local-only scratch (personal notes, icon experiments)
 docs/userInput/
 icons/
+.env-bak

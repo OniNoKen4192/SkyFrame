@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { WeatherResponse } from '../shared/types';
 import { AlertBanner } from './components/AlertBanner';
+import { LocationSetup } from './components/LocationSetup';
 import { TopBar } from './components/TopBar';
 import { Footer } from './components/Footer';
 import { CurrentPanel } from './components/CurrentPanel';
@@ -50,13 +51,29 @@ const REFRESH_BUFFER_MS = 500;
 const ERROR_RETRY_MS = 30 * 1000;
 
 export default function App() {
+  const [configured, setConfigured] = useState<boolean | null>(null);
+  const [showSetup, setShowSetup] = useState(false);
   const [data, setData] = useState<WeatherResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [nextRetryAt, setNextRetryAt] = useState<string | null>(null);
   const [activeView, setActiveView] = useState<ViewKey>('current');
   const [dismissed, setDismissed] = useState<Set<string>>(() => loadDismissed());
 
+  // Check config status on mount
   useEffect(() => {
+    fetch('/api/config')
+      .then((r) => r.json())
+      .then((cfg: { configured: boolean }) => {
+        setConfigured(cfg.configured);
+        if (!cfg.configured) setShowSetup(true);
+      })
+      .catch(() => setConfigured(false));
+  }, []);
+
+  // Poll weather data only when configured
+  useEffect(() => {
+    if (!configured) return;
+
     let cancelled = false;
     let timeoutId: ReturnType<typeof setTimeout> | undefined;
 
@@ -76,9 +93,6 @@ export default function App() {
         setError(null);
         setNextRetryAt(null);
 
-        // Schedule next poll based on the server's own expiration timestamp,
-        // not a fixed client interval. This keeps the displayed "NEXT" time
-        // honest and avoids the 2× TTL drift from timer jitter.
         const nextAt = Date.parse(json.meta.nextRefreshAt);
         const delay = Number.isFinite(nextAt)
           ? nextAt - Date.now() + REFRESH_BUFFER_MS
@@ -97,7 +111,7 @@ export default function App() {
       cancelled = true;
       if (timeoutId !== undefined) clearTimeout(timeoutId);
     };
-  }, []);
+  }, [configured]);
 
   const loadingPlaceholder = (
     <div style={{ padding: '40px 0', textAlign: 'center', opacity: 0.5, fontSize: 11, letterSpacing: '0.22em' }}>
@@ -154,28 +168,28 @@ export default function App() {
     saveDismissed(next);
   };
 
+  const handleSetupComplete = () => {
+    setShowSetup(false);
+    setConfigured(true);
+    setData(null);
+  };
+
   return (
     <div className="hud-showcase" data-alert-tier={primaryTier}>
-      {visible.length > 0 ? (
-        <AlertBanner alerts={visible} onDismiss={dismissAlert} />
-      ) : (
-        <div className="alert-banner alert-banner-brand" role="banner">
-          <div className="alert-banner-row">
-            <div className="alert-banner-stripes alert-banner-stripes-left" aria-hidden="true" />
-            <div className="alert-banner-content">
-              <span className="alert-banner-glyph">■</span>
-              <span className="alert-banner-headline">SKYFRAME</span>
-            </div>
-            <div className="alert-banner-stripes alert-banner-stripes-right" aria-hidden="true" />
-          </div>
-        </div>
+      {showSetup && (
+        <LocationSetup
+          onComplete={handleSetupComplete}
+          onCancel={configured ? () => setShowSetup(false) : undefined}
+        />
       )}
+      {visible.length > 0 && <AlertBanner alerts={visible} onDismiss={dismissAlert} />}
       <TopBar
         stationId={data?.meta?.stationId ?? null}
         error={error}
-        locationName={data?.meta?.locationName ?? 'SKYFRAME'}
+        locationName={data?.meta?.locationName ?? ''}
         activeView={activeView}
         onViewChange={setActiveView}
+        onLocationClick={() => setShowSetup(true)}
       />
 
       {renderView()}

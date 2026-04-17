@@ -1,11 +1,12 @@
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseDebugTiers } from './nws/debug-alerts';
 
-// Load .env before anything reads process.env. No external deps — just
-// splits lines, skips comments, and sets vars that aren't already set.
-const envPath = resolve(dirname(fileURLToPath(import.meta.url)), '..', '.env');
+const PROJECT_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+
+// Load .env before anything reads process.env.
+const envPath = resolve(PROJECT_ROOT, '.env');
 if (existsSync(envPath)) {
   for (const line of readFileSync(envPath, 'utf-8').split('\n')) {
     const trimmed = line.trim();
@@ -18,63 +19,103 @@ if (existsSync(envPath)) {
   }
 }
 
-function requireEnv(name: string): string {
-  const val = process.env[name];
-  if (!val) throw new Error(`Missing required env var: ${name}. Copy .env.example to .env and fill in your values.`);
-  return val;
+// Persistent config saved by the setup flow. Takes priority over .env.
+export interface SkyFrameLocationConfig {
+  lat: number;
+  lon: number;
+  email: string;
+  forecastOffice: string;
+  gridX: number;
+  gridY: number;
+  timezone: string;
+  forecastZone: string;
+  stationPrimary: string;
+  stationFallback: string;
+  locationName: string;
 }
 
-function requireEnvNum(name: string): number {
-  const val = Number(requireEnv(name));
-  if (Number.isNaN(val)) throw new Error(`Env var ${name} must be a number.`);
-  return val;
+const CONFIG_FILE = resolve(PROJECT_ROOT, 'skyframe.config.json');
+
+function loadSavedConfig(): SkyFrameLocationConfig | null {
+  if (!existsSync(CONFIG_FILE)) return null;
+  try {
+    const raw = JSON.parse(readFileSync(CONFIG_FILE, 'utf-8'));
+    if (typeof raw.lat !== 'number' || typeof raw.email !== 'string') return null;
+    return raw as SkyFrameLocationConfig;
+  } catch {
+    return null;
+  }
 }
 
-export const CONFIG = {
-  location: {
-    lat: requireEnvNum('SKYFRAME_LAT'),
-    lon: requireEnvNum('SKYFRAME_LON'),
-    name: process.env.SKYFRAME_LOCATION_NAME || 'SKYFRAME',
-  },
+export function saveSkyFrameConfig(cfg: SkyFrameLocationConfig): void {
+  writeFileSync(CONFIG_FILE, JSON.stringify(cfg, null, 2) + '\n', 'utf-8');
+}
 
-  nws: {
-    forecastOffice: requireEnv('SKYFRAME_FORECAST_OFFICE'),
-    gridX: requireEnvNum('SKYFRAME_GRID_X'),
-    gridY: requireEnvNum('SKYFRAME_GRID_Y'),
-    timezone: requireEnv('SKYFRAME_TIMEZONE'),
-    forecastZone: requireEnv('SKYFRAME_FORECAST_ZONE'),
-    userAgent: `SkyFrame/0.1 (${requireEnv('SKYFRAME_EMAIL')})`,
-    baseUrl: 'https://api.weather.gov',
-  },
+// Build the runtime config. Location fields are nullable when unconfigured.
+function buildConfig() {
+  const saved = loadSavedConfig();
 
-  stations: {
-    primary: requireEnv('SKYFRAME_STATION_PRIMARY'),
-    fallback: requireEnv('SKYFRAME_STATION_FALLBACK'),
-    stalenessMinutes: 90,
-  },
+  // Location: prefer saved config.json > .env > null (unconfigured)
+  const lat = saved?.lat ?? (process.env.SKYFRAME_LAT ? Number(process.env.SKYFRAME_LAT) : null);
+  const lon = saved?.lon ?? (process.env.SKYFRAME_LON ? Number(process.env.SKYFRAME_LON) : null);
+  const email = saved?.email ?? process.env.SKYFRAME_EMAIL ?? null;
 
-  cache: {
-    forecastMs: 5 * 60 * 1000,
-    observationMs: 90 * 1000,
-    pointMetadataMs: 24 * 60 * 60 * 1000,
-    alertsMs: 5 * 60 * 1000,
-  },
+  const configured = lat != null && lon != null && email != null;
 
-  trendThresholds: {
-    temperatureF: 0.5,
-    dewpointF: 0.3,
-    pressureInHg: 0.01,
-    humidityPct: 0.5,
-    windMph: 1.0,
-    visibilityMi: 0.3,
-  },
+  return {
+    configured,
 
-  server: {
-    port: 3000,
-    host: '127.0.0.1',
-  },
+    location: {
+      lat: lat ?? 0,
+      lon: lon ?? 0,
+      name: saved?.locationName ?? process.env.SKYFRAME_LOCATION_NAME ?? '',
+    },
 
-  debug: {
-    injectTiers: parseDebugTiers(process.env.SKYFRAME_DEBUG_TIERS),
-  },
-};
+    nws: {
+      forecastOffice: saved?.forecastOffice ?? process.env.SKYFRAME_FORECAST_OFFICE ?? '',
+      gridX: saved?.gridX ?? (process.env.SKYFRAME_GRID_X ? Number(process.env.SKYFRAME_GRID_X) : 0),
+      gridY: saved?.gridY ?? (process.env.SKYFRAME_GRID_Y ? Number(process.env.SKYFRAME_GRID_Y) : 0),
+      timezone: saved?.timezone ?? process.env.SKYFRAME_TIMEZONE ?? 'America/Chicago',
+      forecastZone: saved?.forecastZone ?? process.env.SKYFRAME_FORECAST_ZONE ?? '',
+      userAgent: email ? `SkyFrame/0.1 (${email})` : 'SkyFrame/0.1 (unconfigured)',
+      baseUrl: 'https://api.weather.gov',
+    },
+
+    stations: {
+      primary: saved?.stationPrimary ?? process.env.SKYFRAME_STATION_PRIMARY ?? '',
+      fallback: saved?.stationFallback ?? process.env.SKYFRAME_STATION_FALLBACK ?? '',
+      stalenessMinutes: 90,
+    },
+
+    cache: {
+      forecastMs: 5 * 60 * 1000,
+      observationMs: 90 * 1000,
+      pointMetadataMs: 24 * 60 * 60 * 1000,
+      alertsMs: 5 * 60 * 1000,
+    },
+
+    trendThresholds: {
+      temperatureF: 0.5,
+      dewpointF: 0.3,
+      pressureInHg: 0.01,
+      humidityPct: 0.5,
+      windMph: 1.0,
+      visibilityMi: 0.3,
+    },
+
+    server: {
+      port: 3000,
+      host: '127.0.0.1',
+    },
+
+    debug: {
+      injectTiers: parseDebugTiers(process.env.SKYFRAME_DEBUG_TIERS),
+    },
+  };
+}
+
+export let CONFIG = buildConfig();
+
+export function reloadConfig(): void {
+  CONFIG = buildConfig();
+}
