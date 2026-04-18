@@ -35,21 +35,25 @@ describe('mapEventToTier', () => {
 });
 
 describe('tierRank', () => {
-  it('orders all tiers from most-severe (1) to least-severe (9)', () => {
+  it('orders all tiers from most-severe (1) to least-severe (11)', () => {
     expect(tierRank('tornado-emergency')).toBe(1);
-    expect(tierRank('tornado-warning')).toBe(2);
-    expect(tierRank('severe-warning')).toBe(3);
-    expect(tierRank('blizzard')).toBe(4);
-    expect(tierRank('winter-storm')).toBe(5);
-    expect(tierRank('flood')).toBe(6);
-    expect(tierRank('heat')).toBe(7);
-    expect(tierRank('special-weather-statement')).toBe(8);
-    expect(tierRank('watch')).toBe(9);
+    expect(tierRank('tornado-pds')).toBe(2);
+    expect(tierRank('tornado-warning')).toBe(3);
+    expect(tierRank('tstorm-destructive')).toBe(4);
+    expect(tierRank('severe-warning')).toBe(5);
+    expect(tierRank('blizzard')).toBe(6);
+    expect(tierRank('winter-storm')).toBe(7);
+    expect(tierRank('flood')).toBe(8);
+    expect(tierRank('heat')).toBe(9);
+    expect(tierRank('special-weather-statement')).toBe(10);
+    expect(tierRank('watch')).toBe(11);
   });
 
   it('returns smaller numbers for more-severe tiers', () => {
-    expect(tierRank('tornado-emergency')).toBeLessThan(tierRank('tornado-warning'));
-    expect(tierRank('tornado-warning')).toBeLessThan(tierRank('severe-warning'));
+    expect(tierRank('tornado-emergency')).toBeLessThan(tierRank('tornado-pds'));
+    expect(tierRank('tornado-pds')).toBeLessThan(tierRank('tornado-warning'));
+    expect(tierRank('tornado-warning')).toBeLessThan(tierRank('tstorm-destructive'));
+    expect(tierRank('tstorm-destructive')).toBeLessThan(tierRank('severe-warning'));
     expect(tierRank('severe-warning')).toBeLessThan(tierRank('watch'));
   });
 });
@@ -57,7 +61,8 @@ describe('tierRank', () => {
 describe('TIER_COLORS', () => {
   it('has base + dark for every AlertTier value', () => {
     const tiers: AlertTier[] = [
-      'tornado-emergency', 'tornado-warning', 'severe-warning',
+      'tornado-emergency', 'tornado-pds', 'tornado-warning',
+      'tstorm-destructive', 'severe-warning',
       'blizzard', 'winter-storm', 'flood', 'heat',
       'special-weather-statement', 'watch',
     ];

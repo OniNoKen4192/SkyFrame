@@ -83,7 +83,9 @@ export interface WeatherResponse {
 
 export type AlertTier =
   | 'tornado-emergency'
+  | 'tornado-pds'
   | 'tornado-warning'
+  | 'tstorm-destructive'
   | 'severe-warning'
   | 'blizzard'
   | 'winter-storm'

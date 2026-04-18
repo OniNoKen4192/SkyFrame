@@ -18,14 +18,16 @@ const EVENT_TO_TIER: ReadonlyMap<string, AlertTier> = new Map<string, AlertTier>
 
 const TIER_RANK: ReadonlyMap<AlertTier, number> = new Map<AlertTier, number>([
   ['tornado-emergency',          1],
-  ['tornado-warning',            2],
-  ['severe-warning',             3],
-  ['blizzard',                   4],
-  ['winter-storm',               5],
-  ['flood',                      6],
-  ['heat',                       7],
-  ['special-weather-statement',  8],
-  ['watch',                      9],
+  ['tornado-pds',                2],
+  ['tornado-warning',            3],
+  ['tstorm-destructive',         4],
+  ['severe-warning',             5],
+  ['blizzard',                   6],
+  ['winter-storm',               7],
+  ['flood',                      8],
+  ['heat',                       9],
+  ['special-weather-statement', 10],
+  ['watch',                     11],
 ]);
 
 export function mapEventToTier(event: string): AlertTier | null {
@@ -41,7 +43,9 @@ export function tierRank(tier: AlertTier): number {
 // at brightness ~0.6; tune live if needed.
 export const TIER_COLORS: Record<AlertTier, { base: string; dark: string }> = {
   'tornado-emergency':         { base: '#9400D3', dark: '#5a007e' },
+  'tornado-pds':               { base: '#d400a8', dark: '#800065' },
   'tornado-warning':           { base: '#ff4444', dark: '#a02828' },
+  'tstorm-destructive':        { base: '#c8102e', dark: '#78091c' },
   'severe-warning':            { base: '#ff8800', dark: '#a05500' },
   'blizzard':                  { base: '#ffffff', dark: '#bbbbbb' },
   'winter-storm':              { base: '#4488ff', dark: '#2a55a0' },

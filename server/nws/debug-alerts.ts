@@ -8,7 +8,9 @@ interface TierSpec {
 
 const TIER_SPECS: Record<AlertTier, TierSpec> = {
   'tornado-emergency':         { event: 'Tornado Emergency',           severity: 'Extreme'  },
+  'tornado-pds':               { event: 'Tornado Warning',             severity: 'Extreme'  },
   'tornado-warning':           { event: 'Tornado Warning',             severity: 'Extreme'  },
+  'tstorm-destructive':        { event: 'Severe Thunderstorm Warning', severity: 'Extreme'  },
   'severe-warning':            { event: 'Severe Thunderstorm Warning', severity: 'Severe'   },
   'blizzard':                  { event: 'Blizzard Warning',            severity: 'Extreme'  },
   'winter-storm':              { event: 'Winter Storm Warning',        severity: 'Severe'   },
