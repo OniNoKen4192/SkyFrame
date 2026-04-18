@@ -18,6 +18,8 @@ const TIER_SPECS: Record<AlertTier, TierSpec> = {
   'heat':                      { event: 'Heat Advisory',               severity: 'Moderate' },
   'special-weather-statement': { event: 'Special Weather Statement',   severity: 'Moderate' },
   'watch':                     { event: 'Tornado Watch',               severity: 'Severe'   },
+  'advisory-high':             { event: 'Wind Advisory',               severity: 'Minor'    },
+  'advisory':                  { event: 'Air Quality Alert',           severity: 'Minor'    },
 };
 
 const VALID_TIERS = new Set<string>(Object.keys(TIER_SPECS));

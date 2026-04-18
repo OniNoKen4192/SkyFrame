@@ -92,7 +92,9 @@ export type AlertTier =
   | 'flood'
   | 'heat'
   | 'special-weather-statement'
-  | 'watch';
+  | 'watch'
+  | 'advisory-high'
+  | 'advisory';
 
 export interface Alert {
   id: string;

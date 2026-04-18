@@ -11,6 +11,13 @@ const EVENT_TO_TIER: ReadonlyMap<string, AlertTier> = new Map<string, AlertTier>
   ['Special Weather Statement',  'special-weather-statement'],
   ['Tornado Watch',              'watch'],
   ['Severe Thunderstorm Watch',  'watch'],
+  ['Wind Advisory',              'advisory-high'],
+  ['Winter Weather Advisory',    'advisory-high'],
+  ['Dense Fog Advisory',         'advisory-high'],
+  ['Wind Chill Advisory',        'advisory-high'],
+  ['Freeze Warning',             'advisory-high'],
+  ['Freeze Watch',               'advisory-high'],
+  ['Frost Advisory',             'advisory-high'],
 ]);
 
 const TIER_RANK: ReadonlyMap<AlertTier, number> = new Map<AlertTier, number>([
@@ -25,6 +32,8 @@ const TIER_RANK: ReadonlyMap<AlertTier, number> = new Map<AlertTier, number>([
   ['heat',                       9],
   ['special-weather-statement', 10],
   ['watch',                     11],
+  ['advisory-high',             12],
+  ['advisory',                  13],
 ]);
 
 export function mapEventToTier(event: string): AlertTier | null {
@@ -50,6 +59,8 @@ export const TIER_COLORS: Record<AlertTier, { base: string; dark: string }> = {
   'heat':                      { base: '#ff5533', dark: '#a0331c' },
   'special-weather-statement': { base: '#ee82ee', dark: '#9d539d' },
   'watch':                     { base: '#ffdd33', dark: '#a08820' },
+  'advisory-high':             { base: '#ffaa22', dark: '#a06d15' },
+  'advisory':                  { base: '#00e5d1', dark: '#008e82' },
 };
 
 function firstValue(value: string[] | string | undefined): string | undefined {
@@ -61,7 +72,7 @@ function firstValue(value: string[] | string | undefined): string | undefined {
 export function classifyAlert(
   event: string,
   parameters?: Record<string, string[] | string> | undefined,
-): AlertTier | null {
+): AlertTier {
   if (event === 'Tornado Warning' || event === 'Tornado Emergency') {
     const threat = firstValue(parameters?.tornadoDamageThreat)?.toUpperCase();
     if (threat === 'CATASTROPHIC') return 'tornado-emergency';
@@ -74,5 +85,5 @@ export function classifyAlert(
     if (threat === 'DESTRUCTIVE') return 'tstorm-destructive';
     return 'severe-warning';
   }
-  return mapEventToTier(event);
+  return mapEventToTier(event) ?? 'advisory';
 }

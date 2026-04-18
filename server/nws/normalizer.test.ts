@@ -330,7 +330,7 @@ describe('normalizeWeather', () => {
       expect(result.meta.error).toBeUndefined();
     });
 
-    it('drops alerts whose event name is not in the v1.1 tier mapping', async () => {
+    it('classifies advisory-high events instead of dropping them (Wind Advisory, Frost Advisory)', async () => {
       mockWithAlerts({
         features: [
           { properties: { id: 'a', event: 'Wind Advisory',       severity: 'Minor',    headline: 'Wind',      description: '', effective: '2026-04-16T10:00:00Z', expires: '2026-04-16T20:00:00Z', areaDesc: 'WI' } },
@@ -341,8 +341,13 @@ describe('normalizeWeather', () => {
       const result = await normalizeWeather();
       vi.useRealTimers();
 
-      expect(result.alerts).toHaveLength(1);
+      // Wind Advisory and Frost Advisory now map to advisory-high; all 3 alerts pass through.
+      // Sorted by tierRank: tornado-warning (3) first, then advisory-high (12) x2.
+      expect(result.alerts).toHaveLength(3);
       expect(result.alerts[0]!.event).toBe('Tornado Warning');
+      expect(result.alerts[0]!.tier).toBe('tornado-warning');
+      expect(result.alerts[1]!.tier).toBe('advisory-high');
+      expect(result.alerts[2]!.tier).toBe('advisory-high');
     });
 
     it('classifies Tornado Warning with CONSIDERABLE damage threat as tornado-pds', async () => {

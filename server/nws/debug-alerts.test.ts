@@ -42,6 +42,7 @@ describe('parseDebugTiers', () => {
       'tstorm-destructive', 'severe-warning',
       'blizzard', 'winter-storm', 'flood', 'heat',
       'special-weather-statement', 'watch',
+      'advisory-high', 'advisory',
     ];
     expect(parseDebugTiers(all.join(','))).toEqual(all);
   });
