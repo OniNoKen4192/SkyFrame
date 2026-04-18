@@ -56,6 +56,7 @@ export function synthesizeDebugAlerts(tiers: AlertTier[], now: Date): NwsAlertsR
           severity: spec.severity,
           headline: `DEBUG: ${spec.event} issued for {CITY} (synthetic)`,
           description: 'Synthetic alert for development (SKYFRAME_DEBUG_TIERS env var is active).',
+          sent: effective,
           effective,
           expires,
           areaDesc: 'Debug Mode',
