@@ -72,7 +72,10 @@ export function CurrentPanel({ current, units, onToggleUnits }: CurrentPanelProp
             <span className="suntime">↑ {current.sunrise} ↓ {current.sunset}</span>
           </div>
         </div>
-        <div className="hud-hero-icon">
+        <div
+          className="hud-hero-icon"
+          data-clear={current.iconCode === 'sun' || current.iconCode === 'moon' ? 'true' : 'false'}
+        >
           <WxIcon code={current.iconCode} size={112} />
         </div>
       </div>
