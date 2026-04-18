@@ -1,0 +1,85 @@
+/* ============================================================
+   Terminal Modal — reusable primitive for alert detail (v1.2 #4)
+   and forecast narrative (v1.2 #5). Chrome only; content is
+   passed as children.
+
+   Right-angled HUD aesthetic — no border-radius anywhere.
+   ============================================================ */
+
+.terminal-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: terminal-modal-fade 120ms ease-out;
+}
+
+.terminal-modal {
+  background: #08121a;
+  color: #cfd8e3;
+  width: clamp(480px, 75vw, 960px);
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  border: 2px solid var(--terminal-modal-accent, #22d3ee);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--terminal-modal-accent, #22d3ee) 25%, transparent);
+  font-family: inherit;
+  animation: terminal-modal-fade 120ms ease-out;
+}
+
+.terminal-modal-titlebar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  border-bottom: 1px solid color-mix(in srgb, var(--terminal-modal-accent, #22d3ee) 30%, transparent);
+  position: sticky;
+  top: 0;
+  background: inherit;
+  z-index: 1;
+}
+
+.terminal-modal-title {
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--terminal-modal-accent, #22d3ee);
+  font-size: 12px;
+}
+
+.terminal-modal-title-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: #8b95a7;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+
+.terminal-modal-close {
+  background: none;
+  border: none;
+  color: #8b95a7;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+}
+
+.terminal-modal-close:hover {
+  color: #cfd8e3;
+}
+
+.terminal-modal-body {
+  padding: 14px;
+  overflow-y: auto;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+@keyframes terminal-modal-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
