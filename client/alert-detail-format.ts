@@ -38,7 +38,7 @@ const TIME_FMT = new Intl.DateTimeFormat('en-US', {
   timeZoneName: 'short',
 });
 
-function formatTime(iso: string): string {
+export function formatTime(iso: string): string {
   return TIME_FMT.format(new Date(iso)).toUpperCase();
 }
 

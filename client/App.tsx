@@ -4,6 +4,7 @@ import type { TempUnit } from '../shared/units';
 import { AlertBanner } from './components/AlertBanner';
 import { TerminalModal } from './components/TerminalModal';
 import { AlertDetailBody } from './components/AlertDetailBody';
+import { formatTime } from './alert-detail-format';
 import { TIER_COLORS } from '../shared/alert-tiers';
 import { LocationSetup } from './components/LocationSetup';
 import { TopBar } from './components/TopBar';
@@ -221,12 +222,7 @@ export default function App() {
     ? alerts.find((a) => a.id === detailAlertId) ?? null
     : null;
 
-  const detailIssuedLabel = detailAlert
-    ? new Intl.DateTimeFormat('en-US', {
-        timeZone: 'America/Chicago',
-        hour: 'numeric', minute: '2-digit', hour12: true, timeZoneName: 'short',
-      }).format(new Date(detailAlert.issuedAt)).toUpperCase()
-    : '';
+  const detailIssuedLabel = detailAlert ? formatTime(detailAlert.issuedAt) : '';
 
   return (
     <div className="hud-showcase" data-alert-tier={primaryTier}>
