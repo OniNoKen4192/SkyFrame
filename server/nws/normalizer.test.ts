@@ -367,6 +367,7 @@ describe('normalizeWeather', () => {
       const result = await normalizeWeather();
       expect(result.alerts).toHaveLength(1);
       expect(result.alerts[0]!.tier).toBe('tornado-pds');
+      vi.useRealTimers();
     });
 
     it('classifies Tornado Warning with CATASTROPHIC damage threat as tornado-emergency', async () => {
@@ -391,6 +392,7 @@ describe('normalizeWeather', () => {
       const result = await normalizeWeather();
       expect(result.alerts).toHaveLength(1);
       expect(result.alerts[0]!.tier).toBe('tornado-emergency');
+      vi.useRealTimers();
     });
 
     it('classifies Severe Thunderstorm Warning with DESTRUCTIVE threat as tstorm-destructive', async () => {
@@ -415,6 +417,7 @@ describe('normalizeWeather', () => {
       const result = await normalizeWeather();
       expect(result.alerts).toHaveLength(1);
       expect(result.alerts[0]!.tier).toBe('tstorm-destructive');
+      vi.useRealTimers();
     });
 
     it('leaves Severe Thunderstorm Warning with CONSIDERABLE threat as severe-warning', async () => {
@@ -439,6 +442,7 @@ describe('normalizeWeather', () => {
       const result = await normalizeWeather();
       expect(result.alerts).toHaveLength(1);
       expect(result.alerts[0]!.tier).toBe('severe-warning');
+      vi.useRealTimers();
     });
 
     it('returns empty alerts array when NWS alerts response is empty', async () => {
