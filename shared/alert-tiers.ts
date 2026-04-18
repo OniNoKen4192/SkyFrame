@@ -1,9 +1,6 @@
 import type { AlertTier } from './types';
 
 const EVENT_TO_TIER: ReadonlyMap<string, AlertTier> = new Map<string, AlertTier>([
-  ['Tornado Emergency',          'tornado-emergency'],
-  ['Tornado Warning',            'tornado-warning'],
-  ['Severe Thunderstorm Warning', 'severe-warning'],
   ['Blizzard Warning',           'blizzard'],
   ['Winter Storm Warning',       'winter-storm'],
   ['Flood Warning',              'flood'],

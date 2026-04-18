@@ -4,9 +4,6 @@ import type { AlertTier } from './types';
 
 describe('mapEventToTier', () => {
   it.each([
-    ['Tornado Emergency',          'tornado-emergency'],
-    ['Tornado Warning',            'tornado-warning'],
-    ['Severe Thunderstorm Warning', 'severe-warning'],
     ['Blizzard Warning',           'blizzard'],
     ['Winter Storm Warning',       'winter-storm'],
     ['Flood Warning',              'flood'],
@@ -22,6 +19,9 @@ describe('mapEventToTier', () => {
   });
 
   it.each([
+    'Tornado Warning',            // now handled by classifyAlert only
+    'Tornado Emergency',          // now handled by classifyAlert only
+    'Severe Thunderstorm Warning', // now handled by classifyAlert only
     'Wind Advisory',
     'Air Quality Alert',
     'Frost Advisory',
