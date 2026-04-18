@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { mapEventToTier, tierRank, TIER_COLORS } from './alert-tiers';
+import { mapEventToTier, tierRank, TIER_COLORS, classifyAlert } from './alert-tiers';
 import type { AlertTier } from './types';
 
 describe('mapEventToTier', () => {
@@ -71,5 +71,92 @@ describe('TIER_COLORS', () => {
       expect(TIER_COLORS[t].base).toMatch(/^#[0-9a-fA-F]{6}$/);
       expect(TIER_COLORS[t].dark).toMatch(/^#[0-9a-fA-F]{6}$/);
     }
+  });
+});
+
+describe('classifyAlert', () => {
+  describe('tornado family', () => {
+    it('Tornado Warning with no parameters → tornado-warning', () => {
+      expect(classifyAlert('Tornado Warning')).toBe('tornado-warning');
+    });
+
+    it('Tornado Warning with tornadoDamageThreat=CONSIDERABLE → tornado-pds', () => {
+      expect(classifyAlert('Tornado Warning', { tornadoDamageThreat: ['CONSIDERABLE'] }))
+        .toBe('tornado-pds');
+    });
+
+    it('Tornado Warning with tornadoDamageThreat=CATASTROPHIC → tornado-emergency', () => {
+      expect(classifyAlert('Tornado Warning', { tornadoDamageThreat: ['CATASTROPHIC'] }))
+        .toBe('tornado-emergency');
+    });
+
+    it('Tornado Warning with unknown damage threat → tornado-warning (fallback)', () => {
+      expect(classifyAlert('Tornado Warning', { tornadoDamageThreat: ['UNKNOWN_FUTURE'] }))
+        .toBe('tornado-warning');
+    });
+
+    it('accepts lowercase damage threat values (case-insensitive)', () => {
+      expect(classifyAlert('Tornado Warning', { tornadoDamageThreat: ['considerable'] }))
+        .toBe('tornado-pds');
+    });
+
+    it('tolerates bare string parameter value (not wrapped in array)', () => {
+      expect(classifyAlert('Tornado Warning', { tornadoDamageThreat: 'CONSIDERABLE' }))
+        .toBe('tornado-pds');
+    });
+
+    it('legacy event "Tornado Emergency" with no parameters → tornado-emergency', () => {
+      expect(classifyAlert('Tornado Emergency')).toBe('tornado-emergency');
+    });
+
+    it('legacy event "Tornado Emergency" with CONSIDERABLE threat → still tornado-emergency', () => {
+      // Structured threat wins if present; but legacy event alone also resolves correctly.
+      expect(classifyAlert('Tornado Emergency', { tornadoDamageThreat: ['CATASTROPHIC'] }))
+        .toBe('tornado-emergency');
+    });
+
+    it('ignores empty parameter array', () => {
+      expect(classifyAlert('Tornado Warning', { tornadoDamageThreat: [] }))
+        .toBe('tornado-warning');
+    });
+  });
+
+  describe('thunderstorm family', () => {
+    it('Severe Thunderstorm Warning with no parameters → severe-warning', () => {
+      expect(classifyAlert('Severe Thunderstorm Warning')).toBe('severe-warning');
+    });
+
+    it('Severe Thunderstorm Warning with thunderstormDamageThreat=DESTRUCTIVE → tstorm-destructive', () => {
+      expect(classifyAlert('Severe Thunderstorm Warning', { thunderstormDamageThreat: ['DESTRUCTIVE'] }))
+        .toBe('tstorm-destructive');
+    });
+
+    it('Severe Thunderstorm Warning with thunderstormDamageThreat=CONSIDERABLE → severe-warning (not promoted)', () => {
+      expect(classifyAlert('Severe Thunderstorm Warning', { thunderstormDamageThreat: ['CONSIDERABLE'] }))
+        .toBe('severe-warning');
+    });
+
+    it('Severe Thunderstorm Warning with unknown threat value → severe-warning (fallback)', () => {
+      expect(classifyAlert('Severe Thunderstorm Warning', { thunderstormDamageThreat: ['UNKNOWN'] }))
+        .toBe('severe-warning');
+    });
+  });
+
+  describe('other events', () => {
+    it('delegates to mapEventToTier for non-tornado, non-tstorm events', () => {
+      expect(classifyAlert('Blizzard Warning')).toBe('blizzard');
+      expect(classifyAlert('Flash Flood Warning')).toBe('flood');
+      expect(classifyAlert('Tornado Watch')).toBe('watch');
+    });
+
+    it('returns null for unknown events', () => {
+      expect(classifyAlert('Made Up Alert')).toBeNull();
+    });
+
+    it('ignores parameters on non-escalation events', () => {
+      // Garbage parameters on a blizzard don't change the outcome.
+      expect(classifyAlert('Blizzard Warning', { tornadoDamageThreat: ['CATASTROPHIC'] }))
+        .toBe('blizzard');
+    });
   });
 });

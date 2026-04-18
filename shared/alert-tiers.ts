@@ -54,3 +54,28 @@ export const TIER_COLORS: Record<AlertTier, { base: string; dark: string }> = {
   'special-weather-statement': { base: '#ee82ee', dark: '#9d539d' },
   'watch':                     { base: '#ffdd33', dark: '#a08820' },
 };
+
+function firstValue(value: string[] | string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+  if (typeof value === 'string') return value;
+  return value.length > 0 ? value[0] : undefined;
+}
+
+export function classifyAlert(
+  event: string,
+  parameters?: Record<string, string[] | string> | undefined,
+): AlertTier | null {
+  if (event === 'Tornado Warning' || event === 'Tornado Emergency') {
+    const threat = firstValue(parameters?.tornadoDamageThreat)?.toUpperCase();
+    if (threat === 'CATASTROPHIC') return 'tornado-emergency';
+    if (threat === 'CONSIDERABLE') return 'tornado-pds';
+    if (event === 'Tornado Emergency') return 'tornado-emergency';
+    return 'tornado-warning';
+  }
+  if (event === 'Severe Thunderstorm Warning') {
+    const threat = firstValue(parameters?.thunderstormDamageThreat)?.toUpperCase();
+    if (threat === 'DESTRUCTIVE') return 'tstorm-destructive';
+    return 'severe-warning';
+  }
+  return mapEventToTier(event);
+}
