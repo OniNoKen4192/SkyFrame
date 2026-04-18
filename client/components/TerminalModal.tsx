@@ -55,6 +55,7 @@ export function TerminalModal({
         previouslyFocused.focus();
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   if (!open) return null;
