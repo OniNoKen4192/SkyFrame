@@ -155,3 +155,6 @@ Running list of what's in the codebase. Update this when a feature ships so we d
 
 ### Alert system enhancements (post-v1.1)
 - PDS Tornado and Destructive Severe Thunderstorm alert tiers, classified from NWS Impact-Based Warning damage-threat parameters (hot magenta and crimson respectively). Fixes latent Tornado Emergency detection bug in the same change.
+
+### °F/°C toggle (post-v1.1)
+- Click the hero temperature to switch units globally. Preference persists in localStorage. Conversion is client-side; server continues to serve °F. (PR #6, 2026-04-18)
