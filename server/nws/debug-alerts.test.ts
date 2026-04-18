@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { parseDebugTiers, synthesizeDebugAlerts } from './debug-alerts';
 import type { AlertTier } from '../../shared/types';
+import { classifyAlert } from '../../shared/alert-tiers';
 
 describe('parseDebugTiers', () => {
   it('returns [] for undefined input', () => {
@@ -37,7 +38,8 @@ describe('parseDebugTiers', () => {
 
   it('accepts every defined AlertTier value', () => {
     const all: AlertTier[] = [
-      'tornado-emergency', 'tornado-warning', 'severe-warning',
+      'tornado-emergency', 'tornado-pds', 'tornado-warning',
+      'tstorm-destructive', 'severe-warning',
       'blizzard', 'winter-storm', 'flood', 'heat',
       'special-weather-statement', 'watch',
     ];
@@ -53,8 +55,10 @@ describe('synthesizeDebugAlerts', () => {
   });
 
   it.each([
-    ['tornado-emergency',          'Tornado Emergency',           'Extreme'],
+    ['tornado-emergency',          'Tornado Warning',             'Extreme'],
+    ['tornado-pds',                'Tornado Warning',             'Extreme'],
     ['tornado-warning',            'Tornado Warning',             'Extreme'],
+    ['tstorm-destructive',         'Severe Thunderstorm Warning', 'Extreme'],
     ['severe-warning',             'Severe Thunderstorm Warning', 'Severe'],
     ['blizzard',                   'Blizzard Warning',            'Extreme'],
     ['winter-storm',               'Winter Storm Warning',        'Severe'],
@@ -118,5 +122,56 @@ describe('synthesizeDebugAlerts', () => {
   it('describes itself as a synthetic alert mentioning the env var', () => {
     const result = synthesizeDebugAlerts(['flood'], NOW);
     expect(result.features[0]!.properties.description).toContain('SKYFRAME_DEBUG_TIERS');
+  });
+});
+
+describe('synthesizeDebugAlerts — escalated tier parameters', () => {
+  const NOW2 = new Date('2026-04-17T17:00:00-05:00');
+
+  it('emits tornadoDamageThreat=CATASTROPHIC for tornado-emergency', () => {
+    const result = synthesizeDebugAlerts(['tornado-emergency'], NOW2);
+    expect(result.features[0]!.properties.parameters).toEqual({
+      tornadoDamageThreat: ['CATASTROPHIC'],
+    });
+  });
+
+  it('emits tornadoDamageThreat=CONSIDERABLE for tornado-pds', () => {
+    const result = synthesizeDebugAlerts(['tornado-pds'], NOW2);
+    expect(result.features[0]!.properties.parameters).toEqual({
+      tornadoDamageThreat: ['CONSIDERABLE'],
+    });
+  });
+
+  it('emits thunderstormDamageThreat=DESTRUCTIVE for tstorm-destructive', () => {
+    const result = synthesizeDebugAlerts(['tstorm-destructive'], NOW2);
+    expect(result.features[0]!.properties.parameters).toEqual({
+      thunderstormDamageThreat: ['DESTRUCTIVE'],
+    });
+  });
+
+  it('omits parameters for non-escalated tiers', () => {
+    const result = synthesizeDebugAlerts(['tornado-warning', 'severe-warning', 'blizzard'], NOW2);
+    for (const feature of result.features) {
+      expect(feature.properties.parameters).toBeUndefined();
+    }
+  });
+});
+
+describe('synthesizeDebugAlerts — end-to-end classification round-trip', () => {
+  // Verifies that a synthesized feature, when run through the real classifier,
+  // resolves to the same tier it was synthesized for. This is the load-bearing
+  // guarantee of debug injection: what you inject is what you see.
+  const NOW3 = new Date('2026-04-17T17:00:00-05:00');
+
+  it.each([
+    'tornado-emergency',
+    'tornado-pds',
+    'tornado-warning',
+    'tstorm-destructive',
+    'severe-warning',
+  ] as const)('synthesized %s classifies back to itself', (tier) => {
+    const result = synthesizeDebugAlerts([tier], NOW3);
+    const props = result.features[0]!.properties;
+    expect(classifyAlert(props.event, props.parameters)).toBe(tier);
   });
 });

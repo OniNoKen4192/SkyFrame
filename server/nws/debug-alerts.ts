@@ -7,7 +7,7 @@ interface TierSpec {
 }
 
 const TIER_SPECS: Record<AlertTier, TierSpec> = {
-  'tornado-emergency':         { event: 'Tornado Emergency',           severity: 'Extreme'  },
+  'tornado-emergency':         { event: 'Tornado Warning',             severity: 'Extreme'  },
   'tornado-pds':               { event: 'Tornado Warning',             severity: 'Extreme'  },
   'tornado-warning':           { event: 'Tornado Warning',             severity: 'Extreme'  },
   'tstorm-destructive':        { event: 'Severe Thunderstorm Warning', severity: 'Extreme'  },
@@ -30,6 +30,15 @@ export function parseDebugTiers(raw: string | undefined): AlertTier[] {
     .filter((s): s is AlertTier => VALID_TIERS.has(s));
 }
 
+function parametersForTier(tier: AlertTier): Record<string, string[]> | undefined {
+  switch (tier) {
+    case 'tornado-emergency':  return { tornadoDamageThreat: ['CATASTROPHIC'] };
+    case 'tornado-pds':        return { tornadoDamageThreat: ['CONSIDERABLE'] };
+    case 'tstorm-destructive': return { thunderstormDamageThreat: ['DESTRUCTIVE'] };
+    default:                   return undefined;
+  }
+}
+
 export function synthesizeDebugAlerts(tiers: AlertTier[], now: Date): NwsAlertsResponse {
   const effective = now.toISOString();
   const expires = new Date(now.getTime() + 60 * 60 * 1000).toISOString();
@@ -37,6 +46,7 @@ export function synthesizeDebugAlerts(tiers: AlertTier[], now: Date): NwsAlertsR
   return {
     features: tiers.map((tier, index) => {
       const spec = TIER_SPECS[tier];
+      const parameters = parametersForTier(tier);
       return {
         properties: {
           id: `debug-${tier}-${index}`,
@@ -47,6 +57,7 @@ export function synthesizeDebugAlerts(tiers: AlertTier[], now: Date): NwsAlertsR
           effective,
           expires,
           areaDesc: 'Debug Mode',
+          ...(parameters ? { parameters } : {}),
         },
       };
     }),
