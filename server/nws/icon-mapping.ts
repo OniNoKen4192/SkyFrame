@@ -51,6 +51,13 @@ function baseIconFromSlug(slug: string, dayOrNight: string): IconCode {
   }
 }
 
+// Above this threshold, daily forecast icons that NWS chose as non-precip
+// (sun/moon/partly-*/cloud) get upgraded to a precip icon. Mirror of the
+// hourly downgrade rule, inverted: hourly says "if NWS gave us rain but
+// precip is unlikely, downgrade"; daily says "if NWS gave us sun but
+// precip is highly likely, upgrade." Hourly behavior unchanged.
+const HIGH_PRECIP_THRESHOLD = 50;
+
 export function mapNwsIcon(url: string, precipProb?: number | null): IconCode {
   if (!url || typeof url !== 'string') return 'cloud';
 
@@ -71,4 +78,31 @@ export function mapNwsIcon(url: string, precipProb?: number | null): IconCode {
   }
 
   return icon;
+}
+
+function pickPrecipIcon(shortForecast: string | undefined): IconCode {
+  // Keyword-match the NWS forecast text. Order matters: thunder beats
+  // snow beats rain — convective storms are the dominant signal.
+  const fc = (shortForecast ?? '').toLowerCase();
+  if (fc.includes('thunder')) return 'thunder';
+  if (fc.includes('snow') || fc.includes('flurries') || fc.includes('blizzard')) return 'snow';
+  return 'rain';
+}
+
+export function mapNwsDailyIcon(
+  url: string,
+  precipProb?: number | null,
+  shortForecast?: string,
+): IconCode {
+  const baseIcon = mapNwsIcon(url, precipProb);
+
+  if (precipProb == null || precipProb < HIGH_PRECIP_THRESHOLD) return baseIcon;
+
+  // Already a precip icon (or fog, which is a visibility indicator we
+  // preserve rather than override) — no upgrade needed.
+  if (baseIcon === 'rain' || baseIcon === 'snow' || baseIcon === 'thunder' || baseIcon === 'fog') {
+    return baseIcon;
+  }
+
+  return pickPrecipIcon(shortForecast);
 }

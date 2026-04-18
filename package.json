@@ -10,7 +10,7 @@
     "build": "tsc -p tsconfig.client.json --noEmit && vite build",
     "preview": "vite preview",
     "start": "tsx server/index.ts",
-    "test": "vitest run",
+    "test": "vitest run --pool=forks",
     "test:watch": "vitest",
     "typecheck": "tsc -p tsconfig.server.json --noEmit && tsc -p tsconfig.client.json --noEmit",
     "start:prod": "npm run build && npm run server"

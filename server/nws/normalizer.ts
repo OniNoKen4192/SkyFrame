@@ -3,7 +3,7 @@ import type {
 } from '../../shared/types';
 import { CONFIG } from '../config';
 import { fetchNws } from './client';
-import { mapNwsIcon } from './icon-mapping';
+import { mapNwsIcon, mapNwsDailyIcon } from './icon-mapping';
 import { computeTrend, type TimedValue } from './trends';
 import { buildPrecipOutlook } from './precip';
 import { classifyAlert, tierRank } from '../../shared/alert-tiers';
@@ -410,7 +410,7 @@ function collapseDailyPeriods(
         dateLabel: formatDateLabel(a.startTime, timeZone),
         highF: a.temperature,
         lowF: b.temperature,
-        iconCode: mapNwsIcon(a.icon, pairProb),
+        iconCode: mapNwsDailyIcon(a.icon, pairProb, a.shortForecast),
         precipProbPct: pairProb,
         shortDescription: a.shortForecast,
       });
@@ -433,7 +433,7 @@ function collapseDailyPeriods(
         dateLabel: formatDateLabel(a.startTime, timeZone),
         highF: a.temperature,
         lowF: a.temperature,
-        iconCode: mapNwsIcon(a.icon, nightProb),
+        iconCode: mapNwsDailyIcon(a.icon, nightProb, a.shortForecast),
         precipProbPct: nightProb,
         shortDescription: a.shortForecast,
       });
@@ -447,7 +447,7 @@ function collapseDailyPeriods(
         dateLabel: formatDateLabel(a.startTime, timeZone),
         highF: a.temperature,
         lowF: a.temperature,
-        iconCode: mapNwsIcon(a.icon, dayProb),
+        iconCode: mapNwsDailyIcon(a.icon, dayProb, a.shortForecast),
         precipProbPct: dayProb,
         shortDescription: a.shortForecast,
       });

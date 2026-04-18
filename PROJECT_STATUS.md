@@ -85,6 +85,9 @@ shared/
 ### Future version backlog
 - **Settings gear:** °F/°C toggle + curated color picker (no alert-color overlap). Per spec: `docs/superpowers/specs/2026-04-15-v1.1-roadmap-design.md`. Originally v1.1 Step 5, deferred.
 - **Alert dismiss duration:** Currently dismissed alerts stay dismissed until they drop off the NWS feed. Could add time-based auto-reactivation if needed.
+- **Icon set expansion (v1.2 Section 2c):** New SVG icons for the ~25 NWS weather states currently lumped or falling through to generic cloud (tornado, hurricane, sleet, wind variants, etc.). Gap list at `docs/icon-gaps.md`. Deferred pending user-produced icon art.
+- **Hero icon centering edge case:** The current `data-clear="true"` rule uses `flex-grow: 1` which works in fixed-width windows. On a maximized/very-wide window the centered icon may drift visually far from the readout. Easy fix when it matters: add a `max-width` cap (e.g. `240px`) to `.hud-hero-icon[data-clear="true"]` in `client/styles/hud.css`.
+- **Vitest 2 upgrade (test runner):** `npm test` script uses `--pool=forks` to work around a Vitest 1.6.1 thread-pool bug that intermittently fails with "No test suite found in file..." across all test files. Forks pool is reliable but ~2× slower than the (broken) threads pool. Vitest 2 is reported to fix the underlying bug; upgrading would let us drop the workaround. Low priority — current setup runs all 196 tests in under 6s.
 - See `docs/userInput/v1.2 ideas.txt` for additional candidates (NWS alert types, per-alert deep-dive, sound/notifications, animations, keyboard shortcuts)
 
 ## How to run
@@ -158,3 +161,7 @@ Running list of what's in the codebase. Update this when a feature ships so we d
 
 ### °F/°C toggle (post-v1.1)
 - Click the hero temperature to switch units globally. Preference persists in localStorage. Conversion is client-side; server continues to serve °F. (PR #6, 2026-04-18)
+
+### Icon presentation fixes (post-v1.1)
+- Daily forecast icons upgrade to rain/snow/thunder when precipProb >= 50% and NWS chose a non-precip icon. Picks target via shortForecast keyword match (thunder beats snow beats rain). Hourly + current-conditions behavior unchanged. (PR #7, 2026-04-18)
+- Hero icon centers in the CurrentPanel hero area when current conditions are clear sky (sun/moon). (PR #7, 2026-04-18)
