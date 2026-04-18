@@ -23,6 +23,13 @@ export function TerminalModal({
   const titleId = useId();
   const closeRef = useRef<HTMLButtonElement>(null);
   const overlayMouseDownRef = useRef(false);
+  const onCloseRef = useRef(onClose);
+
+  // Keep the ref current on every render so the keydown handler always calls
+  // the latest onClose without needing it in the main effect's dep array.
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  });
 
   useEffect(() => {
     if (!open) return;
@@ -34,15 +41,21 @@ export function TerminalModal({
     closeRef.current?.focus();
 
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') onCloseRef.current();
     };
     window.addEventListener('keydown', onKey);
 
     return () => {
       window.removeEventListener('keydown', onKey);
-      previouslyFocused?.focus();
+      // Guard against the trigger element having been removed from the DOM
+      // (e.g. stale-alert cleanup unmounts the button before the modal closes).
+      // Calling .focus() on a detached element silently no-ops to document.body;
+      // document.contains() lets us skip that and fail gracefully.
+      if (previouslyFocused && document.contains(previouslyFocused)) {
+        previouslyFocused.focus();
+      }
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open) return null;
 
