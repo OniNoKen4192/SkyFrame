@@ -53,6 +53,10 @@ A startup log line confirms when debug mode is active — safety net against lea
 
 Implementation: `server/nws/debug-alerts.ts` (parser + synthesizer), wired through `CONFIG.debug.injectTiers` in `server/config.ts`.
 
+## Housekeeping
+
+- **Update the feature list** in `PROJECT_STATUS.md` → "Implemented features" whenever a feature is completed. This is the source of truth for what's shipped — keeps us from having to crawl the codebase to check.
+
 ## Provider integration notes
 
 NWS is a point→grid→station flow, not a single-endpoint API. The `/points` call returns URLs for the forecast, hourly forecast, and nearby station list; we resolve it once and cache the result indefinitely. Current conditions come from a separate `/stations/{id}/observations/latest` call, which occasionally returns null for individual fields — that's why a fallback station exists.

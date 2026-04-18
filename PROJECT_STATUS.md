@@ -72,22 +72,20 @@ shared/
 - Station fallback when primary is stale
 - Server-side caching with TTL per endpoint type
 
-### v1.1 work (in progress)
+### v1.1
 - **Step 1** ✅ Offline indicator (Footer + TopBar reflect connectivity state)
 - **Step 2** ✅ Tabbed view switcher (CURRENT | HOURLY | OUTLOOK | ALL)
 - **Steps 3+4** ✅ NWS alerts + UI color override (9-tier system, hazard-stripe banner, expand/collapse, dismissal)
-- **Step 5** — Settings gear (°F/°C toggle, color picker) — pending
+- **Step 5** — Settings gear (°F/°C toggle, color picker) — **deferred to future version**
 - **Step 6** ✅ Location setup — first-run modal (ZIP or lat/lon), NWS auto-resolve (office, grid, timezone, stations), persistent skyframe.config.json, re-configurable via clickable TopBar location
 - **Bug fixes:** hourly past-hour filtering, icon occlusion, range bar glow, precip icon threshold, overnight orphan dedup, stripe rendering
 
 ## What's pending
 
-### v1.1 remaining
-- **Step 5 — Settings gear:** °F/°C toggle + curated color picker (no alert-color overlap). Per spec: `docs/superpowers/specs/2026-04-15-v1.1-roadmap-design.md`. This is the last v1.1 item.
-
-### v1.2 candidates
-- See `docs/userInput/v1.2 ideas.txt`
-- Additional NWS alert types, per-alert deep-dive, sound/notifications, animations, keyboard shortcuts
+### Future version backlog
+- **Settings gear:** °F/°C toggle + curated color picker (no alert-color overlap). Per spec: `docs/superpowers/specs/2026-04-15-v1.1-roadmap-design.md`. Originally v1.1 Step 5, deferred.
+- **Alert dismiss duration:** Currently dismissed alerts stay dismissed until they drop off the NWS feed. Could add time-based auto-reactivation if needed.
+- See `docs/userInput/v1.2 ideas.txt` for additional candidates (NWS alert types, per-alert deep-dive, sound/notifications, animations, keyboard shortcuts)
 
 ## How to run
 
@@ -125,3 +123,32 @@ SKYFRAME_DEBUG_TIERS=tornado-warning,flood npm run server
 6. **Commit convention:** Short imperative subject, multi-paragraph body, `Co-Authored-By: Claude Opus 4.6 (1M context) <noreply@anthropic.com>` trailer.
 
 7. **PR workflow:** Feature branches named `feat/...` or `fix/...`. PRs via `gh pr create`. Merge via GitHub UI. Post-merge: `git checkout main && git pull && git branch -d <branch>`.
+
+---
+
+## Implemented features
+
+Running list of what's in the codebase. Update this when a feature ships so we don't have to crawl the code to check.
+
+### Core (v1.0)
+- Current conditions panel (hero temp, 5 metric bars, trend arrows)
+- Hourly forecast panel (SVG line chart, 12h, icons, precip bars)
+- 7-day outlook panel (high/low range bars with glow, icons, precip %)
+- HUD aesthetic (cyan-on-dark, CSS custom properties for accent color)
+- Custom SVG icon sprite with SMIL animations (sun, moon, cloud, rain, snow, thunder, fog, partly-*)
+- NWS data: parallel fetch of forecast, hourly, current, alerts, sunrise/sunset
+- Unit conversion (°C→°F, m/s→mph, Pa→inHg)
+- Station fallback (secondary station when primary is stale/null)
+- Server-side caching (TTL per endpoint type)
+- Precip icon probability threshold (< 30% downgrades to partly-*)
+
+### v1.1
+- Offline indicator (pulsing red dot + "LINK.OFFLINE" in Footer and TopBar)
+- Tabbed view switcher (CURRENT | HOURLY | OUTLOOK | ALL) with TopBar nav buttons
+- NWS alert banners (hazard-stripe, expand/collapse for multiple, dismiss with ×)
+- Alert tier color system (9 tiers: tornado-emergency through watch, each with accent color override)
+- UI theme follows highest-severity visible alert (dismissing updates theme)
+- Alert dismissal persisted to localStorage (cleared when alert drops off NWS feed)
+- Location setup wizard (first-run modal: ZIP or lat/lon → NWS auto-resolve → skyframe.config.json)
+- Re-configure location via clickable TopBar location name
+- Debug alert injection (SKYFRAME_DEBUG_TIERS env var for dev/testing)
