@@ -1,8 +1,11 @@
 import type { CurrentConditions, Trend } from '../../shared/types';
+import { convertTempF, scaleTempTrend, type TempUnit } from '../../shared/units';
 import { WxIcon } from './WxIcon';
 
 interface CurrentPanelProps {
   current: CurrentConditions;
+  units: TempUnit;
+  onToggleUnits: () => void;
 }
 
 function trendText(t: Trend): { arrow: string; rate: string; className: string } {
@@ -27,8 +30,15 @@ function fillPercent(metric: string, value: number): number {
   }
 }
 
-export function CurrentPanel({ current }: CurrentPanelProps) {
-  const tempTrend = trendText(current.trends.temp);
+export function CurrentPanel({ current, units, onToggleUnits }: CurrentPanelProps) {
+  const tempTrend = trendText(scaleTempTrend(current.trends.temp, units));
+  const dewTrend = scaleTempTrend(current.trends.dewpoint, units);
+
+  const heroTemp = Math.round(convertTempF(current.tempF, units));
+  const feelTemp = Math.round(convertTempF(current.feelsLikeF, units));
+  const dewTemp = current.dewpointF != null
+    ? Math.round(convertTempF(current.dewpointF, units))
+    : null;
 
   return (
     <>
@@ -39,10 +49,17 @@ export function CurrentPanel({ current }: CurrentPanelProps) {
           <span className="corner bl"></span>
           <span className="corner br"></span>
           <div className="tag">TEMP / FEEL</div>
-          <div className="temp">
-            {Math.round(current.tempF)}
-            <span className="unit">°F</span>
-            <span className="feel">/ {Math.round(current.feelsLikeF)}</span>
+          <div
+            className="temp"
+            onClick={onToggleUnits}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onToggleUnits(); } }}
+            title={`Click to switch to °${units === 'F' ? 'C' : 'F'}`}
+          >
+            {heroTemp}
+            <span className="unit">°{units}</span>
+            <span className="feel">/ {feelTemp}</span>
             {tempTrend.arrow && (
               <span className="trend">{tempTrend.arrow} {tempTrend.rate}</span>
             )}
@@ -65,7 +82,7 @@ export function CurrentPanel({ current }: CurrentPanelProps) {
         <BarRow label="HUM"  value={current.humidityPct != null ? `${current.humidityPct} %` : '--'} fill={fillPercent('humidity', current.humidityPct ?? 0)} trend={current.trends.humidity} />
         <BarRow label="PRES" value={current.pressureInHg != null ? `${current.pressureInHg.toFixed(2)} "` : '--'} fill={fillPercent('pressure', current.pressureInHg ?? 0)} trend={current.trends.pressure} />
         <BarRow label="VIS"  value={current.visibilityMi != null ? `${current.visibilityMi} MI` : '--'} fill={fillPercent('visibility', current.visibilityMi ?? 0)} trend={current.trends.visibility} />
-        <BarRow label="DEW"  value={current.dewpointF != null ? `${Math.round(current.dewpointF)} °F` : '--'} fill={fillPercent('dewpoint', current.dewpointF ?? 0)} trend={current.trends.dewpoint} />
+        <BarRow label="DEW"  value={dewTemp != null ? `${dewTemp} °${units}` : '--'} fill={fillPercent('dewpoint', current.dewpointF ?? 0)} trend={dewTrend} />
       </div>
     </>
   );

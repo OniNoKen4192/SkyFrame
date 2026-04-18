@@ -230,6 +230,13 @@
   text-shadow: 0 0 12px rgba(var(--accent-rgb),0.4);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+  cursor: pointer;
+  transition: text-shadow 120ms ease;
+}
+.hud-readout .temp:hover,
+.hud-readout .temp:focus-visible {
+  outline: none;
+  text-shadow: 0 0 16px rgba(var(--accent-rgb),0.75);
 }
 .hud-readout .temp .unit { font-size: 24px; opacity: 0.7; vertical-align: super; }
 .hud-readout .temp .feel { font-size: 18px; opacity: 0.5; margin-left: 10px; }
