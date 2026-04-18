@@ -174,9 +174,12 @@ describe('classifyAlert', () => {
     });
 
     it('return type is non-nullable AlertTier (never returns null)', () => {
-      // Compile-time assertion: TS should narrow this to AlertTier (no null branch).
+      // Compile-time assertion: TS will fail to compile if classifyAlert is ever
+      // changed back to AlertTier | null (can't assign nullable to non-nullable).
+      // Runtime assertion verifies the catch-all actually runs for an arbitrary
+      // unknown event, not just that "a string was returned" (which the type guarantees).
       const result: AlertTier = classifyAlert('Anything');
-      expect(typeof result).toBe('string');
+      expect(result).toBe('advisory');
     });
 
     it('ignores parameters on non-escalation events', () => {

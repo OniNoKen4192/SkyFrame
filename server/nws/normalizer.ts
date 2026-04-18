@@ -226,7 +226,7 @@ function normalizeAlerts(raw: NwsAlertsResponse): Alert[] {
 
   for (const f of raw.features) {
     const tier = classifyAlert(f.properties.event, f.properties.parameters);
-    if (tier === null) continue;  // drop unmapped events
+    // classifyAlert always returns a tier — unknowns fall to 'advisory' (catch-all)
 
     const severity = validSeverities.has(f.properties.severity)
       ? f.properties.severity as Alert['severity']
