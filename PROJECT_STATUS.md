@@ -87,6 +87,7 @@ shared/
 - **Alert dismiss duration:** Currently dismissed alerts stay dismissed until they drop off the NWS feed. Could add time-based auto-reactivation if needed.
 - **Icon set expansion (v1.2 Section 2c):** New SVG icons for the ~25 NWS weather states currently lumped or falling through to generic cloud (tornado, hurricane, sleet, wind variants, etc.). Gap list at `docs/icon-gaps.md`. Deferred pending user-produced icon art.
 - **Hero icon centering edge case:** The current `data-clear="true"` rule uses `flex-grow: 1` which works in fixed-width windows. On a maximized/very-wide window the centered icon may drift visually far from the readout. Easy fix when it matters: add a `max-width` cap (e.g. `240px`) to `.hud-hero-icon[data-clear="true"]` in `client/styles/hud.css`.
+- **Vitest 2 upgrade (test runner):** `npm test` script uses `--pool=forks` to work around a Vitest 1.6.1 thread-pool bug that intermittently fails with "No test suite found in file..." across all test files. Forks pool is reliable but ~2× slower than the (broken) threads pool. Vitest 2 is reported to fix the underlying bug; upgrading would let us drop the workaround. Low priority — current setup runs all 196 tests in under 6s.
 - See `docs/userInput/v1.2 ideas.txt` for additional candidates (NWS alert types, per-alert deep-dive, sound/notifications, animations, keyboard shortcuts)
 
 ## How to run
