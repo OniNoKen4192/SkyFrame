@@ -11,8 +11,9 @@
   inset: 0;
   background: rgba(0, 0, 0, 0.5);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
+  padding-top: 70px;
   z-index: 1000;
   animation: terminal-modal-fade 120ms ease-out;
 }
@@ -21,7 +22,7 @@
   background: #08121a;
   color: #cfd8e3;
   width: clamp(480px, 75vw, 960px);
-  max-height: 80vh;
+  max-height: calc(100vh - 90px);
   display: flex;
   flex-direction: column;
   border: 2px solid var(--terminal-modal-accent, #22d3ee);

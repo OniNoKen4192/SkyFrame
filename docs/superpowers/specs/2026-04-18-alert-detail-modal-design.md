@@ -192,8 +192,8 @@ Rendering in `AlertDetailBody`:
 
 ### New stylesheet — `client/styles/terminal-modal.css`
 
-- `.terminal-modal-overlay` — `position: fixed; inset: 0; background: rgba(0,0,0,0.5);`
-- `.terminal-modal` — width `clamp(480px, 75vw, 960px)`, max-height `80vh`, centered via flex on overlay, monospace font inherited
+- `.terminal-modal-overlay` — `position: fixed; inset: 0; background: rgba(0,0,0,0.5);` flex with `align-items: flex-start` and `padding-top: 70px` so the modal sits just below the `AlertBanner` instead of vertically centered (revised 2026-04-18 during manual validation — centered felt disconnected from the trigger).
+- `.terminal-modal` — width `clamp(480px, 75vw, 960px)`, max-height `calc(100vh - 90px)` (fills remaining vertical space below the overlay's 70px top padding with a 20px gap at the bottom), horizontally centered, monospace font inherited
 - Border: `2px solid var(--terminal-modal-accent)` where `--terminal-modal-accent` is set as an inline CSS variable: `style={{ '--terminal-modal-accent': accentColor }}`
 - Outer glow: `box-shadow: 0 0 18px color-mix(in srgb, var(--terminal-modal-accent) 25%, transparent);`
 - Title bar: `position: sticky; top: 0;` — stays pinned when body scrolls
