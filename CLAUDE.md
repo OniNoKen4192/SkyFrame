@@ -47,7 +47,7 @@ SKYFRAME_DEBUG_TIERS=tornado-warning npm run server          # single red banner
 SKYFRAME_DEBUG_TIERS=tornado-warning,flood,watch npm run server  # 3 alerts, expand toggle
 ```
 
-Valid tier names: `tornado-emergency`, `tornado-warning`, `severe-warning`, `blizzard`, `winter-storm`, `flood`, `heat`, `special-weather-statement`, `watch`. Unknown names are silently dropped. When unset, production behavior is unchanged.
+Valid tier names: `tornado-emergency`, `tornado-pds`, `tornado-warning`, `tstorm-destructive`, `severe-warning`, `blizzard`, `winter-storm`, `flood`, `heat`, `special-weather-statement`, `watch`. Unknown names are silently dropped. When unset, production behavior is unchanged.
 
 A startup log line confirms when debug mode is active — safety net against leaving it set accidentally.
 

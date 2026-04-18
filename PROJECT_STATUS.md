@@ -152,3 +152,6 @@ Running list of what's in the codebase. Update this when a feature ships so we d
 - Location setup wizard (first-run modal: ZIP or lat/lon → NWS auto-resolve → skyframe.config.json)
 - Re-configure location via clickable TopBar location name
 - Debug alert injection (SKYFRAME_DEBUG_TIERS env var for dev/testing)
+
+### Alert system enhancements (post-v1.1)
+- PDS Tornado and Destructive Severe Thunderstorm alert tiers, classified from NWS Impact-Based Warning damage-threat parameters (hot magenta and crimson respectively). Fixes latent Tornado Emergency detection bug in the same change.
