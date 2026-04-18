@@ -207,7 +207,7 @@ Rendering in `AlertDetailBody`:
 
 ### Accent color source
 
-`AlertDetailBody` resolves the tier CSS variable (e.g. `var(--tier-tornado-warning)`) based on `alert.tier` and passes it up to `TerminalModal` via the `accentColor` prop. This reuses Feature 3's per-tier CSS variables — no new color work.
+`AlertDetailBody` reads the hex color from the existing `TIER_COLORS` map in `shared/alert-tiers.ts` (e.g. `TIER_COLORS[alert.tier].base` → `'#ff4444'` for `tornado-warning`) and passes it up to `TerminalModal` via the `accentColor` prop. `TerminalModal` applies it by setting `--terminal-modal-accent` as an inline style. No new color definitions; reuses the same palette as existing alert banners.
 
 ## Testing strategy
 
