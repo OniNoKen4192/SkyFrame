@@ -14,6 +14,13 @@ describe('mapEventToTier', () => {
     ['Special Weather Statement',  'special-weather-statement'],
     ['Tornado Watch',              'watch'],
     ['Severe Thunderstorm Watch',  'watch'],
+    ['Wind Advisory',              'advisory-high'],
+    ['Winter Weather Advisory',    'advisory-high'],
+    ['Dense Fog Advisory',         'advisory-high'],
+    ['Wind Chill Advisory',        'advisory-high'],
+    ['Freeze Warning',             'advisory-high'],
+    ['Freeze Watch',               'advisory-high'],
+    ['Frost Advisory',             'advisory-high'],
   ] as Array<[string, AlertTier]>)('maps "%s" to %s', (event, tier) => {
     expect(mapEventToTier(event)).toBe(tier);
   });
@@ -22,11 +29,10 @@ describe('mapEventToTier', () => {
     'Tornado Warning',            // now handled by classifyAlert only
     'Tornado Emergency',          // now handled by classifyAlert only
     'Severe Thunderstorm Warning', // now handled by classifyAlert only
-    'Wind Advisory',
     'Air Quality Alert',
-    'Frost Advisory',
-    'Dense Fog Advisory',
     'Hurricane Warning',
+    'Lake Effect Snow Advisory',
+    'Beach Hazards Statement',
     '',
     'Some Made Up Alert',
   ])('returns null for unmapped event "%s"', (event) => {
@@ -35,7 +41,7 @@ describe('mapEventToTier', () => {
 });
 
 describe('tierRank', () => {
-  it('orders all tiers from most-severe (1) to least-severe (11)', () => {
+  it('orders all tiers from most-severe (1) to least-severe (13)', () => {
     expect(tierRank('tornado-emergency')).toBe(1);
     expect(tierRank('tornado-pds')).toBe(2);
     expect(tierRank('tornado-warning')).toBe(3);
@@ -47,6 +53,8 @@ describe('tierRank', () => {
     expect(tierRank('heat')).toBe(9);
     expect(tierRank('special-weather-statement')).toBe(10);
     expect(tierRank('watch')).toBe(11);
+    expect(tierRank('advisory-high')).toBe(12);
+    expect(tierRank('advisory')).toBe(13);
   });
 
   it('returns smaller numbers for more-severe tiers', () => {
@@ -55,6 +63,8 @@ describe('tierRank', () => {
     expect(tierRank('tornado-warning')).toBeLessThan(tierRank('tstorm-destructive'));
     expect(tierRank('tstorm-destructive')).toBeLessThan(tierRank('severe-warning'));
     expect(tierRank('severe-warning')).toBeLessThan(tierRank('watch'));
+    expect(tierRank('watch')).toBeLessThan(tierRank('advisory-high'));
+    expect(tierRank('advisory-high')).toBeLessThan(tierRank('advisory'));
   });
 });
 
@@ -65,6 +75,7 @@ describe('TIER_COLORS', () => {
       'tstorm-destructive', 'severe-warning',
       'blizzard', 'winter-storm', 'flood', 'heat',
       'special-weather-statement', 'watch',
+      'advisory-high', 'advisory',
     ];
     for (const t of tiers) {
       expect(TIER_COLORS[t]).toBeDefined();
@@ -149,8 +160,26 @@ describe('classifyAlert', () => {
       expect(classifyAlert('Tornado Watch')).toBe('watch');
     });
 
-    it('returns null for unknown events', () => {
-      expect(classifyAlert('Made Up Alert')).toBeNull();
+    it('returns "advisory" (catch-all) for unknown events instead of null', () => {
+      expect(classifyAlert('Made Up Alert')).toBe('advisory');
+      expect(classifyAlert('Air Quality Alert')).toBe('advisory');
+      expect(classifyAlert('Beach Hazards Statement')).toBe('advisory');
+      expect(classifyAlert('')).toBe('advisory');
+    });
+
+    it('returns "advisory-high" for known advisory-high events', () => {
+      expect(classifyAlert('Wind Advisory')).toBe('advisory-high');
+      expect(classifyAlert('Winter Weather Advisory')).toBe('advisory-high');
+      expect(classifyAlert('Freeze Warning')).toBe('advisory-high');
+    });
+
+    it('return type is non-nullable AlertTier (never returns null)', () => {
+      // Compile-time assertion: TS will fail to compile if classifyAlert is ever
+      // changed back to AlertTier | null (can't assign nullable to non-nullable).
+      // Runtime assertion verifies the catch-all actually runs for an arbitrary
+      // unknown event, not just that "a string was returned" (which the type guarantees).
+      const result: AlertTier = classifyAlert('Anything');
+      expect(result).toBe('advisory');
     });
 
     it('ignores parameters on non-escalation events', () => {

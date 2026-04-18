@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>SkyFrame — Advisory Tier Color Mockup</title>
+<style>
+  :root {
+    --accent: #00e5d1;
+    --accent-rgb: 0, 229, 209;
+  }
+  * { box-sizing: border-box; }
+  body {
+    background: #001518;
+    color: var(--accent);
+    font-family: 'Cascadia Mono', 'Consolas', 'Courier New', monospace;
+    padding: 40px 60px;
+    margin: 0;
+    line-height: 1.4;
+  }
+  h1 {
+    font-size: 16px;
+    font-weight: 400;
+    letter-spacing: 0.22em;
+    opacity: 0.8;
+    margin: 0 0 4px;
+  }
+  .subtitle {
+    font-size: 11px;
+    opacity: 0.5;
+    letter-spacing: 0.12em;
+    margin: 0 0 32px;
+  }
+  h2 {
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 0.22em;
+    opacity: 0.6;
+    margin: 36px 0 14px;
+    padding-bottom: 6px;
+    border-bottom: 1px dashed rgba(var(--accent-rgb), 0.15);
+  }
+  .candidate-label {
+    font-size: 10px;
+    opacity: 0.55;
+    margin: 14px 0 4px;
+    letter-spacing: 0.16em;
+  }
+  .candidate-label .swatch {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    vertical-align: middle;
+    margin-right: 6px;
+    border-radius: 2px;
+  }
+  .candidate-label .hex { opacity: 0.7; margin-left: 8px; }
+
+  /* ============================================================
+     Banner — copied verbatim from client/styles/hud.css
+     ============================================================ */
+  .alert-banner {
+    display: flex;
+    flex-direction: column;
+    margin: 0 0 14px;
+    border-bottom: 1px dashed rgba(var(--accent-rgb), 0.18);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    font-weight: 700;
+  }
+  .alert-banner-row {
+    display: flex;
+    align-items: stretch;
+    min-height: 12px;
+  }
+  .alert-banner-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 18px;
+    white-space: nowrap;
+  }
+  .alert-banner-glyph {
+    font-size: 14px;
+    line-height: 1;
+  }
+  .alert-banner-stripes {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    background-color: currentColor;
+  }
+  .alert-banner-stripes::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -20px;
+    width: calc(100% + 40px);
+  }
+  .alert-banner-stripes-left::before {
+    background: repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(0,0,0,0.35) 5px, rgba(0,0,0,0.35) 10px);
+    animation: stripe-slide-right 2s linear infinite;
+  }
+  .alert-banner-stripes-right::before {
+    background: repeating-linear-gradient(-45deg, transparent, transparent 5px, rgba(0,0,0,0.35) 5px, rgba(0,0,0,0.35) 10px);
+    animation: stripe-slide-left 2s linear infinite;
+  }
+  @keyframes stripe-slide-right {
+    from { transform: translateX(0); }
+    to   { transform: translateX(14.14px); }
+  }
+  @keyframes stripe-slide-left {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-14.14px); }
+  }
+
+  /* "advisory" (catch-all, no stripes) — flat color sides, no animation */
+  .alert-banner.no-stripes .alert-banner-stripes::before {
+    display: none;
+  }
+
+  /* Per-tier color (text + currentColor-driven stripe background) */
+  .t-tornado-emergency  { color: #b052e4; text-shadow: 0 0 8px rgba(176, 82, 228, 0.7); }
+  .t-tornado-pds        { color: #ff55c8; text-shadow: 0 0 8px rgba(255, 85, 200, 0.7); }
+  .t-tornado-warning    { color: #ff4444; text-shadow: 0 0 8px rgba(255, 68, 68, 0.7); }
+  .t-tstorm-destructive { color: #ff4466; text-shadow: 0 0 8px rgba(255, 68, 102, 0.7); }
+  .t-severe-warning     { color: #ff8800; text-shadow: 0 0 8px rgba(255, 136, 0, 0.7); }
+  .t-blizzard           { color: #ffffff; text-shadow: 0 0 8px rgba(255, 255, 255, 0.7); }
+  .t-winter-storm       { color: #4488ff; text-shadow: 0 0 8px rgba(68, 136, 255, 0.7); }
+  .t-flood              { color: #22cc66; text-shadow: 0 0 8px rgba(34, 204, 102, 0.7); }
+  .t-heat               { color: #ff5533; text-shadow: 0 0 8px rgba(255, 85, 51, 0.7); }
+  .t-sws                { color: #ee82ee; text-shadow: 0 0 8px rgba(238, 130, 238, 0.7); }
+  .t-watch              { color: #ffdd33; text-shadow: 0 0 8px rgba(255, 221, 51, 0.7); }
+
+  /* Advisory-high candidates */
+  .t-cand-a { color: #ffb000; text-shadow: 0 0 8px rgba(255, 176, 0, 0.7); }
+  .t-cand-b { color: #daa520; text-shadow: 0 0 8px rgba(218, 165, 32, 0.7); }
+  .t-cand-c { color: #ffaa22; text-shadow: 0 0 8px rgba(255, 170, 34, 0.7); }
+  .t-cand-d { color: #ffc107; text-shadow: 0 0 8px rgba(255, 193, 7, 0.7); }
+  .t-cand-e { color: #cc9900; text-shadow: 0 0 8px rgba(204, 153, 0, 0.7); }
+
+  /* Advisory (catch-all) — base cyan via --accent */
+  .t-advisory { color: var(--accent); text-shadow: 0 0 8px rgba(var(--accent-rgb), 0.7); }
+
+  /* Watch uses a darkened stripe overlay (yellow is too bright for the default 0.35) */
+  .t-watch .alert-banner-stripes-left::before {
+    background: repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(0,0,0,0.55) 5px, rgba(0,0,0,0.55) 10px);
+  }
+  .t-watch .alert-banner-stripes-right::before {
+    background: repeating-linear-gradient(-45deg, transparent, transparent 5px, rgba(0,0,0,0.55) 5px, rgba(0,0,0,0.55) 10px);
+  }
+</style>
+</head>
+<body>
+
+<h1>■ SKYFRAME — ADVISORY TIER COLOR MOCKUP</h1>
+<div class="subtitle">Pick which advisory-high color reads as "caution, less urgent than severe but more than a watch." Dashboard background + accent shown for context.</div>
+
+<h2>EXISTING TIERS (REFERENCE — NOT FOR CHANGE)</h2>
+
+<div class="alert-banner t-tornado-emergency">
+  <div class="alert-banner-row">
+    <div class="alert-banner-stripes alert-banner-stripes-left"></div>
+    <div class="alert-banner-content">
+      <span class="alert-banner-glyph">▲</span>
+      <span>TORNADO EMERGENCY · UNTIL 4:30 PM CDT</span>
+    </div>
+    <div class="alert-banner-stripes alert-banner-stripes-right"></div>
+  </div>
+</div>
+
+<div class="alert-banner t-tornado-pds">
+  <div class="alert-banner-row">
+    <div class="alert-banner-stripes alert-banner-stripes-left"></div>
+    <div class="alert-banner-content">
+      <span class="alert-banner-glyph">▲</span>
+      <span>TORNADO WARNING (PDS) · UNTIL 4:30 PM CDT</span>
+    </div>
+    <div class="alert-banner-stripes alert-banner-stripes-right"></div>
+  </div>
+</div>
+
+<div class="alert-banner t-tornado-warning">
+  <div class="alert-banner-row">
+    <div class="alert-banner-stripes alert-banner-stripes-left"></div>
+    <div class="alert-banner-content">
+      <span class="alert-banner-glyph">▲</span>
+      <span>TORNADO WARNING · UNTIL 4:30 PM CDT</span>
+    </div>
+    <div class="alert-banner-stripes alert-banner-stripes-right"></div>
+  </div>
+</div>
+
+<div class="alert-banner t-tstorm-destructive">
+  <div class="alert-banner-row">
+    <div class="alert-banner-stripes alert-banner-stripes-left"></div>
+    <div class="alert-banner-content">
+      <span class="alert-banner-glyph">▲</span>
+      <span>SEVERE THUNDERSTORM WARNING (DESTRUCTIVE) · UNTIL 4:30 PM CDT</span>
+    </div>
+    <div class="alert-banner-stripes alert-banner-stripes-right"></div>
+  </div>
+</div>
+
+<div class="alert-banner t-severe-warning">
+  <div class="alert-banner-row">
+    <div class="alert-banner-stripes alert-banner-stripes-left"></div>
+    <div class="alert-banner-content">
+      <span class="alert-banner-glyph">▲</span>
+      <span>SEVERE THUNDERSTORM WARNING · UNTIL 4:30 PM CDT</span>
+    </div>
+    <div class="alert-banner-stripes alert-banner-stripes-right"></div>
+  </div>
+</div>
+
+<div class="alert-banner t-blizzard">
+  <div class="alert-banner-row">
+    <div class="alert-banner-stripes alert-banner-stripes-left"></div>
+    <div class="alert-banner-content">
+      <span class="alert-banner-glyph">▲</span>
+      <span>BLIZZARD WARNING · UNTIL 8:00 AM CDT</span>
+    </div>
+    <div class="alert-banner-stripes alert-banner-stripes-right"></div>
+  </div>
+</div>
+
+<div class="alert-banner t-winter-storm">
+  <div class="alert-banner-row">
+    <div class="alert-banner-stripes alert-banner-stripes-left"></div>
+    <div class="alert-banner-content">
+      <span class="alert-banner-glyph">▲</span>
+      <span>WINTER STORM WARNING · UNTIL 6:00 PM CDT</span>
+    </div>
+    <div class="alert-banner-stripes alert-banner-stripes-right"></div>
+  </div>
+</div>
+
+<div class="alert-banner t-flood">
+  <div class="alert-banner-row">
+    <div class="alert-banner-stripes alert-banner-stripes-left"></div>
+    <div class="alert-banner-content">
+      <span class="alert-banner-glyph">▲</span>
+      <span>FLOOD WARNING · UNTIL 11:00 PM CDT</span>
+    </div>
+    <div class="alert-banner-stripes alert-banner-stripes-right"></div>
+  </div>
+</div>
+
+<div class="alert-banner t-heat">
+  <div class="alert-banner-row">
+    <div class="alert-banner-stripes alert-banner-stripes-left"></div>
+    <div class="alert-banner-content">
+      <span class="alert-banner-glyph">▲</span>
+      <span>EXCESSIVE HEAT WARNING · UNTIL 8:00 PM CDT</span>
+    </div>
+    <div class="alert-banner-stripes alert-banner-stripes-right"></div>
+  </div>
+</div>
+
+<div class="alert-banner t-sws">
+  <div class="alert-banner-row">
+    <div class="alert-banner-stripes alert-banner-stripes-left"></div>
+    <div class="alert-banner-content">
+      <span class="alert-banner-glyph">▲</span>
+      <span>SPECIAL WEATHER STATEMENT · UNTIL 5:00 PM CDT</span>
+    </div>
+    <div class="alert-banner-stripes alert-banner-stripes-right"></div>
+  </div>
+</div>
+
+<div class="alert-banner t-watch">
+  <div class="alert-banner-row">
+    <div class="alert-banner-stripes alert-banner-stripes-left"></div>
+    <div class="alert-banner-content">
+      <span class="alert-banner-glyph">▲</span>
+      <span>SEVERE THUNDERSTORM WATCH · UNTIL 9:00 PM CDT</span>
+    </div>
+    <div class="alert-banner-stripes alert-banner-stripes-right"></div>
+  </div>
+</div>
+
+<h2>ADVISORY-HIGH CANDIDATES (PICK ONE)</h2>
+
+<div class="candidate-label">
+  <span class="swatch" style="background:#ffb000"></span>
+  CANDIDATE A — DEEP AMBER<span class="hex">#ffb000</span>
+</div>
+<div class="alert-banner t-cand-a">
+  <div class="alert-banner-row">
+    <div class="alert-banner-stripes alert-banner-stripes-left"></div>
+    <div class="alert-banner-content">
+      <span class="alert-banner-glyph">▲</span>
+      <span>WIND ADVISORY · UNTIL 7:00 PM CDT</span>
+    </div>
+    <div class="alert-banner-stripes alert-banner-stripes-right"></div>
+  </div>
+</div>
+
+<div class="candidate-label">
+  <span class="swatch" style="background:#daa520"></span>
+  CANDIDATE B — GOLDENROD<span class="hex">#daa520</span>
+</div>
+<div class="alert-banner t-cand-b">
+  <div class="alert-banner-row">
+    <div class="alert-banner-stripes alert-banner-stripes-left"></div>
+    <div class="alert-banner-content">
+      <span class="alert-banner-glyph">▲</span>
+      <span>WINTER WEATHER ADVISORY · UNTIL 11:00 PM CDT</span>
+    </div>
+    <div class="alert-banner-stripes alert-banner-stripes-right"></div>
+  </div>
+</div>
+
+<div class="candidate-label">
+  <span class="swatch" style="background:#ffaa22"></span>
+  CANDIDATE C — HONEY-ORANGE<span class="hex">#ffaa22</span>
+</div>
+<div class="alert-banner t-cand-c">
+  <div class="alert-banner-row">
+    <div class="alert-banner-stripes alert-banner-stripes-left"></div>
+    <div class="alert-banner-content">
+      <span class="alert-banner-glyph">▲</span>
+      <span>DENSE FOG ADVISORY · UNTIL 9:00 AM CDT</span>
+    </div>
+    <div class="alert-banner-stripes alert-banner-stripes-right"></div>
+  </div>
+</div>
+
+<div class="candidate-label">
+  <span class="swatch" style="background:#ffc107"></span>
+  CANDIDATE D — MATERIAL AMBER<span class="hex">#ffc107</span>
+</div>
+<div class="alert-banner t-cand-d">
+  <div class="alert-banner-row">
+    <div class="alert-banner-stripes alert-banner-stripes-left"></div>
+    <div class="alert-banner-content">
+      <span class="alert-banner-glyph">▲</span>
+      <span>FREEZE WARNING · UNTIL 9:00 AM CDT</span>
+    </div>
+    <div class="alert-banner-stripes alert-banner-stripes-right"></div>
+  </div>
+</div>
+
+<div class="candidate-label">
+  <span class="swatch" style="background:#cc9900"></span>
+  CANDIDATE E — DARK GOLD<span class="hex">#cc9900</span>
+</div>
+<div class="alert-banner t-cand-e">
+  <div class="alert-banner-row">
+    <div class="alert-banner-stripes alert-banner-stripes-left"></div>
+    <div class="alert-banner-content">
+      <span class="alert-banner-glyph">▲</span>
+      <span>FROST ADVISORY · UNTIL 9:00 AM CDT</span>
+    </div>
+    <div class="alert-banner-stripes alert-banner-stripes-right"></div>
+  </div>
+</div>
+
+<h2>ADVISORY (CATCH-ALL, BASE CYAN, NO STRIPES)</h2>
+
+<div class="alert-banner t-advisory no-stripes">
+  <div class="alert-banner-row">
+    <div class="alert-banner-stripes alert-banner-stripes-left"></div>
+    <div class="alert-banner-content">
+      <span class="alert-banner-glyph">▲</span>
+      <span>AIR QUALITY ALERT · UNTIL 8:00 PM CDT</span>
+    </div>
+    <div class="alert-banner-stripes alert-banner-stripes-right"></div>
+  </div>
+</div>
+
+<div class="alert-banner t-advisory no-stripes">
+  <div class="alert-banner-row">
+    <div class="alert-banner-stripes alert-banner-stripes-left"></div>
+    <div class="alert-banner-content">
+      <span class="alert-banner-glyph">▲</span>
+      <span>BEACH HAZARDS STATEMENT · UNTIL 6:00 AM CDT</span>
+    </div>
+    <div class="alert-banner-stripes alert-banner-stripes-right"></div>
+  </div>
+</div>
+
+<div class="subtitle" style="margin-top: 32px;">Note: For watch (yellow), the stripes use a heavier 0.55 dark overlay so they read against the bright base. The advisory-high winner may need the same treatment — easy to apply during smoke test.</div>
+
+</body>
+</html>

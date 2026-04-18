@@ -12,7 +12,7 @@ A local, ad-free weather dashboard. Single user, serves on localhost. HUD-style 
 - **Backend:** Fastify 5 + Node.js via tsx (serves API + prod static bundle on port 3000)
 - **Styling:** Vanilla CSS with custom properties (`--accent`, `--accent-rgb`, `--accent-glow-*`) for the accent color system
 - **Data:** NOAA/NWS public REST API (no auth required, User-Agent header mandatory)
-- **Tests:** Vitest (server-side only — 163 tests across 10 files). No client-side test infrastructure.
+- **Tests:** Vitest (server-side only — 204 tests across 11 files). No client-side test infrastructure.
 - **Build:** `npm run build` → Vite bundles client into `dist/client/` (gitignored)
 - **Config:** Location + identity lives in `.env` (gitignored). Copy `.env.example` to get started.
 
@@ -87,7 +87,7 @@ shared/
 - **Alert dismiss duration:** Currently dismissed alerts stay dismissed until they drop off the NWS feed. Could add time-based auto-reactivation if needed.
 - **Icon set expansion (v1.2 Section 2c):** New SVG icons for the ~25 NWS weather states currently lumped or falling through to generic cloud (tornado, hurricane, sleet, wind variants, etc.). Gap list at `docs/icon-gaps.md`. Deferred pending user-produced icon art.
 - **Hero icon centering edge case:** The current `data-clear="true"` rule uses `flex-grow: 1` which works in fixed-width windows. On a maximized/very-wide window the centered icon may drift visually far from the readout. Easy fix when it matters: add a `max-width` cap (e.g. `240px`) to `.hud-hero-icon[data-clear="true"]` in `client/styles/hud.css`.
-- **Vitest 2 upgrade (test runner):** `npm test` script uses `--pool=forks` to work around a Vitest 1.6.1 thread-pool bug that intermittently fails with "No test suite found in file..." across all test files. Forks pool is reliable but ~2× slower than the (broken) threads pool. Vitest 2 is reported to fix the underlying bug; upgrading would let us drop the workaround. Low priority — current setup runs all 196 tests in under 6s.
+- **Vitest 2 upgrade (test runner):** `npm test` script uses `--pool=forks` to work around a Vitest 1.6.1 thread-pool bug that intermittently fails with "No test suite found in file..." across all test files. Forks pool is reliable but ~2× slower than the (broken) threads pool. Vitest 2 is reported to fix the underlying bug; upgrading would let us drop the workaround. Low priority — current setup runs all 204 tests in under 6s.
 - See `docs/userInput/v1.2 ideas.txt` for additional candidates (NWS alert types, per-alert deep-dive, sound/notifications, animations, keyboard shortcuts)
 
 ## How to run
@@ -104,7 +104,7 @@ npm run server       # Fastify API server (port 3000, reads .env)
 npm run start:prod   # builds client + starts Fastify on port 3000
 
 # Tests
-npm test             # Vitest (163 tests, server-side only)
+npm test             # Vitest (204 tests, server-side only)
 npm run typecheck    # Both server + client TypeScript configs
 
 # Debug alerts (dev only)
@@ -158,6 +158,10 @@ Running list of what's in the codebase. Update this when a feature ships so we d
 
 ### Alert system enhancements (post-v1.1)
 - PDS Tornado and Destructive Severe Thunderstorm alert tiers, classified from NWS Impact-Based Warning damage-threat parameters (hot magenta and crimson respectively). Fixes latent Tornado Emergency detection bug in the same change.
+
+### Advisory tiers (post-v1.1)
+- Two new alert tiers: `advisory-high` (honey-orange `#ffaa22`, hazard stripes) for 7 known low-severity NWS events (Wind Advisory, Winter Weather Advisory, Dense Fog Advisory, Wind Chill Advisory, Freeze Warning, Freeze Watch, Frost Advisory), and `advisory` (base cyan, hazard stripes) as catch-all for unknown events. Neither tier overrides the dashboard theme accent.
+- `classifyAlert` now always returns an `AlertTier` — unmatched NWS events fall to the `advisory` catch-all instead of being silently dropped by the normalizer. (PR #8, 2026-04-18)
 
 ### °F/°C toggle (post-v1.1)
 - Click the hero temperature to switch units globally. Preference persists in localStorage. Conversion is client-side; server continues to serve °F. (PR #6, 2026-04-18)
