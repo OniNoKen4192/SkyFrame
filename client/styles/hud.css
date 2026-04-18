@@ -791,6 +791,14 @@
 .alert-banner[data-tier="watch"] .alert-banner-stripes-right::before {
   background: repeating-linear-gradient(-45deg, transparent, transparent 5px, rgba(0,0,0,0.55) 5px, rgba(0,0,0,0.55) 10px);
 }
+.alert-banner[data-tier="advisory-high"] {
+  color: #ffaa22;
+  text-shadow: 0 0 8px rgba(255, 170, 34, 0.7);
+}
+.alert-banner[data-tier="advisory"] {
+  color: var(--accent);
+  text-shadow: 0 0 8px rgba(var(--accent-rgb), 0.7);
+}
 
 /* ============================================================
    UI ACCENT COLOR OVERRIDE (v1.1 Step 4)
