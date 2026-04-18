@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { convertTempF, scaleTempTrend, type TempUnit } from './units';
+import { convertTempF, scaleTempTrend } from './units';
 import type { Trend } from './types';
 
 describe('convertTempF', () => {

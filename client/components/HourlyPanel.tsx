@@ -1,8 +1,10 @@
 import type { HourlyPeriod } from '../../shared/types';
+import { convertTempF, type TempUnit } from '../../shared/units';
 import { WxIcon } from './WxIcon';
 
 interface HourlyPanelProps {
   hourly: HourlyPeriod[];
+  units: TempUnit;
 }
 
 const SVG_WIDTH = 720;
@@ -10,12 +12,15 @@ const SVG_HEIGHT = 110;
 const Y_TOP = 20;
 const Y_BOTTOM = 90;
 
-function computeChartPoints(hourly: HourlyPeriod[]): {
+function computeChartPoints(
+  hourly: HourlyPeriod[],
+  units: TempUnit,
+): {
   points: Array<{ x: number; y: number; temp: number }>;
   minTemp: number;
   maxTemp: number;
 } {
-  const temps = hourly.map((h) => h.tempF);
+  const temps = hourly.map((h) => convertTempF(h.tempF, units));
   const minTemp = Math.floor(Math.min(...temps) / 2) * 2;
   const maxTemp = Math.ceil(Math.max(...temps) / 2) * 2;
   const range = Math.max(1, maxTemp - minTemp);
@@ -23,11 +28,14 @@ function computeChartPoints(hourly: HourlyPeriod[]): {
   const columnWidth = SVG_WIDTH / hourly.length;
   const yScale = Y_BOTTOM - Y_TOP;
 
-  const points = hourly.map((h, i) => ({
-    x: (i + 0.5) * columnWidth,
-    y: Y_TOP + ((maxTemp - h.tempF) / range) * yScale,
-    temp: h.tempF,
-  }));
+  const points = hourly.map((h, i) => {
+    const t = convertTempF(h.tempF, units);
+    return {
+      x: (i + 0.5) * columnWidth,
+      y: Y_TOP + ((maxTemp - t) / range) * yScale,
+      temp: t,
+    };
+  });
 
   return { points, minTemp, maxTemp };
 }
@@ -38,16 +46,16 @@ function precipBarClass(pct: number): string {
   return 'bar low';
 }
 
-export function HourlyPanel({ hourly }: HourlyPanelProps) {
+export function HourlyPanel({ hourly, units }: HourlyPanelProps) {
   if (hourly.length === 0) return null;
-  const { points, minTemp, maxTemp } = computeChartPoints(hourly);
+  const { points, minTemp, maxTemp } = computeChartPoints(hourly, units);
   const polylinePoints = points.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
 
   return (
     <div className="hud-hourly-section">
       <div className="hud-section-label">
         <span>■ HOURLY FORECAST &nbsp;·&nbsp; NEXT {hourly.length}H &nbsp;·&nbsp; MKX GRID 88,58</span>
-        <span>RANGE {minTemp}° — {maxTemp}°F</span>
+        <span>RANGE {minTemp}° — {maxTemp}°{units}</span>
       </div>
 
       <div className="hourly-wrap">

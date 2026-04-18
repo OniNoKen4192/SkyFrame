@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { WeatherResponse } from '../shared/types';
+import type { TempUnit } from '../shared/units';
 import { AlertBanner } from './components/AlertBanner';
 import { LocationSetup } from './components/LocationSetup';
 import { TopBar } from './components/TopBar';
@@ -37,6 +38,27 @@ function saveDismissed(set: Set<string>): void {
   }
 }
 
+// Temperature unit preference. Lives at App level alongside dismissed
+// alerts so all child panels see one source of truth.
+const UNITS_KEY = 'skyframe.units';
+
+function loadUnits(): TempUnit {
+  try {
+    const raw = localStorage.getItem(UNITS_KEY);
+    return raw === 'C' ? 'C' : 'F';
+  } catch {
+    return 'F';
+  }
+}
+
+function saveUnits(unit: TempUnit): void {
+  try {
+    localStorage.setItem(UNITS_KEY, unit);
+  } catch {
+    // Quota exceeded or storage unavailable — silently degrade.
+  }
+}
+
 // When the server's cache has expired and we need to retry, wait this long
 // before the next poll. Also used as the fallback if the response didn't
 // include a meta.nextRefreshAt we could parse.
@@ -58,6 +80,7 @@ export default function App() {
   const [nextRetryAt, setNextRetryAt] = useState<string | null>(null);
   const [activeView, setActiveView] = useState<ViewKey>('current');
   const [dismissed, setDismissed] = useState<Set<string>>(() => loadDismissed());
+  const [units, setUnits] = useState<TempUnit>(() => loadUnits());
 
   // Check config status on mount
   useEffect(() => {
@@ -122,14 +145,14 @@ export default function App() {
   const renderView = () => {
     if (!data) return loadingPlaceholder;
     switch (activeView) {
-      case 'current': return <CurrentPanel current={data.current} />;
-      case 'hourly':  return <HourlyPanel hourly={data.hourly} />;
-      case 'outlook': return <OutlookPanel daily={data.daily} />;
+      case 'current': return <CurrentPanel current={data.current} units={units} onToggleUnits={toggleUnits} />;
+      case 'hourly':  return <HourlyPanel hourly={data.hourly} units={units} />;
+      case 'outlook': return <OutlookPanel daily={data.daily} units={units} />;
       case 'all': return (
         <>
-          <CurrentPanel current={data.current} />
-          <HourlyPanel hourly={data.hourly} />
-          <OutlookPanel daily={data.daily} />
+          <CurrentPanel current={data.current} units={units} onToggleUnits={toggleUnits} />
+          <HourlyPanel hourly={data.hourly} units={units} />
+          <OutlookPanel daily={data.daily} units={units} />
         </>
       );
     }
@@ -166,6 +189,12 @@ export default function App() {
     next.add(id);
     setDismissed(next);
     saveDismissed(next);
+  };
+
+  const toggleUnits = () => {
+    const next: TempUnit = units === 'F' ? 'C' : 'F';
+    setUnits(next);
+    saveUnits(next);
   };
 
   const handleSetupComplete = () => {

@@ -1,8 +1,10 @@
 import type { DailyPeriod } from '../../shared/types';
+import { convertTempF, type TempUnit } from '../../shared/units';
 import { WxIcon } from './WxIcon';
 
 interface OutlookPanelProps {
   daily: DailyPeriod[];
+  units: TempUnit;
 }
 
 function precipClass(pct: number): string {
@@ -12,12 +14,12 @@ function precipClass(pct: number): string {
   return 'precip zero';
 }
 
-export function OutlookPanel({ daily }: OutlookPanelProps) {
+export function OutlookPanel({ daily, units }: OutlookPanelProps) {
   if (daily.length === 0) return null;
 
-  // Compute shared scale from all days' highs/lows
-  const lows = daily.map((d) => d.lowF);
-  const highs = daily.map((d) => d.highF);
+  // Compute shared scale from all days' highs/lows in chosen unit
+  const lows = daily.map((d) => convertTempF(d.lowF, units));
+  const highs = daily.map((d) => convertTempF(d.highF, units));
   const scaleMin = Math.floor(Math.min(...lows) / 2) * 2;
   const scaleMax = Math.ceil(Math.max(...highs) / 2) * 2;
   const scaleRange = Math.max(1, scaleMax - scaleMin);
@@ -34,7 +36,7 @@ export function OutlookPanel({ daily }: OutlookPanelProps) {
     <div className="hud-outlook-section">
       <div className="hud-section-label">
         <span>■ 7-DAY OUTLOOK &nbsp;·&nbsp; KMKE &nbsp;/&nbsp; MKX GRID 88,58 &nbsp;/&nbsp; WIZ066</span>
-        <span>RANGE {scaleMin}° — {scaleMax}°F</span>
+        <span>RANGE {scaleMin}° — {scaleMax}°{units}</span>
       </div>
 
       <div className="outlook-scale">
@@ -47,13 +49,17 @@ export function OutlookPanel({ daily }: OutlookPanelProps) {
 
       <div className="outlook">
         {daily.map((day) => {
-          const leftPct = ((day.lowF - scaleMin) / scaleRange) * 100;
-          const rightPct = ((scaleMax - day.highF) / scaleRange) * 100;
+          const lo = convertTempF(day.lowF, units);
+          const hi = convertTempF(day.highF, units);
+          const leftPct = ((lo - scaleMin) / scaleRange) * 100;
+          const rightPct = ((scaleMax - hi) / scaleRange) * 100;
 
           return (
             <OutlookRow
               key={day.dateISO}
               day={day}
+              displayLow={Math.round(lo)}
+              displayHigh={Math.round(hi)}
               leftPct={leftPct}
               rightPct={rightPct}
             />
@@ -66,11 +72,13 @@ export function OutlookPanel({ daily }: OutlookPanelProps) {
 
 interface OutlookRowProps {
   day: DailyPeriod;
+  displayLow: number;
+  displayHigh: number;
   leftPct: number;
   rightPct: number;
 }
 
-function OutlookRow({ day, leftPct, rightPct }: OutlookRowProps) {
+function OutlookRow({ day, displayLow, displayHigh, leftPct, rightPct }: OutlookRowProps) {
   return (
     <>
       <div className="date">
@@ -90,9 +98,9 @@ function OutlookRow({ day, leftPct, rightPct }: OutlookRowProps) {
         <div className="tick" style={{ left: `${100 - rightPct}%` }}></div>
       </div>
       <div className="lh">
-        <span className="l">{day.lowF}</span>
+        <span className="l">{displayLow}</span>
         <span className="sep">·</span>
-        <span className="h">{day.highF}</span>
+        <span className="h">{displayHigh}</span>
       </div>
     </>
   );
