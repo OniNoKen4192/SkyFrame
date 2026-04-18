@@ -1,3 +1,5 @@
+import type { Alert } from '../shared/types';
+
 export type AlertDescriptionParagraph = {
   prefix: 'HAZARD' | 'SOURCE' | 'IMPACT' | null;
   text: string;
@@ -26,4 +28,23 @@ export function parseDescription(raw: string): AlertDescriptionParagraph[] {
   }
 
   return paragraphs;
+}
+
+const TIME_FMT = new Intl.DateTimeFormat('en-US', {
+  timeZone: 'America/Chicago',
+  hour: 'numeric',
+  minute: '2-digit',
+  hour12: true,
+  timeZoneName: 'short',
+});
+
+function formatTime(iso: string): string {
+  return TIME_FMT.format(new Date(iso)).toUpperCase();
+}
+
+export function formatAlertMeta(alert: Alert): string {
+  const issued = formatTime(alert.issuedAt);
+  const expires = formatTime(alert.expires);
+  const area = alert.areaDesc.toUpperCase();
+  return `ISSUED ${issued} \u00B7 EXPIRES ${expires} \u00B7 ${area}`;
 }

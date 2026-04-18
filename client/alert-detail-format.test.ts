@@ -77,3 +77,36 @@ describe('parseDescription', () => {
     ]);
   });
 });
+
+import { formatAlertMeta } from './alert-detail-format';
+import type { Alert } from '../shared/types';
+
+const SAMPLE_ALERT: Alert = {
+  id: 'x',
+  event: 'Tornado Warning',
+  tier: 'tornado-warning',
+  severity: 'Extreme',
+  headline: 'Tornado Warning',
+  description: 'irrelevant',
+  issuedAt: '2026-04-16T19:14:00Z',  // 2:14 PM CDT
+  effective: '2026-04-16T19:14:00Z',
+  expires:   '2026-04-16T20:00:00Z',  // 3:00 PM CDT
+  areaDesc: 'Linn County, IA',
+};
+
+describe('formatAlertMeta', () => {
+  it('renders issued / expires / area in uppercase with bullet separators', () => {
+    const result = formatAlertMeta(SAMPLE_ALERT);
+    expect(result).toBe('ISSUED 2:14 PM CDT \u00B7 EXPIRES 3:00 PM CDT \u00B7 LINN COUNTY, IA');
+  });
+
+  it('handles expires crossing midnight', () => {
+    const alert: Alert = {
+      ...SAMPLE_ALERT,
+      issuedAt: '2026-04-16T04:30:00Z',  // 11:30 PM CDT previous day
+      expires:  '2026-04-16T06:00:00Z',  // 1:00 AM CDT
+    };
+    const result = formatAlertMeta(alert);
+    expect(result).toBe('ISSUED 11:30 PM CDT \u00B7 EXPIRES 1:00 AM CDT \u00B7 LINN COUNTY, IA');
+  });
+});
