@@ -12,7 +12,7 @@ A local, ad-free weather dashboard. Single user, serves on localhost. HUD-style 
 - **Backend:** Fastify 5 + Node.js via tsx (serves API + prod static bundle on port 3000)
 - **Styling:** Vanilla CSS with custom properties (`--accent`, `--accent-rgb`, `--accent-glow-*`) for the accent color system
 - **Data:** NOAA/NWS public REST API (no auth required, User-Agent header mandatory)
-- **Tests:** Vitest (server-side only — 126 tests across 9 files). No client-side test infrastructure.
+- **Tests:** Vitest (server-side only — 163 tests across 10 files). No client-side test infrastructure.
 - **Build:** `npm run build` → Vite bundles client into `dist/client/` (gitignored)
 - **Config:** Location + identity lives in `.env` (gitignored). Copy `.env.example` to get started.
 
@@ -101,7 +101,7 @@ npm run server       # Fastify API server (port 3000, reads .env)
 npm run start:prod   # builds client + starts Fastify on port 3000
 
 # Tests
-npm test             # Vitest (126 tests, server-side only)
+npm test             # Vitest (163 tests, server-side only)
 npm run typecheck    # Both server + client TypeScript configs
 
 # Debug alerts (dev only)
