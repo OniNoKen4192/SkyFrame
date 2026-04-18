@@ -6,7 +6,7 @@ import { fetchNws } from './client';
 import { mapNwsIcon } from './icon-mapping';
 import { computeTrend, type TimedValue } from './trends';
 import { buildPrecipOutlook } from './precip';
-import { mapEventToTier, tierRank } from '../../shared/alert-tiers';
+import { classifyAlert, tierRank } from '../../shared/alert-tiers';
 import { synthesizeDebugAlerts } from './debug-alerts';
 
 // ========== Unit conversion helpers ==========
@@ -148,6 +148,7 @@ export interface NwsAlertsResponse {
       effective: string;
       expires: string;
       areaDesc: string;
+      parameters?: Record<string, string[] | string>;
     };
   }>;
 }
@@ -224,7 +225,7 @@ function normalizeAlerts(raw: NwsAlertsResponse): Alert[] {
   const result: Alert[] = [];
 
   for (const f of raw.features) {
-    const tier = mapEventToTier(f.properties.event);
+    const tier = classifyAlert(f.properties.event, f.properties.parameters);
     if (tier === null) continue;  // drop unmapped events
 
     const severity = validSeverities.has(f.properties.severity)

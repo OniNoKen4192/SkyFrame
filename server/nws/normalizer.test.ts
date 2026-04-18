@@ -345,6 +345,106 @@ describe('normalizeWeather', () => {
       expect(result.alerts[0]!.event).toBe('Tornado Warning');
     });
 
+    it('classifies Tornado Warning with CONSIDERABLE damage threat as tornado-pds', async () => {
+      mockWithAlerts({
+        features: [
+          {
+            properties: {
+              id: 'urn:oid:nws.alerts.pds',
+              event: 'Tornado Warning',
+              severity: 'Extreme',
+              headline: 'Tornado Warning - PDS',
+              description: 'Particularly dangerous situation.',
+              effective: '2026-04-17T17:00:00-05:00',
+              expires: '2026-04-17T18:00:00-05:00',
+              areaDesc: 'Somewhere County',
+              parameters: { tornadoDamageThreat: ['CONSIDERABLE'] },
+            },
+          },
+        ],
+      });
+
+      const result = await normalizeWeather();
+      expect(result.alerts).toHaveLength(1);
+      expect(result.alerts[0]!.tier).toBe('tornado-pds');
+      vi.useRealTimers();
+    });
+
+    it('classifies Tornado Warning with CATASTROPHIC damage threat as tornado-emergency', async () => {
+      mockWithAlerts({
+        features: [
+          {
+            properties: {
+              id: 'urn:oid:nws.alerts.emerg',
+              event: 'Tornado Warning',
+              severity: 'Extreme',
+              headline: 'Tornado Emergency',
+              description: 'Tornado emergency in effect.',
+              effective: '2026-04-17T17:00:00-05:00',
+              expires: '2026-04-17T18:00:00-05:00',
+              areaDesc: 'Somewhere County',
+              parameters: { tornadoDamageThreat: ['CATASTROPHIC'] },
+            },
+          },
+        ],
+      });
+
+      const result = await normalizeWeather();
+      expect(result.alerts).toHaveLength(1);
+      expect(result.alerts[0]!.tier).toBe('tornado-emergency');
+      vi.useRealTimers();
+    });
+
+    it('classifies Severe Thunderstorm Warning with DESTRUCTIVE threat as tstorm-destructive', async () => {
+      mockWithAlerts({
+        features: [
+          {
+            properties: {
+              id: 'urn:oid:nws.alerts.destructive',
+              event: 'Severe Thunderstorm Warning',
+              severity: 'Severe',
+              headline: 'Severe Thunderstorm Warning - Destructive',
+              description: 'Destructive severe thunderstorm.',
+              effective: '2026-04-17T17:00:00-05:00',
+              expires: '2026-04-17T18:00:00-05:00',
+              areaDesc: 'Somewhere County',
+              parameters: { thunderstormDamageThreat: ['DESTRUCTIVE'] },
+            },
+          },
+        ],
+      });
+
+      const result = await normalizeWeather();
+      expect(result.alerts).toHaveLength(1);
+      expect(result.alerts[0]!.tier).toBe('tstorm-destructive');
+      vi.useRealTimers();
+    });
+
+    it('leaves Severe Thunderstorm Warning with CONSIDERABLE threat as severe-warning', async () => {
+      mockWithAlerts({
+        features: [
+          {
+            properties: {
+              id: 'urn:oid:nws.alerts.considerable',
+              event: 'Severe Thunderstorm Warning',
+              severity: 'Severe',
+              headline: 'Severe Thunderstorm Warning - Considerable',
+              description: 'Considerable damage threat.',
+              effective: '2026-04-17T17:00:00-05:00',
+              expires: '2026-04-17T18:00:00-05:00',
+              areaDesc: 'Somewhere County',
+              parameters: { thunderstormDamageThreat: ['CONSIDERABLE'] },
+            },
+          },
+        ],
+      });
+
+      const result = await normalizeWeather();
+      expect(result.alerts).toHaveLength(1);
+      expect(result.alerts[0]!.tier).toBe('severe-warning');
+      vi.useRealTimers();
+    });
+
     it('returns empty alerts array when NWS alerts response is empty', async () => {
       mockWithAlerts({ features: [] });
       const result = await normalizeWeather();

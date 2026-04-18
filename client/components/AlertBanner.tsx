@@ -2,11 +2,12 @@ import { useState } from 'react';
 import type { Alert } from '../../shared/types';
 import { tierRank } from '../../shared/alert-tiers';
 
-// Tornado Emergency, Tornado Warning, Severe Thunderstorm Warning — top 3
-// imminent / short-duration threats. The user shouldn't be able to silence
-// these. Longer-duration alerts (blizzard, winter storm, flood, heat, SWS,
+// Tornado Emergency, PDS Tornado, Tornado Warning, Destructive Severe
+// Thunderstorm Warning, and Severe Thunderstorm Warning — imminent /
+// short-duration threats. The user shouldn't be able to silence these.
+// Longer-duration alerts (blizzard, winter storm, flood, heat, SWS,
 // watches) remain dismissible so they don't nag for hours.
-const NON_DISMISSIBLE_RANK_THRESHOLD = 3;
+const NON_DISMISSIBLE_RANK_THRESHOLD = 5;
 
 interface AlertBannerProps {
   alerts: Alert[];                    // already filtered to visible by App

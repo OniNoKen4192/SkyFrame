@@ -728,12 +728,20 @@
 
 /* Per-tier text color + glow. Stripes auto-inherit via currentColor. */
 .alert-banner[data-tier="tornado-emergency"] {
-  color: #9400D3;
-  text-shadow: 0 0 8px rgba(148, 0, 211, 0.7);
+  color: #b052e4;
+  text-shadow: 0 0 8px rgba(176, 82, 228, 0.7);
+}
+.alert-banner[data-tier="tornado-pds"] {
+  color: #ff55c8;
+  text-shadow: 0 0 8px rgba(255, 85, 200, 0.7);
 }
 .alert-banner[data-tier="tornado-warning"] {
   color: #ff4444;
   text-shadow: 0 0 8px rgba(255, 68, 68, 0.7);
+}
+.alert-banner[data-tier="tstorm-destructive"] {
+  color: #ff4466;
+  text-shadow: 0 0 8px rgba(255, 68, 102, 0.7);
 }
 .alert-banner[data-tier="severe-warning"] {
   color: #ff8800;
@@ -780,12 +788,20 @@
    ============================================================ */
 
 .hud-showcase[data-alert-tier="tornado-emergency"] {
-  --accent: #9400D3;
-  --accent-rgb: 148, 0, 211;
+  --accent: #b052e4;
+  --accent-rgb: 176, 82, 228;
+}
+.hud-showcase[data-alert-tier="tornado-pds"] {
+  --accent: #ff55c8;
+  --accent-rgb: 255, 85, 200;
 }
 .hud-showcase[data-alert-tier="tornado-warning"] {
   --accent: #ff4444;
   --accent-rgb: 255, 68, 68;
+}
+.hud-showcase[data-alert-tier="tstorm-destructive"] {
+  --accent: #ff4466;
+  --accent-rgb: 255, 68, 102;
 }
 .hud-showcase[data-alert-tier="severe-warning"] {
   --accent: #ff8800;
