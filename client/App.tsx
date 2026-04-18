@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react';
 import type { WeatherResponse } from '../shared/types';
 import type { TempUnit } from '../shared/units';
 import { AlertBanner } from './components/AlertBanner';
+import { TerminalModal } from './components/TerminalModal';
+import { AlertDetailBody } from './components/AlertDetailBody';
+import { TIER_COLORS } from '../shared/alert-tiers';
 import { LocationSetup } from './components/LocationSetup';
 import { TopBar } from './components/TopBar';
 import { Footer } from './components/Footer';
@@ -81,6 +84,7 @@ export default function App() {
   const [activeView, setActiveView] = useState<ViewKey>('current');
   const [dismissed, setDismissed] = useState<Set<string>>(() => loadDismissed());
   const [units, setUnits] = useState<TempUnit>(() => loadUnits());
+  const [detailAlertId, setDetailAlertId] = useState<string | null>(null);
 
   // Check config status on mount
   useEffect(() => {
@@ -181,6 +185,16 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [alerts.map((a) => a.id).join('|')]);
 
+  // If the alert whose modal is open disappears from a later poll (expired
+  // on the NWS side), close the modal rather than render a stale title.
+  useEffect(() => {
+    if (detailAlertId === null) return;
+    if (!alerts.some((a) => a.id === detailAlertId)) {
+      setDetailAlertId(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [alerts.map((a) => a.id).join('|'), detailAlertId]);
+
   const visible = alerts.filter((a) => !dismissed.has(a.id));
   const primaryTier = visible[0]?.tier;
 
@@ -203,6 +217,17 @@ export default function App() {
     setData(null);
   };
 
+  const detailAlert = detailAlertId !== null
+    ? alerts.find((a) => a.id === detailAlertId) ?? null
+    : null;
+
+  const detailIssuedLabel = detailAlert
+    ? new Intl.DateTimeFormat('en-US', {
+        timeZone: 'America/Chicago',
+        hour: 'numeric', minute: '2-digit', hour12: true, timeZoneName: 'short',
+      }).format(new Date(detailAlert.issuedAt)).toUpperCase()
+    : '';
+
   return (
     <div className="hud-showcase" data-alert-tier={primaryTier}>
       {showSetup && (
@@ -211,7 +236,23 @@ export default function App() {
           onCancel={configured ? () => setShowSetup(false) : undefined}
         />
       )}
-      {visible.length > 0 && <AlertBanner alerts={visible} onDismiss={dismissAlert} />}
+      {visible.length > 0 && (
+        <AlertBanner
+          alerts={visible}
+          onDismiss={dismissAlert}
+          onOpenDetail={setDetailAlertId}
+        />
+      )}
+      <TerminalModal
+        open={detailAlert !== null}
+        onClose={() => setDetailAlertId(null)}
+        titleGlyph="▲"
+        titleText={detailAlert?.event.toUpperCase() ?? ''}
+        titleRight={detailIssuedLabel}
+        accentColor={detailAlert ? TIER_COLORS[detailAlert.tier].base : '#22d3ee'}
+      >
+        {detailAlert && <AlertDetailBody alert={detailAlert} />}
+      </TerminalModal>
       <TopBar
         stationId={data?.meta?.stationId ?? null}
         error={error}

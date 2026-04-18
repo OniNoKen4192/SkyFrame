@@ -12,6 +12,7 @@ const NON_DISMISSIBLE_RANK_THRESHOLD = 5;
 interface AlertBannerProps {
   alerts: Alert[];                    // already filtered to visible by App
   onDismiss: (id: string) => void;
+  onOpenDetail: (id: string) => void;
 }
 
 function formatExpires(iso: string): string {
@@ -22,15 +23,14 @@ function formatExpires(iso: string): string {
   return fmt.format(new Date(iso)).toUpperCase();
 }
 
-export function AlertBanner({ alerts, onDismiss }: AlertBannerProps) {
+export function AlertBanner({ alerts, onDismiss, onOpenDetail }: AlertBannerProps) {
   const [expanded, setExpanded] = useState(false);
 
   if (alerts.length === 0) return null;
 
   const primary = alerts[0]!;
-  const headline = alerts.length === 1
-    ? `${primary.event.toUpperCase()} · UNTIL ${formatExpires(primary.expires)}`
-    : `${alerts.length} ACTIVE ALERTS · ${primary.event.toUpperCase()} UNTIL ${formatExpires(primary.expires)}`;
+  const primaryEventUpper = primary.event.toUpperCase();
+  const expiresLabel = formatExpires(primary.expires);
 
   const canExpand = alerts.length > 1;
   const canDismiss = tierRank(primary.tier) > NON_DISMISSIBLE_RANK_THRESHOLD;
@@ -46,7 +46,34 @@ export function AlertBanner({ alerts, onDismiss }: AlertBannerProps) {
         <div className="alert-banner-stripes alert-banner-stripes-left" aria-hidden="true" />
         <div className="alert-banner-content">
           <span className="alert-banner-glyph">▲</span>
-          <span className="alert-banner-headline">{headline}</span>
+          <span className="alert-banner-headline">
+            {alerts.length === 1 ? (
+              <>
+                <button
+                  type="button"
+                  className="alert-banner-event-trigger"
+                  onClick={() => onOpenDetail(primary.id)}
+                  aria-label={`Show details for ${primary.event}`}
+                >
+                  {primaryEventUpper}
+                </button>
+                {' · UNTIL '}{expiresLabel}
+              </>
+            ) : (
+              <>
+                {alerts.length}{' ACTIVE ALERTS · '}
+                <button
+                  type="button"
+                  className="alert-banner-event-trigger"
+                  onClick={() => onOpenDetail(primary.id)}
+                  aria-label={`Show details for ${primary.event}`}
+                >
+                  {primaryEventUpper}
+                </button>
+                {' UNTIL '}{expiresLabel}
+              </>
+            )}
+          </span>
         </div>
         <div className="alert-banner-stripes alert-banner-stripes-right" aria-hidden="true" />
         {canExpand && (
@@ -75,7 +102,14 @@ export function AlertBanner({ alerts, onDismiss }: AlertBannerProps) {
         <ul className="alert-banner-list">
           {alerts.map((a) => (
             <li key={a.id}>
-              <span className="alert-banner-list-event">{a.event}</span>
+              <button
+                type="button"
+                className="alert-banner-event-trigger alert-banner-list-event"
+                onClick={() => onOpenDetail(a.id)}
+                aria-label={`Show details for ${a.event}`}
+              >
+                {a.event}
+              </button>
               <span className="alert-banner-list-sep"> · </span>
               <span className="alert-banner-list-expires">until {formatExpires(a.expires)}</span>
               <span className="alert-banner-list-sep">  ·  </span>
