@@ -731,9 +731,17 @@
   color: #9400D3;
   text-shadow: 0 0 8px rgba(148, 0, 211, 0.7);
 }
+.alert-banner[data-tier="tornado-pds"] {
+  color: #d400a8;
+  text-shadow: 0 0 8px rgba(212, 0, 168, 0.7);
+}
 .alert-banner[data-tier="tornado-warning"] {
   color: #ff4444;
   text-shadow: 0 0 8px rgba(255, 68, 68, 0.7);
+}
+.alert-banner[data-tier="tstorm-destructive"] {
+  color: #c8102e;
+  text-shadow: 0 0 8px rgba(200, 16, 46, 0.7);
 }
 .alert-banner[data-tier="severe-warning"] {
   color: #ff8800;
@@ -783,9 +791,17 @@
   --accent: #9400D3;
   --accent-rgb: 148, 0, 211;
 }
+.hud-showcase[data-alert-tier="tornado-pds"] {
+  --accent: #d400a8;
+  --accent-rgb: 212, 0, 168;
+}
 .hud-showcase[data-alert-tier="tornado-warning"] {
   --accent: #ff4444;
   --accent-rgb: 255, 68, 68;
+}
+.hud-showcase[data-alert-tier="tstorm-destructive"] {
+  --accent: #c8102e;
+  --accent-rgb: 200, 16, 46;
 }
 .hud-showcase[data-alert-tier="severe-warning"] {
   --accent: #ff8800;
