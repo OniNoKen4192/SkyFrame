@@ -1,6 +1,6 @@
 # SkyFrame — Project Status
 
-**Last updated:** 2026-04-19
+**Last updated:** 2026-04-19 (Feature 7)
 
 ## What is SkyFrame
 
@@ -179,3 +179,8 @@ Running list of what's in the codebase. Update this when a feature ships so we d
 - Click the `▶` glyph next to the CurrentPanel `TEMP / FEEL` tag or at the end of the HourlyPanel section label to open today's forecast narrative. Click any day-row date label in the 7-day outlook to open that day's narrative. Modal shows day and night sections stacked with NWS-preserved period names (e.g. `THIS AFTERNOON` / `TONIGHT` for today; `FRIDAY` / `FRIDAY NIGHT` for future days). Reuses the `TerminalModal` primitive from Feature 4 in base-cyan accent — validates the "chrome + thin wrapper" architecture across a second consumer.
 - `DailyPeriod` gains four nullable fields (`dayDetailedForecast`, `nightDetailedForecast`, `dayPeriodName`, `nightPeriodName`) populated by the normalizer from the NWS forecast response. Orphan periods (standalone `Tonight` at window start, day-only at window end) leave the missing half null; the modal body omits the absent section without a placeholder.
 - `WeatherMeta` gains `forecastGeneratedAt` — the NWS `/gridpoints/.../forecast` top-level `generatedAt` timestamp, shown on the right side of the modal title bar.
+
+### GPS autodetect (v1.2 Feature 7)
+- `⌖ USE MY LOCATION` button in the `LocationSetup` modal. Click → browser Geolocation prompt → on success, coordinates populate the existing LOCATION input as `"lat, lon"` with 4-decimal precision. User reviews and clicks SAVE as normal — the existing `/api/setup` flow runs unchanged.
+- Localhost-gated via `window.location.hostname` check against `localhost`, `127.0.0.1`, `::1`. Off-loopback hostnames show the button as `GPS LOCATION UNAVAILABLE` (disabled), with tooltip explaining browsers block Geolocation over non-HTTPS origins.
+- Along the way: `LocationSetup` modal top-aligns below the banner (matching `TerminalModal`), and the generic `.setup-btn:disabled` state gets explicit opacity / not-allowed-cursor styling that was previously only on the primary variant.
