@@ -1049,3 +1049,41 @@
   outline: 1px dashed currentColor;
   outline-offset: 2px;
 }
+
+/* ============================================================
+   Clickable outlook day labels (v1.2 Feature 5). Opens the
+   forecast narrative modal for that specific day. Mirrors the
+   .alert-banner-event-trigger pattern from Feature 4 — inline
+   button that looks like text, underline-on-hover.
+   ============================================================ */
+.outlook-date-trigger {
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  padding: 0;
+  cursor: pointer;
+  text-shadow: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.outlook-date-trigger:hover {
+  text-decoration: underline;
+}
+
+.outlook-date-trigger:focus-visible {
+  outline: 1px dashed currentColor;
+  outline-offset: 2px;
+}
+
+/* TopBar right cluster wraps the ForecastButton and the clock
+   into one flex group so they sit side-by-side on the right side. */
+.hud-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}

@@ -5,6 +5,7 @@ import { WxIcon } from './WxIcon';
 interface OutlookPanelProps {
   daily: DailyPeriod[];
   units: TempUnit;
+  onOpenForecastDay: (dateISO: string) => void;
 }
 
 function precipClass(pct: number): string {
@@ -14,7 +15,7 @@ function precipClass(pct: number): string {
   return 'precip zero';
 }
 
-export function OutlookPanel({ daily, units }: OutlookPanelProps) {
+export function OutlookPanel({ daily, units, onOpenForecastDay }: OutlookPanelProps) {
   if (daily.length === 0) return null;
 
   // Compute shared scale from all days' highs/lows in chosen unit
@@ -62,6 +63,7 @@ export function OutlookPanel({ daily, units }: OutlookPanelProps) {
               displayHigh={Math.round(hi)}
               leftPct={leftPct}
               rightPct={rightPct}
+              onOpenForecastDay={onOpenForecastDay}
             />
           );
         })}
@@ -76,15 +78,23 @@ interface OutlookRowProps {
   displayHigh: number;
   leftPct: number;
   rightPct: number;
+  onOpenForecastDay: (dateISO: string) => void;
 }
 
-function OutlookRow({ day, displayLow, displayHigh, leftPct, rightPct }: OutlookRowProps) {
+function OutlookRow({ day, displayLow, displayHigh, leftPct, rightPct, onOpenForecastDay }: OutlookRowProps) {
   return (
     <>
       <div className="date">
-        <span className="dow">{day.dayOfWeek}</span>
-        <span className="dot">·</span>
-        <span className="dt">{day.dateLabel}</span>
+        <button
+          type="button"
+          className="outlook-date-trigger"
+          onClick={() => onOpenForecastDay(day.dateISO)}
+          aria-label={`Show forecast narrative for ${day.dayOfWeek} ${day.dateLabel}`}
+        >
+          <span className="dow">{day.dayOfWeek}</span>
+          <span className="dot">·</span>
+          <span className="dt">{day.dateLabel}</span>
+        </button>
       </div>
       <div className="icon">
         <WxIcon code={day.iconCode} size={30} />

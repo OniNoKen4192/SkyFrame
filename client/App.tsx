@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { WeatherResponse } from '../shared/types';
+import type { WeatherResponse, DailyPeriod } from '../shared/types';
 import type { TempUnit } from '../shared/units';
 import { AlertBanner } from './components/AlertBanner';
 import { TerminalModal } from './components/TerminalModal';
@@ -12,8 +12,13 @@ import { Footer } from './components/Footer';
 import { CurrentPanel } from './components/CurrentPanel';
 import { HourlyPanel } from './components/HourlyPanel';
 import { OutlookPanel } from './components/OutlookPanel';
+import { ForecastBody } from './components/ForecastBody';
 
 export type ViewKey = 'current' | 'hourly' | 'outlook' | 'all';
+
+export type ForecastTrigger =
+  | { kind: 'today' }
+  | { kind: 'day'; dateISO: string };
 
 // Dismissed-alerts persistence. Lives at App level (not AlertBanner) so the
 // root data-alert-tier and the banner always render from the same filtered
@@ -86,6 +91,7 @@ export default function App() {
   const [dismissed, setDismissed] = useState<Set<string>>(() => loadDismissed());
   const [units, setUnits] = useState<TempUnit>(() => loadUnits());
   const [detailAlertId, setDetailAlertId] = useState<string | null>(null);
+  const [forecastTrigger, setForecastTrigger] = useState<ForecastTrigger | null>(null);
 
   // Check config status on mount
   useEffect(() => {
@@ -152,18 +158,19 @@ export default function App() {
     switch (activeView) {
       case 'current': return <CurrentPanel current={data.current} units={units} onToggleUnits={toggleUnits} />;
       case 'hourly':  return <HourlyPanel hourly={data.hourly} units={units} />;
-      case 'outlook': return <OutlookPanel daily={data.daily} units={units} />;
+      case 'outlook': return <OutlookPanel daily={data.daily} units={units} onOpenForecastDay={(dateISO) => setForecastTrigger({ kind: 'day', dateISO })} />;
       case 'all': return (
         <>
           <CurrentPanel current={data.current} units={units} onToggleUnits={toggleUnits} />
           <HourlyPanel hourly={data.hourly} units={units} />
-          <OutlookPanel daily={data.daily} units={units} />
+          <OutlookPanel daily={data.daily} units={units} onOpenForecastDay={(dateISO) => setForecastTrigger({ kind: 'day', dateISO })} />
         </>
       );
     }
   };
 
   const alerts = data?.alerts ?? [];
+  const daily = data?.daily ?? [];
 
   // Prune dismissed ids to only those still in the active alerts list, so the
   // Set doesn't grow unbounded across days/weeks. Re-runs only when the active
@@ -196,6 +203,21 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [alerts.map((a) => a.id).join('|'), detailAlertId]);
 
+  // Close the forecast modal if the day it points at falls off the
+  // end of the window (e.g. next-day rollover) or if the daily list
+  // empties entirely.
+  useEffect(() => {
+    if (forecastTrigger === null) return;
+    if (forecastTrigger.kind === 'today' && daily.length === 0) {
+      setForecastTrigger(null);
+      return;
+    }
+    if (forecastTrigger.kind === 'day' && !daily.some((d) => d.dateISO === forecastTrigger.dateISO)) {
+      setForecastTrigger(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [daily.map((d) => d.dateISO).join('|'), forecastTrigger]);
+
   const visible = alerts.filter((a) => !dismissed.has(a.id));
   const primaryTier = visible[0]?.tier;
 
@@ -224,6 +246,21 @@ export default function App() {
 
   const detailIssuedLabel = detailAlert ? formatTime(detailAlert.issuedAt) : '';
 
+  const forecastPeriod: DailyPeriod | null =
+    forecastTrigger?.kind === 'today' ? (daily[0] ?? null) :
+    forecastTrigger?.kind === 'day'   ? (daily.find((d) => d.dateISO === forecastTrigger.dateISO) ?? null) :
+    null;
+
+  const forecastTitleText = forecastTrigger?.kind === 'today'
+    ? 'FORECAST · TODAY'
+    : forecastPeriod
+    ? `FORECAST · ${forecastPeriod.dayOfWeek.toUpperCase()} ${forecastPeriod.dateLabel.toUpperCase()}`
+    : '';
+
+  const forecastGeneratedLabel = data?.meta?.forecastGeneratedAt
+    ? formatTime(data.meta.forecastGeneratedAt)
+    : '';
+
   return (
     <div className="hud-showcase" data-alert-tier={primaryTier}>
       {showSetup && (
@@ -249,6 +286,16 @@ export default function App() {
       >
         {detailAlert && <AlertDetailBody alert={detailAlert} />}
       </TerminalModal>
+      <TerminalModal
+        open={forecastPeriod !== null}
+        onClose={() => setForecastTrigger(null)}
+        titleGlyph="▸"
+        titleText={forecastTitleText}
+        titleRight={forecastGeneratedLabel}
+        accentColor="#22d3ee"
+      >
+        {forecastPeriod && <ForecastBody period={forecastPeriod} />}
+      </TerminalModal>
       <TopBar
         stationId={data?.meta?.stationId ?? null}
         error={error}
@@ -256,6 +303,8 @@ export default function App() {
         activeView={activeView}
         onViewChange={setActiveView}
         onLocationClick={() => setShowSetup(true)}
+        onOpenForecastToday={() => setForecastTrigger({ kind: 'today' })}
+        forecastButtonDisabled={daily.length === 0}
       />
 
       {renderView()}
