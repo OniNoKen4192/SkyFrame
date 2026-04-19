@@ -1061,7 +1061,7 @@
   border: none;
   color: inherit;
   font: inherit;
-  line-height: 1;
+  line-height: 0.5;
   letter-spacing: inherit;
   text-transform: inherit;
   cursor: pointer;
@@ -1069,7 +1069,7 @@
   padding: 0 4px;
   margin-left: 6px;
   opacity: 0.6;
-  vertical-align: 0.08em;
+  vertical-align: middle;
 }
 
 .forecast-inline-trigger:hover:not(:disabled) {
