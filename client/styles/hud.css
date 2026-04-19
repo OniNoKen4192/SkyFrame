@@ -1017,3 +1017,35 @@
   outline: 1px dashed currentColor;
   outline-offset: 2px;
 }
+
+/* ============================================================
+   TopBar forecast button (v1.2 Feature 5). Opens today's
+   forecast narrative in a TerminalModal. Muted by default,
+   brightens on hover — HUD aesthetic, not a primary action.
+   ============================================================ */
+.hud-topbar-forecast {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font: inherit;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 10px;
+  opacity: 0.55;
+  text-shadow: 0 0 6px rgba(var(--accent-rgb), 0.5);
+}
+
+.hud-topbar-forecast:hover:not(:disabled) {
+  opacity: 1;
+}
+
+.hud-topbar-forecast:disabled {
+  cursor: not-allowed;
+  opacity: 0.25;
+}
+
+.hud-topbar-forecast:focus-visible {
+  outline: 1px dashed currentColor;
+  outline-offset: 2px;
+}
