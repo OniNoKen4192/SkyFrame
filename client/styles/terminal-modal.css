@@ -105,3 +105,23 @@
   color: var(--terminal-modal-accent, #22d3ee);
   font-weight: 700;
 }
+
+/* Forecast-narrative content styles (v1.2 Feature 5). Lives with
+   the modal stylesheet for the same reason the alert-detail
+   styles do — tight coupling to modal-body layout. */
+.forecast-section-header {
+  color: var(--terminal-modal-accent, #22d3ee);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  margin: 0 0 8px;
+}
+
+.forecast-section-header:not(:first-child) {
+  margin-top: 16px;
+}
+
+.forecast-narrative {
+  margin: 0 0 9px;
+  white-space: pre-wrap;
+}
