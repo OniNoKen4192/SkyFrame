@@ -1,6 +1,6 @@
 # SkyFrame — Project Status
 
-**Last updated:** 2026-04-18
+**Last updated:** 2026-04-19
 
 ## What is SkyFrame
 
@@ -12,7 +12,7 @@ A local, ad-free weather dashboard. Single user, serves on localhost. HUD-style 
 - **Backend:** Fastify 5 + Node.js via tsx (serves API + prod static bundle on port 3000)
 - **Styling:** Vanilla CSS with custom properties (`--accent`, `--accent-rgb`, `--accent-glow-*`) for the accent color system
 - **Data:** NOAA/NWS public REST API (no auth required, User-Agent header mandatory)
-- **Tests:** Vitest (217 tests across 12 files — mostly server-side, plus pure client-side helpers in `client/alert-detail-format.test.ts`). No React component test infrastructure (RTL / jsdom).
+- **Tests:** Vitest (221 tests across 12 files — mostly server-side, plus pure client-side helpers in `client/alert-detail-format.test.ts`). No React component test infrastructure (RTL / jsdom).
 - **Build:** `npm run build` → Vite bundles client into `dist/client/` (gitignored)
 - **Config:** Location + identity lives in `.env` (gitignored). Copy `.env.example` to get started.
 
@@ -104,7 +104,7 @@ npm run server       # Fastify API server (port 3000, reads .env)
 npm run start:prod   # builds client + starts Fastify on port 3000
 
 # Tests
-npm test             # Vitest (217 tests — mostly server, plus pure client helpers)
+npm test             # Vitest (221 tests — mostly server, plus pure client helpers)
 npm run typecheck    # Both server + client TypeScript configs
 
 # Debug alerts (dev only)
@@ -174,3 +174,8 @@ Running list of what's in the codebase. Update this when a feature ships so we d
 - Click an alert event name in the banner (single-alert headline or multi-alert expanded list) to open a terminal-styled modal showing the full NWS `description` text, issued/expires timestamps, and affected area. HAZARD/SOURCE/IMPACT paragraph prefixes render in the alert's tier color. Close via × button, Esc key, or overlay click. Focus returns to the trigger on close.
 - Introduces a reusable `TerminalModal` primitive (chrome only — overlay, title bar, close behaviors, accent border) with zero alert-specific code. Feature 5's forecast narrative popup will reuse it.
 - `Alert` type gains an `issuedAt` field sourced from the NWS CAP `sent` timestamp, with fallback to `effective` when absent.
+
+### NWS narrative forecast modal (v1.2 Feature 5)
+- Click the `▶` glyph next to the CurrentPanel `TEMP / FEEL` tag or at the end of the HourlyPanel section label to open today's forecast narrative. Click any day-row date label in the 7-day outlook to open that day's narrative. Modal shows day and night sections stacked with NWS-preserved period names (e.g. `THIS AFTERNOON` / `TONIGHT` for today; `FRIDAY` / `FRIDAY NIGHT` for future days). Reuses the `TerminalModal` primitive from Feature 4 in base-cyan accent — validates the "chrome + thin wrapper" architecture across a second consumer.
+- `DailyPeriod` gains four nullable fields (`dayDetailedForecast`, `nightDetailedForecast`, `dayPeriodName`, `nightPeriodName`) populated by the normalizer from the NWS forecast response. Orphan periods (standalone `Tonight` at window start, day-only at window end) leave the missing half null; the modal body omits the absent section without a placeholder.
+- `WeatherMeta` gains `forecastGeneratedAt` — the NWS `/gridpoints/.../forecast` top-level `generatedAt` timestamp, shown on the right side of the modal title bar.

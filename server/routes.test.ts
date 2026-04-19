@@ -32,6 +32,7 @@ const FIXTURE_RESPONSE = {
     cacheHit: false,
     stationId: 'KMKE',
     locationName: 'TEST LOCATION',
+    forecastGeneratedAt: '2026-04-15T13:30:00Z',
   },
 };
 

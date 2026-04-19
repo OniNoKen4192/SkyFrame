@@ -1,11 +1,14 @@
 import type { CurrentConditions, Trend } from '../../shared/types';
 import { convertTempF, scaleTempTrend, type TempUnit } from '../../shared/units';
 import { WxIcon } from './WxIcon';
+import { ForecastButton } from './ForecastButton';
 
 interface CurrentPanelProps {
   current: CurrentConditions;
   units: TempUnit;
   onToggleUnits: () => void;
+  onOpenForecastToday: () => void;
+  forecastButtonDisabled: boolean;
 }
 
 function trendText(t: Trend): { arrow: string; rate: string; className: string } {
@@ -30,7 +33,7 @@ function fillPercent(metric: string, value: number): number {
   }
 }
 
-export function CurrentPanel({ current, units, onToggleUnits }: CurrentPanelProps) {
+export function CurrentPanel({ current, units, onToggleUnits, onOpenForecastToday, forecastButtonDisabled }: CurrentPanelProps) {
   const tempTrend = trendText(scaleTempTrend(current.trends.temp, units));
   const dewTrend = scaleTempTrend(current.trends.dewpoint, units);
 
@@ -48,7 +51,10 @@ export function CurrentPanel({ current, units, onToggleUnits }: CurrentPanelProp
           <span className="corner tr"></span>
           <span className="corner bl"></span>
           <span className="corner br"></span>
-          <div className="tag">TEMP / FEEL</div>
+          <div className="tag">
+            TEMP / FEEL
+            <ForecastButton onClick={onOpenForecastToday} disabled={forecastButtonDisabled} />
+          </div>
           <div
             className="temp"
             onClick={onToggleUnits}

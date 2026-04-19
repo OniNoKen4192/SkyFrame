@@ -1017,3 +1017,72 @@
   outline: 1px dashed currentColor;
   outline-offset: 2px;
 }
+
+/* ============================================================
+   Clickable outlook day labels (v1.2 Feature 5). Opens the
+   forecast narrative modal for that specific day. Mirrors the
+   .alert-banner-event-trigger pattern from Feature 4 — inline
+   button that looks like text, underline-on-hover.
+   ============================================================ */
+.outlook-date-trigger {
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  padding: 0;
+  cursor: pointer;
+  text-shadow: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.outlook-date-trigger:hover {
+  text-decoration: underline;
+}
+
+.outlook-date-trigger:focus-visible {
+  outline: 1px dashed currentColor;
+  outline-offset: 2px;
+}
+
+/* ============================================================
+   Inline "open today's forecast" trigger (v1.2 Feature 5).
+   Used inside CurrentPanel's TEMP / FEEL tag and HourlyPanel's
+   section label. Inherits the surrounding label's typography so
+   it reads as part of that label — with a small left margin to
+   separate the glyph from the preceding text, and a brighten +
+   underline on hover so it clearly signals interactivity.
+   ============================================================ */
+.forecast-inline-trigger {
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+  line-height: 0.5;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+  text-shadow: inherit;
+  padding: 0 4px;
+  margin-left: 6px;
+  opacity: 0.6;
+  vertical-align: middle;
+}
+
+.forecast-inline-trigger:hover:not(:disabled) {
+  opacity: 1;
+  text-decoration: underline;
+}
+
+.forecast-inline-trigger:disabled {
+  cursor: not-allowed;
+  opacity: 0.3;
+}
+
+.forecast-inline-trigger:focus-visible {
+  outline: 1px dashed currentColor;
+  outline-offset: 2px;
+}
