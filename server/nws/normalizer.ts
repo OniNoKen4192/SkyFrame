@@ -87,6 +87,7 @@ interface NwsPointResponse {
 
 interface NwsForecastResponse {
   properties: {
+    generatedAt: string;
     periods: Array<{
       name: string;
       startTime: string;
@@ -94,6 +95,7 @@ interface NwsForecastResponse {
       isDaytime: boolean;
       temperature: number;
       shortForecast: string;
+      detailedForecast: string;
       icon: string;
       probabilityOfPrecipitation?: { value: number | null };
     }>;
@@ -313,6 +315,7 @@ export async function normalizeWeather(): Promise<WeatherResponse> {
     cacheHit: false,
     stationId: activeStationId,
     locationName: CONFIG.location.name,
+    forecastGeneratedAt: forecast.properties.generatedAt,
     ...(metaError ? { error: metaError } : {}),
   };
 
@@ -415,6 +418,10 @@ function collapseDailyPeriods(
         iconCode: mapNwsDailyIcon(a.icon, pairProb, a.shortForecast),
         precipProbPct: pairProb,
         shortDescription: a.shortForecast,
+        dayDetailedForecast: a.detailedForecast,
+        nightDetailedForecast: b.detailedForecast,
+        dayPeriodName: a.name,
+        nightPeriodName: b.name,
       });
       i += 2;
     } else if (!a.isDaytime) {
@@ -438,6 +445,10 @@ function collapseDailyPeriods(
         iconCode: mapNwsDailyIcon(a.icon, nightProb, a.shortForecast),
         precipProbPct: nightProb,
         shortDescription: a.shortForecast,
+        dayDetailedForecast: null,
+        nightDetailedForecast: a.detailedForecast,
+        dayPeriodName: null,
+        nightPeriodName: a.name,
       });
       i += 1;
     } else {
@@ -452,6 +463,10 @@ function collapseDailyPeriods(
         iconCode: mapNwsDailyIcon(a.icon, dayProb, a.shortForecast),
         precipProbPct: dayProb,
         shortDescription: a.shortForecast,
+        dayDetailedForecast: a.detailedForecast,
+        nightDetailedForecast: null,
+        dayPeriodName: a.name,
+        nightPeriodName: null,
       });
       i += 1;
     }

@@ -62,6 +62,10 @@ export interface DailyPeriod {
   iconCode: IconCode;
   precipProbPct: number;
   shortDescription: string;
+  dayDetailedForecast: string | null;    // NWS detailed narrative for the day period
+  nightDetailedForecast: string | null;  // NWS detailed narrative for the night period
+  dayPeriodName: string | null;          // NWS period name ("This Afternoon", "Friday")
+  nightPeriodName: string | null;        // NWS period name ("Tonight", "Friday Night")
 }
 
 export interface WeatherMeta {
@@ -70,6 +74,7 @@ export interface WeatherMeta {
   cacheHit: boolean;
   stationId: string;
   locationName: string;
+  forecastGeneratedAt: string;  // NWS top-level generatedAt from /gridpoints/.../forecast
   error?: 'rate_limited' | 'upstream_malformed' | 'station_fallback' | 'partial';
 }
 

@@ -20,11 +20,12 @@ const FIXTURE_POINT = {
 
 const FIXTURE_FORECAST = {
   properties: {
+    generatedAt: '2026-04-15T13:30:00Z',
     periods: [
-      { name: 'This Afternoon', startTime: '2026-04-15T14:00:00-05:00', endTime: '2026-04-15T18:00:00-05:00', isDaytime: true,  temperature: 68, shortForecast: 'Mostly Cloudy', icon: 'https://api.weather.gov/icons/land/day/bkn?size=medium', probabilityOfPrecipitation: { value: 20 } },
-      { name: 'Tonight',        startTime: '2026-04-15T18:00:00-05:00', endTime: '2026-04-16T06:00:00-05:00', isDaytime: false, temperature: 52, shortForecast: 'Cloudy',        icon: 'https://api.weather.gov/icons/land/night/bkn?size=medium', probabilityOfPrecipitation: { value: 20 } },
-      { name: 'Thursday',       startTime: '2026-04-16T06:00:00-05:00', endTime: '2026-04-16T18:00:00-05:00', isDaytime: true,  temperature: 62, shortForecast: 'Rain Likely',   icon: 'https://api.weather.gov/icons/land/day/rain,70?size=medium', probabilityOfPrecipitation: { value: 70 } },
-      { name: 'Thursday Night', startTime: '2026-04-16T18:00:00-05:00', endTime: '2026-04-17T06:00:00-05:00', isDaytime: false, temperature: 48, shortForecast: 'Rain',          icon: 'https://api.weather.gov/icons/land/night/rain?size=medium', probabilityOfPrecipitation: { value: 70 } },
+      { name: 'This Afternoon', startTime: '2026-04-15T14:00:00-05:00', endTime: '2026-04-15T18:00:00-05:00', isDaytime: true,  temperature: 68, shortForecast: 'Mostly Cloudy', detailedForecast: 'Mostly cloudy this afternoon. High near 68. West wind 10 to 15 mph.', icon: 'https://api.weather.gov/icons/land/day/bkn?size=medium',  probabilityOfPrecipitation: { value: 20 } },
+      { name: 'Tonight',        startTime: '2026-04-15T18:00:00-05:00', endTime: '2026-04-16T06:00:00-05:00', isDaytime: false, temperature: 52, shortForecast: 'Cloudy',        detailedForecast: 'Cloudy tonight. Low around 52. Northwest wind 5 to 10 mph.',      icon: 'https://api.weather.gov/icons/land/night/bkn?size=medium', probabilityOfPrecipitation: { value: 20 } },
+      { name: 'Thursday',       startTime: '2026-04-16T06:00:00-05:00', endTime: '2026-04-16T18:00:00-05:00', isDaytime: true,  temperature: 62, shortForecast: 'Rain Likely',   detailedForecast: 'Rain likely Thursday. High near 62. Chance of precipitation is 70%.', icon: 'https://api.weather.gov/icons/land/day/rain,70?size=medium', probabilityOfPrecipitation: { value: 70 } },
+      { name: 'Thursday Night', startTime: '2026-04-16T18:00:00-05:00', endTime: '2026-04-17T06:00:00-05:00', isDaytime: false, temperature: 48, shortForecast: 'Rain',          detailedForecast: 'Rain Thursday night. Low around 48.',                                icon: 'https://api.weather.gov/icons/land/night/rain?size=medium',   probabilityOfPrecipitation: { value: 70 } },
     ],
   },
 };
@@ -67,6 +68,30 @@ const FIXTURE_OBS_HISTORY = {
     { properties: { ...FIXTURE_OBS_LATEST.properties, timestamp: '2026-04-15T17:25:00+00:00', temperature: { value: 15.5, unitCode: 'wmoUnit:degC' } } },
     { properties: { ...FIXTURE_OBS_LATEST.properties, timestamp: '2026-04-15T16:25:00+00:00', temperature: { value: 15.0, unitCode: 'wmoUnit:degC' } } },
   ],
+};
+
+const FIXTURE_FORECAST_OVERNIGHT = {
+  properties: {
+    generatedAt: '2026-04-16T00:10:00Z',
+    periods: [
+      { name: 'Overnight',      startTime: '2026-04-16T00:00:00-05:00', endTime: '2026-04-16T06:00:00-05:00', isDaytime: false, temperature: 50, shortForecast: 'Mostly Clear', detailedForecast: 'Mostly clear overnight. Low around 50.',         icon: 'https://api.weather.gov/icons/land/night/few?size=medium', probabilityOfPrecipitation: { value: 5 } },
+      { name: 'Thursday',       startTime: '2026-04-16T06:00:00-05:00', endTime: '2026-04-16T18:00:00-05:00', isDaytime: true,  temperature: 65, shortForecast: 'Sunny',        detailedForecast: 'Sunny Thursday. High near 65.',                   icon: 'https://api.weather.gov/icons/land/day/few?size=medium',   probabilityOfPrecipitation: { value: 0 } },
+      { name: 'Thursday Night', startTime: '2026-04-16T18:00:00-05:00', endTime: '2026-04-17T06:00:00-05:00', isDaytime: false, temperature: 48, shortForecast: 'Cloudy',       detailedForecast: 'Cloudy Thursday night. Low around 48.',           icon: 'https://api.weather.gov/icons/land/night/bkn?size=medium', probabilityOfPrecipitation: { value: 10 } },
+      { name: 'Friday',         startTime: '2026-04-17T06:00:00-05:00', endTime: '2026-04-17T18:00:00-05:00', isDaytime: true,  temperature: 70, shortForecast: 'Sunny',        detailedForecast: 'Sunny Friday. High near 70.',                     icon: 'https://api.weather.gov/icons/land/day/few?size=medium',   probabilityOfPrecipitation: { value: 5 } },
+      { name: 'Friday Night',   startTime: '2026-04-17T18:00:00-05:00', endTime: '2026-04-18T06:00:00-05:00', isDaytime: false, temperature: 52, shortForecast: 'Clear',        detailedForecast: 'Clear Friday night. Low around 52.',              icon: 'https://api.weather.gov/icons/land/night/skc?size=medium', probabilityOfPrecipitation: { value: 0 } },
+    ],
+  },
+};
+
+const FIXTURE_FORECAST_LATE_EVENING = {
+  properties: {
+    generatedAt: '2026-04-16T22:10:00Z',
+    periods: [
+      { name: 'Tonight',      startTime: '2026-04-16T22:00:00-05:00', endTime: '2026-04-17T06:00:00-05:00', isDaytime: false, temperature: 47, shortForecast: 'Clear', detailedForecast: 'Clear tonight. Low around 47.',  icon: 'https://api.weather.gov/icons/land/night/skc?size=medium', probabilityOfPrecipitation: { value: 0 } },
+      { name: 'Friday',       startTime: '2026-04-17T06:00:00-05:00', endTime: '2026-04-17T18:00:00-05:00', isDaytime: true,  temperature: 70, shortForecast: 'Sunny', detailedForecast: 'Sunny Friday. High near 70.',    icon: 'https://api.weather.gov/icons/land/day/few?size=medium',   probabilityOfPrecipitation: { value: 5 } },
+      { name: 'Friday Night', startTime: '2026-04-17T18:00:00-05:00', endTime: '2026-04-18T06:00:00-05:00', isDaytime: false, temperature: 52, shortForecast: 'Clear', detailedForecast: 'Clear Friday night. Low near 52.', icon: 'https://api.weather.gov/icons/land/night/skc?size=medium', probabilityOfPrecipitation: { value: 0 } },
+    ],
+  },
 };
 
 describe('normalizeWeather', () => {
@@ -604,30 +629,6 @@ describe('normalizeWeather', () => {
     // its local-timezone date label with the next "Day" period. Without
     // dedup, that produced two THU rows (one night-only orphan + one
     // day+night pair). The collapse logic must skip the orphan in that case.
-    const FIXTURE_FORECAST_OVERNIGHT = {
-      properties: {
-        periods: [
-          { name: 'Overnight',      startTime: '2026-04-16T00:00:00-05:00', endTime: '2026-04-16T06:00:00-05:00', isDaytime: false, temperature: 50, shortForecast: 'Mostly Clear', icon: 'https://api.weather.gov/icons/land/night/few?size=medium', probabilityOfPrecipitation: { value: 5 } },
-          { name: 'Thursday',       startTime: '2026-04-16T06:00:00-05:00', endTime: '2026-04-16T18:00:00-05:00', isDaytime: true,  temperature: 65, shortForecast: 'Sunny',        icon: 'https://api.weather.gov/icons/land/day/few?size=medium',   probabilityOfPrecipitation: { value: 0 } },
-          { name: 'Thursday Night', startTime: '2026-04-16T18:00:00-05:00', endTime: '2026-04-17T06:00:00-05:00', isDaytime: false, temperature: 48, shortForecast: 'Cloudy',       icon: 'https://api.weather.gov/icons/land/night/bkn?size=medium', probabilityOfPrecipitation: { value: 10 } },
-          { name: 'Friday',         startTime: '2026-04-17T06:00:00-05:00', endTime: '2026-04-17T18:00:00-05:00', isDaytime: true,  temperature: 70, shortForecast: 'Sunny',        icon: 'https://api.weather.gov/icons/land/day/few?size=medium',   probabilityOfPrecipitation: { value: 5 } },
-          { name: 'Friday Night',   startTime: '2026-04-17T18:00:00-05:00', endTime: '2026-04-18T06:00:00-05:00', isDaytime: false, temperature: 52, shortForecast: 'Clear',        icon: 'https://api.weather.gov/icons/land/night/skc?size=medium', probabilityOfPrecipitation: { value: 0 } },
-        ],
-      },
-    };
-
-    // Late-evening case: NWS serves "Tonight" first, dated today, but the
-    // next period is the NEXT day. Different dates → orphan must be PRESERVED
-    // so the user sees the rest-of-tonight as today's row.
-    const FIXTURE_FORECAST_LATE_EVENING = {
-      properties: {
-        periods: [
-          { name: 'Tonight',      startTime: '2026-04-16T22:00:00-05:00', endTime: '2026-04-17T06:00:00-05:00', isDaytime: false, temperature: 47, shortForecast: 'Clear', icon: 'https://api.weather.gov/icons/land/night/skc?size=medium', probabilityOfPrecipitation: { value: 0 } },
-          { name: 'Friday',       startTime: '2026-04-17T06:00:00-05:00', endTime: '2026-04-17T18:00:00-05:00', isDaytime: true,  temperature: 70, shortForecast: 'Sunny', icon: 'https://api.weather.gov/icons/land/day/few?size=medium',   probabilityOfPrecipitation: { value: 5 } },
-          { name: 'Friday Night', startTime: '2026-04-17T18:00:00-05:00', endTime: '2026-04-18T06:00:00-05:00', isDaytime: false, temperature: 52, shortForecast: 'Clear', icon: 'https://api.weather.gov/icons/land/night/skc?size=medium', probabilityOfPrecipitation: { value: 0 } },
-        ],
-      },
-    };
 
     function mockForecast(forecast: typeof FIXTURE_FORECAST_OVERNIGHT) {
       vi.spyOn(client, 'fetchNws').mockImplementation(async (path: string) => {
@@ -675,6 +676,56 @@ describe('normalizeWeather', () => {
       // Second entry is Friday.
       expect(result.daily[1]!.dateLabel).toBe('APR 17');
       expect(result.daily[1]!.highF).toBe(70);
+    });
+  });
+
+  describe('forecast narratives and generatedAt', () => {
+    function mockWithForecast(forecast: typeof FIXTURE_FORECAST) {
+      vi.spyOn(client, 'fetchNws').mockImplementation(async (path: string) => {
+        if (path.includes('/points/')) return FIXTURE_POINT as never;
+        if (path.includes('/forecast/hourly')) return FIXTURE_HOURLY as never;
+        if (path.includes('/forecast')) return forecast as never;
+        if (path.includes('/observations/latest')) return FIXTURE_OBS_LATEST as never;
+        if (path.includes('/observations')) return FIXTURE_OBS_HISTORY as never;
+        if (path.includes('/alerts/active')) return { features: [] } as never;
+        throw new Error('Unexpected path: ' + path);
+      });
+    }
+
+    it('populates dayDetailedForecast and nightDetailedForecast from a day+night pair', async () => {
+      mockWithForecast(FIXTURE_FORECAST);
+      const result = await normalizeWeather();
+
+      expect(result.daily[0]!.dayDetailedForecast).toBe('Mostly cloudy this afternoon. High near 68. West wind 10 to 15 mph.');
+      expect(result.daily[0]!.nightDetailedForecast).toBe('Cloudy tonight. Low around 52. Northwest wind 5 to 10 mph.');
+    });
+
+    it('populates dayPeriodName and nightPeriodName from the NWS period name field', async () => {
+      mockWithForecast(FIXTURE_FORECAST);
+      const result = await normalizeWeather();
+
+      expect(result.daily[0]!.dayPeriodName).toBe('This Afternoon');
+      expect(result.daily[0]!.nightPeriodName).toBe('Tonight');
+      expect(result.daily[1]!.dayPeriodName).toBe('Thursday');
+      expect(result.daily[1]!.nightPeriodName).toBe('Thursday Night');
+    });
+
+    it('leaves day fields null for a standalone-night orphan at the start of the window', async () => {
+      mockWithForecast(FIXTURE_FORECAST_LATE_EVENING);
+      const result = await normalizeWeather();
+
+      // First row is the "Tonight" orphan.
+      expect(result.daily[0]!.dayDetailedForecast).toBeNull();
+      expect(result.daily[0]!.dayPeriodName).toBeNull();
+      expect(result.daily[0]!.nightDetailedForecast).toBe('Clear tonight. Low around 47.');
+      expect(result.daily[0]!.nightPeriodName).toBe('Tonight');
+    });
+
+    it('surfaces the forecast generatedAt as meta.forecastGeneratedAt', async () => {
+      mockWithForecast(FIXTURE_FORECAST);
+      const result = await normalizeWeather();
+
+      expect(result.meta.forecastGeneratedAt).toBe('2026-04-15T13:30:00Z');
     });
   });
 });
