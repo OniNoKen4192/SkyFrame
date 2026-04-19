@@ -965,21 +965,21 @@
   transition: border-color 120ms ease, box-shadow 120ms ease;
 }
 
-.setup-btn:hover {
+.setup-btn:hover:not(:disabled) {
   border-color: var(--accent);
   box-shadow: 0 0 8px var(--accent-glow-soft);
+}
+
+.setup-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  border-color: rgba(var(--accent-rgb), 0.2);
+  box-shadow: none;
 }
 
 .setup-btn-primary {
   background: rgba(var(--accent-rgb), 0.12);
   border-color: var(--accent);
-}
-
-.setup-btn-primary:disabled {
-  opacity: 0.3;
-  cursor: default;
-  border-color: rgba(var(--accent-rgb), 0.2);
-  box-shadow: none;
 }
 
 .hud-topbar .loc .loc-link {
