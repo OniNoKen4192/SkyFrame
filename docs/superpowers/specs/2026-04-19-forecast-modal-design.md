@@ -7,7 +7,7 @@
 
 ## Summary
 
-Reuse the `TerminalModal` primitive (shipped in Feature 4) to display NWS's human-written daily forecast narratives. Two triggers open it: a `▤` icon button inline with the CurrentPanel `TEMP / FEEL` tag and the HourlyPanel section label (opens today's forecast), and clicking a day row's date label in the 7-day `OutlookPanel` (opens that day's forecast). Body shows stacked day + night narratives with contextual section headers.
+Reuse the `TerminalModal` primitive (shipped in Feature 4) to display NWS's human-written daily forecast narratives. Two triggers open it: a `▶` icon button inline with the CurrentPanel `TEMP / FEEL` tag and the HourlyPanel section label (opens today's forecast), and clicking a day row's date label in the 7-day `OutlookPanel` (opens that day's forecast). Body shows stacked day + night narratives with contextual section headers.
 
 ## Decisions settled during brainstorming
 
@@ -15,7 +15,7 @@ Reuse the `TerminalModal` primitive (shipped in Feature 4) to display NWS's huma
 |---|---|---|
 | Day/night narrative shape on `DailyPeriod` | Two nullable string fields (`dayDetailedForecast`, `nightDetailedForecast`) | Smallest delta; null cases match the normalizer's existing orphan handling |
 | Section header wording | Use NWS period `name` verbatim (preserved as `dayPeriodName`, `nightPeriodName`) | Matches weather.gov; naturally handles "This Afternoon" / "Overnight" for today without custom logic |
-| `▤` trigger placement | Inline at the end of the CurrentPanel `TEMP / FEEL` tag AND the HourlyPanel `■ HOURLY FORECAST ...` section label. (Revised during manual validation — the originally-specified TopBar placement felt disconnected from the weather data it opens; moving it inline with the panel labels reads more naturally. HOURLY-tab users keep access via the Hourly label trigger; OUTLOOK-tab users already have per-day triggers from the day-row buttons.) | The trigger now lives beside the data it relates to rather than in the dashboard chrome |
+| `▶` trigger placement | Inline at the end of the CurrentPanel `TEMP / FEEL` tag AND the HourlyPanel `■ HOURLY FORECAST ...` section label. (Revised during manual validation — the originally-specified TopBar placement felt disconnected from the weather data it opens; moving it inline with the panel labels reads more naturally. HOURLY-tab users keep access via the Hourly label trigger; OUTLOOK-tab users already have per-day triggers from the day-row buttons.) | The trigger now lives beside the data it relates to rather than in the dashboard chrome |
 
 ## Scope
 
@@ -77,7 +77,7 @@ Drives the title-bar right-side timestamp on the forecast modal.
 
 ```
 client/components/ForecastBody.tsx      # Modal content (day + night narratives)
-client/components/ForecastButton.tsx    # Inline ▤ trigger used by CurrentPanel and HourlyPanel
+client/components/ForecastButton.tsx    # Inline ▶ trigger used by CurrentPanel and HourlyPanel
 ```
 
 ### Modified files
@@ -88,7 +88,7 @@ client/components/ForecastButton.tsx    # Inline ▤ trigger used by CurrentPane
 | `server/nws/normalizer.ts` | Pull `generatedAt`, `detailedForecast`, `name`; populate new DailyPeriod fields |
 | `server/nws/normalizer.test.ts` | Add tests covering the new fields for both full-pair and orphan cases |
 | `client/components/CurrentPanel.tsx` | Render `<ForecastButton>` inside the `TEMP / FEEL` tag; new `onOpenForecastToday` and `forecastButtonDisabled` props |
-| `client/components/HourlyPanel.tsx` | Render `<ForecastButton>` at the end of the section-label text (`■ HOURLY FORECAST · NEXT 12H · MKX GRID 88,58 ▤`); same two new props |
+| `client/components/HourlyPanel.tsx` | Render `<ForecastButton>` at the end of the section-label text (`■ HOURLY FORECAST · NEXT 12H · MKX GRID 88,58 ▶`); same two new props |
 | `client/components/OutlookPanel.tsx` | Date label becomes a clickable trigger; new `onOpenForecastDay` prop |
 | `client/App.tsx` | Add `forecastTrigger` state, resolve selected period, render `<TerminalModal>` with `<ForecastBody>` child |
 | `client/styles/terminal-modal.css` | Append `.forecast-*` styles |
@@ -116,7 +116,7 @@ interface ForecastButtonProps {
 }
 ```
 
-Renders `▤` with hover/focus chrome and `aria-label="Open today's forecast narrative"`. Disabled when there's no daily data yet (cold-start / fallback).
+Renders `▶` with hover/focus chrome and `aria-label="Open today's forecast narrative"`. Disabled when there's no daily data yet (cold-start / fallback).
 
 ### State ownership — `App.tsx`
 
@@ -142,20 +142,20 @@ const forecastPeriod: DailyPeriod | null =
 ## Interactions
 
 ### Open paths
-- CurrentPanel / HourlyPanel `▤` click → `setForecastTrigger({ kind: 'today' })`
+- CurrentPanel / HourlyPanel `▶` click → `setForecastTrigger({ kind: 'today' })`
 - Outlook day-row date label click → `setForecastTrigger({ kind: 'day', dateISO: d.dateISO })`
 
 Both render the same `<TerminalModal>` instance. Title text differs:
 
 | Trigger | `titleText` |
 |---|---|
-| `kind: 'today'` | `▤ FORECAST · TODAY` |
-| `kind: 'day'` | `▤ FORECAST · ${period.dayOfWeek.toUpperCase()} ${period.dateLabel.toUpperCase()}` |
+| `kind: 'today'` | `▶ FORECAST · TODAY` |
+| `kind: 'day'` | `▶ FORECAST · ${period.dayOfWeek.toUpperCase()} ${period.dateLabel.toUpperCase()}` |
 
-Example (day): `▤ FORECAST · FRI APR 17`. The `dayOfWeek` field in `DailyPeriod` is already the short form (`FRI`, `SAT`) used in OutlookPanel.
+Example (day): `▶ FORECAST · FRI APR 17`. The `dayOfWeek` field in `DailyPeriod` is already the short form (`FRI`, `SAT`) used in OutlookPanel.
 
 ### Title bar
-- Glyph: `▤`
+- Glyph: `▶`
 - Right side: `meta.forecastGeneratedAt` formatted via the shared `formatTime` helper (same America/Chicago formatter used by the alert modal)
 - Accent color: literal `#22d3ee` (base cyan). No tier logic.
 
