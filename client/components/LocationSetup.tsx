@@ -2,7 +2,7 @@ import { useState } from 'react';
 
 const LOCALHOST_HOSTNAMES = new Set(['localhost', '127.0.0.1', '::1']);
 
-const gpsAvailable = false;
+const gpsAvailable =
   typeof window !== 'undefined' &&
   'geolocation' in navigator &&
   LOCALHOST_HOSTNAMES.has(window.location.hostname);
