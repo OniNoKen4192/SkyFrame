@@ -1086,3 +1086,16 @@
   outline: 1px dashed currentColor;
   outline-offset: 2px;
 }
+
+/* ============================================================
+   USE MY LOCATION button in LocationSetup modal (v1.2 Feature 7).
+   Inherits chrome from .setup-btn. Block-level + full width to
+   visually group with the LOCATION input above it, separated
+   from the EMAIL label below.
+   ============================================================ */
+.setup-btn-gps {
+  display: block;
+  width: 100%;
+  margin-top: -6px;
+  margin-bottom: 14px;
+}
