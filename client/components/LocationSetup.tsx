@@ -2,7 +2,7 @@ import { useState } from 'react';
 
 const LOCALHOST_HOSTNAMES = new Set(['localhost', '127.0.0.1', '::1']);
 
-const gpsAvailable =
+const gpsAvailable = false;
   typeof window !== 'undefined' &&
   'geolocation' in navigator &&
   LOCALHOST_HOSTNAMES.has(window.location.hostname);
@@ -105,7 +105,7 @@ export function LocationSetup({ onComplete, onCancel }: LocationSetupProps) {
           title={gpsAvailable ? undefined : 'GPS requires localhost (browsers block Geolocation over non-HTTPS origins)'}
           onClick={handleUseMyLocation}
         >
-          {locating ? 'LOCATING...' : '⌖ USE MY LOCATION'}
+          {!gpsAvailable ? 'GPS LOCATION UNAVAILABLE' : locating ? 'LOCATING...' : '⌖ USE MY LOCATION'}
         </button>
 
         {gpsError && <div className="setup-error">▲ {gpsError}</div>}
