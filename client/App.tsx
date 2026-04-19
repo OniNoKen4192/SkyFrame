@@ -13,6 +13,12 @@ import { CurrentPanel } from './components/CurrentPanel';
 import { HourlyPanel } from './components/HourlyPanel';
 import { OutlookPanel } from './components/OutlookPanel';
 import { ForecastBody } from './components/ForecastBody';
+import {
+  soundModeForTier,
+  triggerAlertSound,
+  cancelAllLoops,
+  pruneSoundState,
+} from './sound/alert-sounds';
 
 export type ViewKey = 'current' | 'hourly' | 'outlook' | 'all';
 
@@ -42,6 +48,31 @@ function loadDismissed(): Set<string> {
 function saveDismissed(set: Set<string>): void {
   try {
     localStorage.setItem(DISMISSED_KEY, JSON.stringify([...set]));
+  } catch {
+    // Quota exceeded or storage unavailable — silently degrade.
+  }
+}
+
+// Sound-acknowledged alerts persistence. Lives at App level alongside
+// `dismissed` so the trigger effect and the banner's onClick handler
+// see a single source of truth.
+const SOUND_ACK_KEY = 'skyframe.alerts.soundAcknowledged';
+
+function loadSoundAcked(): Set<string> {
+  try {
+    const raw = localStorage.getItem(SOUND_ACK_KEY);
+    if (!raw) return new Set();
+    const arr = JSON.parse(raw);
+    if (!Array.isArray(arr)) return new Set();
+    return new Set(arr.filter((x): x is string => typeof x === 'string'));
+  } catch {
+    return new Set();
+  }
+}
+
+function saveSoundAcked(set: Set<string>): void {
+  try {
+    localStorage.setItem(SOUND_ACK_KEY, JSON.stringify([...set]));
   } catch {
     // Quota exceeded or storage unavailable — silently degrade.
   }
@@ -89,6 +120,7 @@ export default function App() {
   const [nextRetryAt, setNextRetryAt] = useState<string | null>(null);
   const [activeView, setActiveView] = useState<ViewKey>('current');
   const [dismissed, setDismissed] = useState<Set<string>>(() => loadDismissed());
+  const [soundAcked, setSoundAcked] = useState<Set<string>>(() => loadSoundAcked());
   const [units, setUnits] = useState<TempUnit>(() => loadUnits());
   const [detailAlertId, setDetailAlertId] = useState<string | null>(null);
   const [forecastTrigger, setForecastTrigger] = useState<ForecastTrigger | null>(null);
@@ -208,19 +240,34 @@ export default function App() {
   // id-set changes (the join('|') key collapses reference-equality churn).
   useEffect(() => {
     const activeIds = new Set(alerts.map((a) => a.id));
-    let changed = false;
-    const pruned = new Set<string>();
+
+    // Prune dismissed
+    let dismissedChanged = false;
+    const prunedDismissed = new Set<string>();
     for (const id of dismissed) {
-      if (activeIds.has(id)) {
-        pruned.add(id);
-      } else {
-        changed = true;
-      }
+      if (activeIds.has(id)) prunedDismissed.add(id);
+      else dismissedChanged = true;
     }
-    if (changed) {
-      setDismissed(pruned);
-      saveDismissed(pruned);
+    if (dismissedChanged) {
+      setDismissed(prunedDismissed);
+      saveDismissed(prunedDismissed);
     }
+
+    // Prune soundAcked
+    let ackChanged = false;
+    const prunedAck = new Set<string>();
+    for (const id of soundAcked) {
+      if (activeIds.has(id)) prunedAck.add(id);
+      else ackChanged = true;
+    }
+    if (ackChanged) {
+      setSoundAcked(prunedAck);
+      saveSoundAcked(prunedAck);
+    }
+
+    // Prune module-internal state (sessionPlayedIds, cancel orphan loops)
+    pruneSoundState(activeIds);
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [alerts.map((a) => a.id).join('|')]);
 
@@ -233,6 +280,20 @@ export default function App() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [alerts.map((a) => a.id).join('|'), detailAlertId]);
+
+  // Trigger alert sounds for any new qualifying alert (tornado-class or
+  // severe-warning). Re-runs on alert id-list change. Session-dedup and
+  // acknowledgment-checks live inside the sound module and the predicate
+  // below, so repeated polls of the same alert don't re-fire the sound.
+  useEffect(() => {
+    for (const alert of alerts) {
+      const mode = soundModeForTier(alert.tier);
+      if (mode === 'silent') continue;
+      if (soundAcked.has(alert.id)) continue;
+      triggerAlertSound(alert.id, mode, ackSinglePlayed);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [alerts.map((a) => a.id).join('|')]);
 
   // Close the forecast modal if the day it points at falls off the
   // end of the window (e.g. next-day rollover) or if the daily list
@@ -265,6 +326,27 @@ export default function App() {
     next.add(id);
     setDismissed(next);
     saveDismissed(next);
+  };
+
+  const acknowledgeAlertSounds = () => {
+    const cancelled = cancelAllLoops();
+    if (cancelled.length === 0) return;
+    setSoundAcked((prev) => {
+      const next = new Set(prev);
+      for (const id of cancelled) next.add(id);
+      saveSoundAcked(next);
+      return next;
+    });
+  };
+
+  const ackSinglePlayed = (id: string) => {
+    setSoundAcked((prev) => {
+      if (prev.has(id)) return prev;
+      const next = new Set(prev);
+      next.add(id);
+      saveSoundAcked(next);
+      return next;
+    });
   };
 
   const toggleUnits = () => {
@@ -313,6 +395,7 @@ export default function App() {
           alerts={visible}
           onDismiss={dismissAlert}
           onOpenDetail={setDetailAlertId}
+          onAcknowledgeSounds={acknowledgeAlertSounds}
         />
       )}
       <TerminalModal

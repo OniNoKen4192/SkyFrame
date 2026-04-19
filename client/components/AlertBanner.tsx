@@ -13,6 +13,7 @@ interface AlertBannerProps {
   alerts: Alert[];                    // already filtered to visible by App
   onDismiss: (id: string) => void;
   onOpenDetail: (id: string) => void;
+  onAcknowledgeSounds: () => void;
 }
 
 function formatExpires(iso: string): string {
@@ -23,7 +24,7 @@ function formatExpires(iso: string): string {
   return fmt.format(new Date(iso)).toUpperCase();
 }
 
-export function AlertBanner({ alerts, onDismiss, onOpenDetail }: AlertBannerProps) {
+export function AlertBanner({ alerts, onDismiss, onOpenDetail, onAcknowledgeSounds }: AlertBannerProps) {
   const [expanded, setExpanded] = useState(false);
 
   if (alerts.length === 0) return null;
@@ -41,6 +42,7 @@ export function AlertBanner({ alerts, onDismiss, onOpenDetail }: AlertBannerProp
       data-tier={primary.tier}
       role="status"
       aria-live="polite"
+      onClick={onAcknowledgeSounds}
     >
       <div className="alert-banner-row">
         <div className="alert-banner-stripes alert-banner-stripes-left" aria-hidden="true" />
