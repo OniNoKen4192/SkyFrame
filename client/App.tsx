@@ -206,6 +206,14 @@ export default function App() {
   // Close the forecast modal if the day it points at falls off the
   // end of the window (e.g. next-day rollover) or if the daily list
   // empties entirely.
+  //
+  // Note on the 'today' kind: this intentionally does NOT close the
+  // modal when daily[0] changes across a midnight rollover. "Today"
+  // means "the current day 0" — if the dashboard stays open past
+  // midnight, the modal body re-derives from the new daily[0] and
+  // the title still truthfully reads TODAY. If we ever want the
+  // modal to freeze at the click moment instead, capture the dateISO
+  // into the trigger and treat 'today' the same as 'day'.
   useEffect(() => {
     if (forecastTrigger === null) return;
     if (forecastTrigger.kind === 'today' && daily.length === 0) {
