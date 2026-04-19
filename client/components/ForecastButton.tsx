@@ -13,7 +13,7 @@ export function ForecastButton({ onClick, disabled = false }: ForecastButtonProp
       aria-label="Open today's forecast narrative"
       title="Open today's forecast narrative"
     >
-      ▸
+      ☶
     </button>
   );
 }

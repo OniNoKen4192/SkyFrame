@@ -328,7 +328,7 @@ export default function App() {
       <TerminalModal
         open={forecastPeriod !== null}
         onClose={() => setForecastTrigger(null)}
-        titleGlyph="▸"
+        titleGlyph="☶"
         titleText={forecastTitleText}
         titleRight={forecastGeneratedLabel}
         accentColor="#22d3ee"
