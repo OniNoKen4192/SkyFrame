@@ -991,3 +991,29 @@
   border-color: var(--accent);
   text-shadow: 0 0 8px var(--accent-glow-soft);
 }
+
+/* ============================================================
+   Clickable alert event names — opens the alert detail modal
+   (v1.2 Feature 4). Inline button styled to look like text; the
+   underline-on-hover is the only visible affordance.
+   ============================================================ */
+.alert-banner-event-trigger {
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  padding: 0;
+  cursor: pointer;
+  text-shadow: inherit;
+}
+
+.alert-banner-event-trigger:hover {
+  text-decoration: underline;
+}
+
+.alert-banner-event-trigger:focus-visible {
+  outline: 1px dashed currentColor;
+  outline-offset: 2px;
+}

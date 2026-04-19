@@ -1,6 +1,6 @@
 # SkyFrame — Project Status
 
-**Last updated:** 2026-04-17
+**Last updated:** 2026-04-18
 
 ## What is SkyFrame
 
@@ -12,7 +12,7 @@ A local, ad-free weather dashboard. Single user, serves on localhost. HUD-style 
 - **Backend:** Fastify 5 + Node.js via tsx (serves API + prod static bundle on port 3000)
 - **Styling:** Vanilla CSS with custom properties (`--accent`, `--accent-rgb`, `--accent-glow-*`) for the accent color system
 - **Data:** NOAA/NWS public REST API (no auth required, User-Agent header mandatory)
-- **Tests:** Vitest (server-side only — 204 tests across 11 files). No client-side test infrastructure.
+- **Tests:** Vitest (217 tests across 12 files — mostly server-side, plus pure client-side helpers in `client/alert-detail-format.test.ts`). No React component test infrastructure (RTL / jsdom).
 - **Build:** `npm run build` → Vite bundles client into `dist/client/` (gitignored)
 - **Config:** Location + identity lives in `.env` (gitignored). Copy `.env.example` to get started.
 
@@ -104,7 +104,7 @@ npm run server       # Fastify API server (port 3000, reads .env)
 npm run start:prod   # builds client + starts Fastify on port 3000
 
 # Tests
-npm test             # Vitest (204 tests, server-side only)
+npm test             # Vitest (217 tests — mostly server, plus pure client helpers)
 npm run typecheck    # Both server + client TypeScript configs
 
 # Debug alerts (dev only)
@@ -169,3 +169,8 @@ Running list of what's in the codebase. Update this when a feature ships so we d
 ### Icon presentation fixes (post-v1.1)
 - Daily forecast icons upgrade to rain/snow/thunder when precipProb >= 50% and NWS chose a non-precip icon. Picks target via shortForecast keyword match (thunder beats snow beats rain). Hourly + current-conditions behavior unchanged. (PR #7, 2026-04-18)
 - Hero icon centers in the CurrentPanel hero area when current conditions are clear sky (sun/moon). (PR #7, 2026-04-18)
+
+### Alert detail terminal modal (v1.2 Feature 4)
+- Click an alert event name in the banner (single-alert headline or multi-alert expanded list) to open a terminal-styled modal showing the full NWS `description` text, issued/expires timestamps, and affected area. HAZARD/SOURCE/IMPACT paragraph prefixes render in the alert's tier color. Close via × button, Esc key, or overlay click. Focus returns to the trigger on close.
+- Introduces a reusable `TerminalModal` primitive (chrome only — overlay, title bar, close behaviors, accent border) with zero alert-specific code. Feature 5's forecast narrative popup will reuse it.
+- `Alert` type gains an `issuedAt` field sourced from the NWS CAP `sent` timestamp, with fallback to `effective` when absent.

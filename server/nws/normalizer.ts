@@ -145,6 +145,7 @@ export interface NwsAlertsResponse {
       severity: string;
       headline: string;
       description: string;
+      sent?: string;
       effective: string;
       expires: string;
       areaDesc: string;
@@ -239,6 +240,7 @@ function normalizeAlerts(raw: NwsAlertsResponse): Alert[] {
       severity,
       headline: f.properties.headline,
       description: f.properties.description,
+      issuedAt: f.properties.sent ?? f.properties.effective,
       effective: f.properties.effective,
       expires: f.properties.expires,
       areaDesc: f.properties.areaDesc,

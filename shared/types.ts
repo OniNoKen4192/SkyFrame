@@ -103,6 +103,7 @@ export interface Alert {
   severity: 'Extreme' | 'Severe' | 'Moderate' | 'Minor' | 'Unknown';
   headline: string;
   description: string;
+  issuedAt: string;
   effective: string;
   expires: string;
   areaDesc: string;

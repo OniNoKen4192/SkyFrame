@@ -510,6 +510,54 @@ describe('normalizeWeather', () => {
       expect(a.expires).toBe('2026-04-16T17:15:00-05:00');
       expect(a.areaDesc).toBe('Milwaukee, WI');
     });
+
+    it('populates issuedAt from NWS sent field', async () => {
+      mockWithAlerts({
+        features: [
+          {
+            properties: {
+              id: 'urn:oid:nws.alerts.issued',
+              event: 'Tornado Warning',
+              severity: 'Extreme',
+              headline: 'Tornado',
+              description: 'A tornado has been reported.',
+              sent:      '2026-04-16T16:28:00Z',
+              effective: '2026-04-16T16:30:00Z',
+              expires:   '2026-04-16T17:15:00Z',
+              areaDesc:  'Linn County, IA',
+            },
+          },
+        ],
+      });
+
+      const result = await normalizeWeather();
+      expect(result.alerts).toHaveLength(1);
+      expect(result.alerts[0]!.issuedAt).toBe('2026-04-16T16:28:00Z');
+      vi.useRealTimers();
+    });
+
+    it('falls back to effective when sent is missing', async () => {
+      mockWithAlerts({
+        features: [
+          {
+            properties: {
+              id: 'urn:oid:nws.alerts.nosent',
+              event: 'Wind Advisory',
+              severity: 'Minor',
+              headline: 'Wind',
+              description: 'Breezy.',
+              effective: '2026-04-16T10:00:00Z',
+              expires:   '2026-04-16T20:00:00Z',
+              areaDesc:  'Somewhere',
+            },
+          },
+        ],
+      });
+
+      const result = await normalizeWeather();
+      expect(result.alerts[0]!.issuedAt).toBe('2026-04-16T10:00:00Z');
+      vi.useRealTimers();
+    });
   });
 
   describe('debug alert injection', () => {
