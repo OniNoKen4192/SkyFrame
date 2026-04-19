@@ -285,6 +285,10 @@ export default function App() {
   // severe-warning). Re-runs on alert id-list change. Session-dedup and
   // acknowledgment-checks live inside the sound module and the predicate
   // below, so repeated polls of the same alert don't re-fire the sound.
+  //
+  // ackSinglePlayed is intentionally not in the dep array — it uses the
+  // functional setSoundAcked((prev) => ...) form, so a stale closure
+  // still reads the latest state via `prev`.
   useEffect(() => {
     for (const alert of alerts) {
       const mode = soundModeForTier(alert.tier);
