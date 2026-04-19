@@ -28,3 +28,103 @@ export function shouldTriggerSound(
   if (sessionPlayed.has(alert.id)) return 'silent';
   return mode;
 }
+
+// ========== Web Audio internals ==========
+
+const PULSE_INTERVAL_MS = 1500;
+const BEEP_DURATION_MS = 300;
+const SINGLE_PLAY_END_DELAY_MS = 400;  // fires onSinglePlayEnd just after the beep tails off
+
+let ctx: AudioContext | null = null;
+
+// In-memory state, reset per browser session
+const activeLoops = new Map<string, () => void>();
+const sessionPlayedIds = new Set<string>();
+
+function getContext(): AudioContext | null {
+  if (ctx) return ctx;
+  try {
+    const AudioCtor =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!AudioCtor) return null;
+    ctx = new AudioCtor();
+    return ctx;
+  } catch {
+    return null;
+  }
+}
+
+function playBeep(): void {
+  const audio = getContext();
+  if (!audio) return;
+  if (audio.state === 'suspended') void audio.resume();
+
+  const now = audio.currentTime;
+  const osc = audio.createOscillator();
+  const gain = audio.createGain();
+
+  osc.type = 'square';
+  osc.frequency.value = 880;
+  gain.gain.setValueAtTime(0, now);
+  gain.gain.linearRampToValueAtTime(0.25, now + 0.01);
+  gain.gain.setValueAtTime(0.25, now + 0.25);
+  gain.gain.linearRampToValueAtTime(0, now + BEEP_DURATION_MS / 1000);
+
+  osc.connect(gain).connect(audio.destination);
+  osc.start(now);
+  osc.stop(now + BEEP_DURATION_MS / 1000);
+}
+
+function startLoop(): () => void {
+  playBeep();
+  const intervalId = setInterval(playBeep, PULSE_INTERVAL_MS);
+  return () => clearInterval(intervalId);
+}
+
+// ========== Public orchestrator surface ==========
+
+export function triggerAlertSound(
+  alertId: string,
+  mode: SoundMode,
+  onSinglePlayEnd?: (id: string) => void,
+): void {
+  if (mode === 'silent') return;
+  if (sessionPlayedIds.has(alertId)) return;
+  sessionPlayedIds.add(alertId);
+
+  if (mode === 'repeating') {
+    const cancel = startLoop();
+    activeLoops.set(alertId, cancel);
+  } else {
+    // 'single'
+    playBeep();
+    if (onSinglePlayEnd) {
+      setTimeout(() => onSinglePlayEnd(alertId), SINGLE_PLAY_END_DELAY_MS);
+    }
+  }
+}
+
+export function cancelAllLoops(): string[] {
+  const cancelled: string[] = [];
+  for (const [id, cancel] of activeLoops) {
+    cancel();
+    cancelled.push(id);
+  }
+  activeLoops.clear();
+  return cancelled;
+}
+
+export function pruneSoundState(activeIds: ReadonlySet<string>): void {
+  // Drop sessionPlayedIds entries whose alerts are no longer active
+  for (const id of sessionPlayedIds) {
+    if (!activeIds.has(id)) sessionPlayedIds.delete(id);
+  }
+  // Cancel any loops whose alert has dropped off the feed
+  for (const [id, cancel] of activeLoops) {
+    if (!activeIds.has(id)) {
+      cancel();
+      activeLoops.delete(id);
+    }
+  }
+}
