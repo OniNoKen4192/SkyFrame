@@ -1019,38 +1019,6 @@
 }
 
 /* ============================================================
-   TopBar forecast button (v1.2 Feature 5). Opens today's
-   forecast narrative in a TerminalModal. Muted by default,
-   brightens on hover — HUD aesthetic, not a primary action.
-   ============================================================ */
-.hud-topbar-forecast {
-  background: none;
-  border: none;
-  color: var(--accent);
-  font: inherit;
-  font-size: 18px;
-  line-height: 1;
-  cursor: pointer;
-  padding: 0 10px;
-  opacity: 0.55;
-  text-shadow: 0 0 6px rgba(var(--accent-rgb), 0.5);
-}
-
-.hud-topbar-forecast:hover:not(:disabled) {
-  opacity: 1;
-}
-
-.hud-topbar-forecast:disabled {
-  cursor: not-allowed;
-  opacity: 0.25;
-}
-
-.hud-topbar-forecast:focus-visible {
-  outline: 1px dashed currentColor;
-  outline-offset: 2px;
-}
-
-/* ============================================================
    Clickable outlook day labels (v1.2 Feature 5). Opens the
    forecast narrative modal for that specific day. Mirrors the
    .alert-banner-event-trigger pattern from Feature 4 — inline
@@ -1080,10 +1048,39 @@
   outline-offset: 2px;
 }
 
-/* TopBar right cluster wraps the ForecastButton and the clock
-   into one flex group so they sit side-by-side on the right side. */
-.hud-topbar-right {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+/* ============================================================
+   Inline "open today's forecast" trigger (v1.2 Feature 5).
+   Used inside CurrentPanel's TEMP / FEEL tag and HourlyPanel's
+   section label. Inherits the surrounding label's typography so
+   it reads as part of that label — with a small left margin to
+   separate the glyph from the preceding text, and a brighten +
+   underline on hover so it clearly signals interactivity.
+   ============================================================ */
+.forecast-inline-trigger {
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+  text-shadow: inherit;
+  padding: 0 4px;
+  margin-left: 6px;
+  opacity: 0.6;
+}
+
+.forecast-inline-trigger:hover:not(:disabled) {
+  opacity: 1;
+  text-decoration: underline;
+}
+
+.forecast-inline-trigger:disabled {
+  cursor: not-allowed;
+  opacity: 0.3;
+}
+
+.forecast-inline-trigger:focus-visible {
+  outline: 1px dashed currentColor;
+  outline-offset: 2px;
 }

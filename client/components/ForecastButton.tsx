@@ -7,7 +7,7 @@ export function ForecastButton({ onClick, disabled = false }: ForecastButtonProp
   return (
     <button
       type="button"
-      className="hud-topbar-forecast"
+      className="forecast-inline-trigger"
       onClick={onClick}
       disabled={disabled}
       aria-label="Open today's forecast narrative"

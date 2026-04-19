@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import type { ViewKey } from '../App';
-import { ForecastButton } from './ForecastButton';
 
 const TIME_FORMAT = new Intl.DateTimeFormat('en-US', {
   timeZone: 'America/Chicago',
@@ -32,8 +31,6 @@ interface TopBarProps {
   activeView: ViewKey;
   onViewChange: (view: ViewKey) => void;
   onLocationClick: () => void;
-  onOpenForecastToday: () => void;
-  forecastButtonDisabled: boolean;
 }
 
 const TABS: Array<{ key: ViewKey; label: string }> = [
@@ -43,16 +40,7 @@ const TABS: Array<{ key: ViewKey; label: string }> = [
   { key: 'all',     label: 'ALL' },
 ];
 
-export function TopBar({
-  stationId,
-  error,
-  locationName,
-  activeView,
-  onViewChange,
-  onLocationClick,
-  onOpenForecastToday,
-  forecastButtonDisabled,
-}: TopBarProps) {
+export function TopBar({ stationId, error, locationName, activeView, onViewChange, onLocationClick }: TopBarProps) {
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
@@ -97,15 +85,12 @@ export function TopBar({
           ))}
         </nav>
       </div>
-      <div className="hud-topbar-right">
-        <ForecastButton onClick={onOpenForecastToday} disabled={forecastButtonDisabled} />
-        <div className="clock">
-          <div className="clock-time">
-            <span className="clock-digits">{digits}</span>
-            <span className="tz clock-tz">{tz}</span>
-          </div>
-          <div className="clock-date">{dateStr}</div>
+      <div className="clock">
+        <div className="clock-time">
+          <span className="clock-digits">{digits}</span>
+          <span className="tz clock-tz">{tz}</span>
         </div>
+        <div className="clock-date">{dateStr}</div>
       </div>
     </div>
   );

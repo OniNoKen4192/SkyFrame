@@ -15,7 +15,7 @@ Reuse the `TerminalModal` primitive (shipped in Feature 4) to display NWS's huma
 |---|---|---|
 | Day/night narrative shape on `DailyPeriod` | Two nullable string fields (`dayDetailedForecast`, `nightDetailedForecast`) | Smallest delta; null cases match the normalizer's existing orphan handling |
 | Section header wording | Use NWS period `name` verbatim (preserved as `dayPeriodName`, `nightPeriodName`) | Matches weather.gov; naturally handles "This Afternoon" / "Overnight" for today without custom logic |
-| TopBar button placement | Icon button (`▸`) between the view tabs and the clock | Right side per roadmap; typologically distinct from view-switching tabs |
+| `▸` trigger placement | Inline at the end of the CurrentPanel `TEMP / FEEL` tag AND the HourlyPanel `■ HOURLY FORECAST ...` section label. (Revised during manual validation — the originally-specified TopBar placement felt disconnected from the weather data it opens; moving it inline with the panel labels reads more naturally. HOURLY-tab users keep access via the Hourly label trigger; OUTLOOK-tab users already have per-day triggers from the day-row buttons.) | The trigger now lives beside the data it relates to rather than in the dashboard chrome |
 
 ## Scope
 
@@ -23,7 +23,7 @@ Reuse the `TerminalModal` primitive (shipped in Feature 4) to display NWS's huma
 - New fields on `DailyPeriod` to carry day/night narrative text and period names
 - New `WeatherMeta.forecastGeneratedAt` field for the title-bar issuance timestamp
 - Normalizer pulls the relevant NWS fields and populates these
-- `ForecastButton` component renders in the TopBar between tabs and clock
+- `ForecastButton` component renders inline inside CurrentPanel's `TEMP / FEEL` tag and HourlyPanel's section label
 - `OutlookPanel` date labels become clickable triggers
 - `ForecastBody` component renders the day/night narratives inside `TerminalModal`
 - `App` owns a discriminated-union `forecastTrigger` state and renders the modal
@@ -77,7 +77,7 @@ Drives the title-bar right-side timestamp on the forecast modal.
 
 ```
 client/components/ForecastBody.tsx      # Modal content (day + night narratives)
-client/components/ForecastButton.tsx    # TopBar trigger (▸ icon button)
+client/components/ForecastButton.tsx    # Inline ▸ trigger used by CurrentPanel and HourlyPanel
 ```
 
 ### Modified files
@@ -87,11 +87,12 @@ client/components/ForecastButton.tsx    # TopBar trigger (▸ icon button)
 | `shared/types.ts` | Add 4 fields to `DailyPeriod`, 1 field to `WeatherMeta` |
 | `server/nws/normalizer.ts` | Pull `generatedAt`, `detailedForecast`, `name`; populate new DailyPeriod fields |
 | `server/nws/normalizer.test.ts` | Add tests covering the new fields for both full-pair and orphan cases |
-| `client/components/TopBar.tsx` | Render `<ForecastButton>` as a sibling of `.clock`, wrapped with the clock in a new `.hud-topbar-right` flex cluster; new `onOpenForecastToday` prop. (The alternative — inserting the button at the end of `.hud-topbar-left` — keeps it visually closer to the tabs, but the right-cluster approach matches the roadmap's "right side" instruction.) |
+| `client/components/CurrentPanel.tsx` | Render `<ForecastButton>` inside the `TEMP / FEEL` tag; new `onOpenForecastToday` and `forecastButtonDisabled` props |
+| `client/components/HourlyPanel.tsx` | Render `<ForecastButton>` at the end of the section-label text (`■ HOURLY FORECAST · NEXT 12H · MKX GRID 88,58 ▸`); same two new props |
 | `client/components/OutlookPanel.tsx` | Date label becomes a clickable trigger; new `onOpenForecastDay` prop |
 | `client/App.tsx` | Add `forecastTrigger` state, resolve selected period, render `<TerminalModal>` with `<ForecastBody>` child |
 | `client/styles/terminal-modal.css` | Append `.forecast-*` styles |
-| `client/styles/hud.css` | Append `.hud-topbar-forecast` styles and `.outlook-date-trigger` styles |
+| `client/styles/hud.css` | Append `.forecast-inline-trigger` styles and `.outlook-date-trigger` styles |
 | `PROJECT_STATUS.md` | Mark Feature 5 shipped |
 
 ### Component boundaries
@@ -106,7 +107,7 @@ interface ForecastBodyProps {
 
 Renders the day section (header + narrative) and the night section (header + narrative), each guarded by the relevant nullable fields. Section header text is `dayPeriodName.toUpperCase()` / `nightPeriodName.toUpperCase()`. Stateless.
 
-**`ForecastButton`** — stateless TopBar trigger:
+**`ForecastButton`** — stateless inline trigger used inside CurrentPanel and HourlyPanel label text:
 
 ```typescript
 interface ForecastButtonProps {
@@ -248,23 +249,31 @@ Unlike Feature 4's `parseDescription` / `formatAlertMeta`, `ForecastBody` has no
 
 ### Append to `client/styles/hud.css`
 
-**TopBar forecast button:**
+**Inline forecast trigger** (used by CurrentPanel and HourlyPanel):
 
 ```css
-.hud-topbar-forecast {
+.forecast-inline-trigger {
   background: none;
   border: none;
-  color: var(--accent);
+  color: inherit;
   font: inherit;
-  font-size: 18px;
-  line-height: 1;
+  letter-spacing: inherit;
+  text-transform: inherit;
   cursor: pointer;
-  padding: 0 10px;
-  opacity: 0.55;
-  text-shadow: 0 0 6px rgba(var(--accent-rgb), 0.5);
+  text-shadow: inherit;
+  padding: 0 4px;
+  margin-left: 6px;
+  opacity: 0.6;
 }
-.hud-topbar-forecast:hover { opacity: 1; }
-.hud-topbar-forecast:focus-visible {
+.forecast-inline-trigger:hover:not(:disabled) {
+  opacity: 1;
+  text-decoration: underline;
+}
+.forecast-inline-trigger:disabled {
+  cursor: not-allowed;
+  opacity: 0.3;
+}
+.forecast-inline-trigger:focus-visible {
   outline: 1px dashed currentColor;
   outline-offset: 2px;
 }

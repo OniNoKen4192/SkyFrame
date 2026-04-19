@@ -1,10 +1,13 @@
 import type { HourlyPeriod } from '../../shared/types';
 import { convertTempF, type TempUnit } from '../../shared/units';
 import { WxIcon } from './WxIcon';
+import { ForecastButton } from './ForecastButton';
 
 interface HourlyPanelProps {
   hourly: HourlyPeriod[];
   units: TempUnit;
+  onOpenForecastToday: () => void;
+  forecastButtonDisabled: boolean;
 }
 
 const SVG_WIDTH = 720;
@@ -46,7 +49,7 @@ function precipBarClass(pct: number): string {
   return 'bar low';
 }
 
-export function HourlyPanel({ hourly, units }: HourlyPanelProps) {
+export function HourlyPanel({ hourly, units, onOpenForecastToday, forecastButtonDisabled }: HourlyPanelProps) {
   if (hourly.length === 0) return null;
   const { points, minTemp, maxTemp } = computeChartPoints(hourly, units);
   const polylinePoints = points.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
@@ -54,7 +57,10 @@ export function HourlyPanel({ hourly, units }: HourlyPanelProps) {
   return (
     <div className="hud-hourly-section">
       <div className="hud-section-label">
-        <span>■ HOURLY FORECAST &nbsp;·&nbsp; NEXT {hourly.length}H &nbsp;·&nbsp; MKX GRID 88,58</span>
+        <span>
+          ■ HOURLY FORECAST &nbsp;·&nbsp; NEXT {hourly.length}H &nbsp;·&nbsp; MKX GRID 88,58
+          <ForecastButton onClick={onOpenForecastToday} disabled={forecastButtonDisabled} />
+        </span>
         <span>RANGE {minTemp}° — {maxTemp}°{units}</span>
       </div>
 

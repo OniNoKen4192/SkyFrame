@@ -155,15 +155,46 @@ export default function App() {
 
   const renderView = () => {
     if (!data) return loadingPlaceholder;
+    const openToday = () => setForecastTrigger({ kind: 'today' });
+    const openDay = (dateISO: string) => setForecastTrigger({ kind: 'day', dateISO });
+    const forecastDisabled = (data.daily ?? []).length === 0;
     switch (activeView) {
-      case 'current': return <CurrentPanel current={data.current} units={units} onToggleUnits={toggleUnits} />;
-      case 'hourly':  return <HourlyPanel hourly={data.hourly} units={units} />;
-      case 'outlook': return <OutlookPanel daily={data.daily} units={units} onOpenForecastDay={(dateISO) => setForecastTrigger({ kind: 'day', dateISO })} />;
+      case 'current': return (
+        <CurrentPanel
+          current={data.current}
+          units={units}
+          onToggleUnits={toggleUnits}
+          onOpenForecastToday={openToday}
+          forecastButtonDisabled={forecastDisabled}
+        />
+      );
+      case 'hourly':  return (
+        <HourlyPanel
+          hourly={data.hourly}
+          units={units}
+          onOpenForecastToday={openToday}
+          forecastButtonDisabled={forecastDisabled}
+        />
+      );
+      case 'outlook': return (
+        <OutlookPanel daily={data.daily} units={units} onOpenForecastDay={openDay} />
+      );
       case 'all': return (
         <>
-          <CurrentPanel current={data.current} units={units} onToggleUnits={toggleUnits} />
-          <HourlyPanel hourly={data.hourly} units={units} />
-          <OutlookPanel daily={data.daily} units={units} onOpenForecastDay={(dateISO) => setForecastTrigger({ kind: 'day', dateISO })} />
+          <CurrentPanel
+            current={data.current}
+            units={units}
+            onToggleUnits={toggleUnits}
+            onOpenForecastToday={openToday}
+            forecastButtonDisabled={forecastDisabled}
+          />
+          <HourlyPanel
+            hourly={data.hourly}
+            units={units}
+            onOpenForecastToday={openToday}
+            forecastButtonDisabled={forecastDisabled}
+          />
+          <OutlookPanel daily={data.daily} units={units} onOpenForecastDay={openDay} />
         </>
       );
     }
@@ -311,8 +342,6 @@ export default function App() {
         activeView={activeView}
         onViewChange={setActiveView}
         onLocationClick={() => setShowSetup(true)}
-        onOpenForecastToday={() => setForecastTrigger({ kind: 'today' })}
-        forecastButtonDisabled={daily.length === 0}
       />
 
       {renderView()}
