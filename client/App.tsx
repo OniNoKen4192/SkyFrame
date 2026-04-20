@@ -462,6 +462,7 @@ export default function App() {
       <TopBar
         stationId={data?.meta?.stationId ?? null}
         error={error}
+        fallback={data?.meta?.error === 'station_fallback'}
         locationName={data?.meta?.locationName ?? ''}
         activeView={activeView}
         onViewChange={setActiveView}

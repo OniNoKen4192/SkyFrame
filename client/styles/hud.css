@@ -77,6 +77,10 @@
   padding-bottom: 1px;
   animation: linkGlitch 5s linear infinite;
 }
+.hud-topbar .loc .link-fallback {
+  color: #ffaa22;
+  text-shadow: 0 0 8px rgba(255, 170, 34, 0.7);
+}
 @keyframes linkGlitch {
   0%, 92%, 100% {
     text-shadow: 0 0 10px rgba(255, 68, 68, 0.9);
@@ -345,6 +349,14 @@
   background: #ff4444;
   box-shadow: 0 0 6px rgba(255, 68, 68, 0.9);
   animation: none;
+}
+.hud-footer .dot.dot-fallback {
+  background: #ffaa22;
+  box-shadow: 0 0 6px rgba(255, 170, 34, 0.9);
+}
+.hud-footer .footer-link-fallback {
+  color: #ffaa22;
+  text-shadow: 0 0 8px rgba(255, 170, 34, 0.7);
 }
 @keyframes hudBlink {
   0%, 100% { opacity: 1; }
