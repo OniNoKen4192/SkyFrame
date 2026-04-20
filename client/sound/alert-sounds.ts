@@ -42,6 +42,11 @@ let unlockAttached = false;
 const activeLoops = new Map<string, () => void>();
 const sessionPlayedIds = new Set<string>();
 
+// Single-play alerts whose first playBeep attempt failed because the
+// AudioContext was still suspended. Drained by the unlock listener once
+// the context successfully resumes on a user gesture.
+const pendingSinglePlays = new Map<string, (id: string) => void>();
+
 function getContext(): AudioContext | null {
   if (ctx) return ctx;
   try {
@@ -64,19 +69,42 @@ function getContext(): AudioContext | null {
 // Subsequent playBeep calls then see a 'running' context and proceed
 // normally. unlockAttached is reset inside the handler so we can
 // re-arm if the context ever gets suspended again (e.g. tab backgrounded).
+function drainPendingSinglePlays(): void {
+  if (pendingSinglePlays.size === 0) return;
+  const entries = [...pendingSinglePlays];
+  pendingSinglePlays.clear();
+  for (const [alertId, onEnd] of entries) {
+    const played = playBeep();
+    if (played) {
+      sessionPlayedIds.add(alertId);
+      setTimeout(() => onEnd(alertId), SINGLE_PLAY_END_DELAY_MS);
+    } else {
+      // Somehow still not running — put it back in the queue.
+      pendingSinglePlays.set(alertId, onEnd);
+    }
+  }
+}
+
 function attachUnlockListener(): void {
   if (unlockAttached) return;
   if (typeof document === 'undefined') return;
   unlockAttached = true;
 
   const unlock = () => {
-    if (ctx && ctx.state === 'suspended') {
-      void ctx.resume();
-    }
+    const audio = ctx;
     document.removeEventListener('click', unlock);
     document.removeEventListener('keydown', unlock);
     document.removeEventListener('touchstart', unlock);
     unlockAttached = false;
+
+    if (audio && audio.state === 'suspended') {
+      // resume() is async; only drain pending single-plays after the
+      // state has transitioned, otherwise playBeep will still see
+      // 'suspended' and we'll re-queue everything.
+      void audio.resume().then(drainPendingSinglePlays);
+    } else {
+      drainPendingSinglePlays();
+    }
   };
 
   document.addEventListener('click', unlock);
@@ -139,14 +167,20 @@ export function triggerAlertSound(
     activeLoops.set(alertId, cancel);
   } else {
     // 'single' — only mark played if the beep actually fired. If the
-    // context is still suspended, next poll will retry; we don't want
-    // to silently self-acknowledge a beep the user never heard.
+    // context is still suspended, queue for retry inside the unlock
+    // listener's drainPendingSinglePlays; we don't want to silently
+    // self-acknowledge a beep the user never heard, and we can't rely
+    // on the trigger effect re-running (it only fires on id-list
+    // change, which won't happen while the same alert persists across
+    // polls).
     const played = playBeep();
     if (played) {
       sessionPlayedIds.add(alertId);
       if (onSinglePlayEnd) {
         setTimeout(() => onSinglePlayEnd(alertId), SINGLE_PLAY_END_DELAY_MS);
       }
+    } else if (onSinglePlayEnd) {
+      pendingSinglePlays.set(alertId, onSinglePlayEnd);
     }
   }
 }
@@ -172,5 +206,9 @@ export function pruneSoundState(activeIds: ReadonlySet<string>): void {
       cancel();
       activeLoops.delete(id);
     }
+  }
+  // Drop pending single-plays for alerts that have dropped off the feed
+  for (const id of pendingSinglePlays.keys()) {
+    if (!activeIds.has(id)) pendingSinglePlays.delete(id);
   }
 }
