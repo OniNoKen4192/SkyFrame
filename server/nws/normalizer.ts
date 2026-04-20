@@ -8,6 +8,7 @@ import { computeTrend, type TimedValue } from './trends';
 import { buildPrecipOutlook } from './precip';
 import { classifyAlert, tierRank } from '../../shared/alert-tiers';
 import { synthesizeDebugAlerts } from './debug-alerts';
+import { getCachedUpdate, buildUpdateAlert } from '../updates/update-check';
 
 // ========== Unit conversion helpers ==========
 
@@ -274,6 +275,14 @@ export async function normalizeWeather(): Promise<WeatherResponse> {
   const { obsLatest, obsHistory, stationId: activeStationId, fellBack } = obsResult;
   const alerts = normalizeAlerts(alertsResult.data);
   const alertsFailed = alertsResult.failed;
+
+  // Inject the cached update alert (if any). Advisory tier ranks last so the
+  // sort places it at the bottom of the stack, below any weather alerts.
+  const cachedUpdate = getCachedUpdate();
+  if (cachedUpdate) {
+    alerts.push(buildUpdateAlert(cachedUpdate));
+    alerts.sort((a, b) => tierRank(a.tier) - tierRank(b.tier));
+  }
 
   // 3. Normalize current conditions
   const current = normalizeCurrent(

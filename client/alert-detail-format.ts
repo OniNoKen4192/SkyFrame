@@ -42,9 +42,21 @@ export function formatTime(iso: string): string {
   return TIME_FMT.format(new Date(iso)).toUpperCase();
 }
 
+// Synthetic "Update Available" alerts (from the server's update-check module)
+// carry a far-future expires that's meaningless to the user — the alert
+// persists until dismissed or the app version catches up. Detect them here
+// so the banner and modal can skip the "UNTIL {time}" / "EXPIRES {time}"
+// display that implies a real deadline.
+export function isUpdateAlert(alert: Alert): boolean {
+  return alert.id.startsWith('update-');
+}
+
 export function formatAlertMeta(alert: Alert): string {
   const issued = formatTime(alert.issuedAt);
-  const expires = formatTime(alert.expires);
   const area = alert.areaDesc.toUpperCase();
+  if (isUpdateAlert(alert)) {
+    return `ISSUED ${issued} \u00B7 ${area}`;
+  }
+  const expires = formatTime(alert.expires);
   return `ISSUED ${issued} \u00B7 EXPIRES ${expires} \u00B7 ${area}`;
 }

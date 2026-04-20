@@ -78,7 +78,7 @@ describe('parseDescription', () => {
   });
 });
 
-import { formatAlertMeta } from './alert-detail-format';
+import { formatAlertMeta, isUpdateAlert } from './alert-detail-format';
 import type { Alert } from '../shared/types';
 
 const SAMPLE_ALERT: Alert = {
@@ -108,5 +108,28 @@ describe('formatAlertMeta', () => {
     };
     const result = formatAlertMeta(alert);
     expect(result).toBe('ISSUED 11:30 PM CDT \u00B7 EXPIRES 1:00 AM CDT \u00B7 LINN COUNTY, IA');
+  });
+
+  it('omits the EXPIRES segment for update alerts (id starts with "update-")', () => {
+    const alert: Alert = {
+      ...SAMPLE_ALERT,
+      id: 'update-v1.3.0',
+      event: 'Update Available',
+      tier: 'advisory',
+      areaDesc: 'Update',
+    };
+    const result = formatAlertMeta(alert);
+    expect(result).toBe('ISSUED 2:14 PM CDT \u00B7 UPDATE');
+    expect(result).not.toContain('EXPIRES');
+  });
+});
+
+describe('isUpdateAlert', () => {
+  it('returns true when id starts with "update-"', () => {
+    expect(isUpdateAlert({ ...SAMPLE_ALERT, id: 'update-v1.3.0' })).toBe(true);
+  });
+  it('returns false for other ids', () => {
+    expect(isUpdateAlert({ ...SAMPLE_ALERT, id: 'urn:oid:nws.alerts.1' })).toBe(false);
+    expect(isUpdateAlert({ ...SAMPLE_ALERT, id: 'debug-tornado-warning-0' })).toBe(false);
   });
 });

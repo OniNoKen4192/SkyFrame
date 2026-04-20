@@ -20,14 +20,22 @@ function geolocationErrorMessage(err: GeolocationPositionError): string {
   }
 }
 
-interface LocationSetupProps {
-  onComplete: () => void;
-  onCancel?: () => void;
+export interface SettingsInitialConfig {
+  location: string;
+  email: string;
+  updateCheckEnabled: boolean;
 }
 
-export function LocationSetup({ onComplete, onCancel }: LocationSetupProps) {
-  const [location, setLocation] = useState('');
-  const [email, setEmail] = useState('');
+interface SettingsProps {
+  onComplete: () => void;
+  onCancel?: () => void;
+  initialConfig: SettingsInitialConfig;
+}
+
+export function Settings({ onComplete, onCancel, initialConfig }: SettingsProps) {
+  const [location, setLocation] = useState(initialConfig.location);
+  const [email, setEmail] = useState(initialConfig.email);
+  const [updateCheckEnabled, setUpdateCheckEnabled] = useState(initialConfig.updateCheckEnabled);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [locating, setLocating] = useState(false);
@@ -38,7 +46,6 @@ export function LocationSetup({ onComplete, onCancel }: LocationSetupProps) {
   const handleUseMyLocation = () => {
     setLocating(true);
     setGpsError(null);
-
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const lat = pos.coords.latitude.toFixed(4);
@@ -61,7 +68,11 @@ export function LocationSetup({ onComplete, onCancel }: LocationSetupProps) {
       const res = await fetch('/api/setup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ location: location.trim(), email: email.trim() }),
+        body: JSON.stringify({
+          location: location.trim(),
+          email: email.trim(),
+          updateCheckEnabled,
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -83,7 +94,7 @@ export function LocationSetup({ onComplete, onCancel }: LocationSetupProps) {
         <span className="corner tr"></span>
         <span className="corner bl"></span>
         <span className="corner br"></span>
-        <div className="setup-title">■ SKYFRAME SETUP</div>
+        <div className="setup-title">■ SKYFRAME SETTINGS</div>
 
         <label className="setup-label">
           LOCATION
@@ -122,6 +133,31 @@ export function LocationSetup({ onComplete, onCancel }: LocationSetupProps) {
           <span className="setup-hint">
             Required by NWS for API access. Sent only to weather.gov — never shared with other services.
           </span>
+        </label>
+
+        <label className="setup-label">
+          UPDATES
+          <label className="setup-checkbox-row">
+            <input
+              type="checkbox"
+              checked={updateCheckEnabled}
+              onChange={(e) => setUpdateCheckEnabled(e.target.checked)}
+            />
+            <span>Check GitHub for new SkyFrame releases</span>
+          </label>
+          <span className="setup-hint">
+            When enabled, SkyFrame checks the GitHub releases page at startup and once a day.
+            New releases appear as a dismissible advisory alert. Leave unchecked to stop all
+            outbound requests beyond the NWS forecast feed.
+          </span>
+        </label>
+
+        <label className="setup-label">
+          COSMETIC SKIN
+          <select className="setup-input" disabled value="default">
+            <option value="default">Default (HUD cyan)</option>
+          </select>
+          <span className="setup-hint">Coming soon.</span>
         </label>
 
         {error && <div className="setup-error">▲ {error}</div>}

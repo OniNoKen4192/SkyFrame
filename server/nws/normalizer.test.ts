@@ -109,6 +109,27 @@ describe('normalizeWeather', () => {
     });
   });
 
+  // Shared helper for alert-related tests
+  // Pin time to 5 min after FIXTURE_OBS_LATEST so KMKE is fresh (not stale).
+  // Without this, real wall-clock time causes the 90-min staleness check to
+  // fire, making fellBack=true and metaError='station_fallback' instead of
+  // the alerts-specific value we want to assert.
+  const ALERTS_NOW = '2026-04-15T19:30:00+00:00';
+
+  function mockWithAlerts(alertsResponse: unknown) {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(ALERTS_NOW));
+    vi.spyOn(client, 'fetchNws').mockImplementation(async (path: string) => {
+      if (path.includes('/points/')) return FIXTURE_POINT as never;
+      if (path.includes('/forecast/hourly')) return FIXTURE_HOURLY as never;
+      if (path.includes('/forecast')) return FIXTURE_FORECAST as never;
+      if (path.includes('/observations/latest')) return FIXTURE_OBS_LATEST as never;
+      if (path.includes('/observations')) return FIXTURE_OBS_HISTORY as never;
+      if (path.includes('/alerts/active')) return alertsResponse as never;
+      throw new Error('Unexpected path: ' + path);
+    });
+  }
+
   it('returns a complete WeatherResponse with current, hourly, and daily', async () => {
     const result = await normalizeWeather();
     expect(result).toHaveProperty('current');
@@ -321,26 +342,6 @@ describe('normalizeWeather', () => {
         },
       ],
     };
-
-    // Pin time to 5 min after FIXTURE_OBS_LATEST so KMKE is fresh (not stale).
-    // Without this, real wall-clock time causes the 90-min staleness check to
-    // fire, making fellBack=true and metaError='station_fallback' instead of
-    // the alerts-specific value we want to assert.
-    const ALERTS_NOW = '2026-04-15T19:30:00+00:00';
-
-    function mockWithAlerts(alertsResponse: unknown) {
-      vi.useFakeTimers();
-      vi.setSystemTime(new Date(ALERTS_NOW));
-      vi.spyOn(client, 'fetchNws').mockImplementation(async (path: string) => {
-        if (path.includes('/points/')) return FIXTURE_POINT as never;
-        if (path.includes('/forecast/hourly')) return FIXTURE_HOURLY as never;
-        if (path.includes('/forecast')) return FIXTURE_FORECAST as never;
-        if (path.includes('/observations/latest')) return FIXTURE_OBS_LATEST as never;
-        if (path.includes('/observations')) return FIXTURE_OBS_HISTORY as never;
-        if (path.includes('/alerts/active')) return alertsResponse as never;
-        throw new Error('Unexpected path: ' + path);
-      });
-    }
 
     it('exposes alerts sorted by tierRank (highest severity first)', async () => {
       mockWithAlerts(FIXTURE_ALERTS_TWO_TIERS);
@@ -621,6 +622,47 @@ describe('normalizeWeather', () => {
       // Confirm no /alerts/active call was attempted.
       const alertCalls = fetchSpy.mock.calls.filter(([p]) => typeof p === 'string' && p.includes('/alerts/active'));
       expect(alertCalls).toHaveLength(0);
+    });
+  });
+
+  describe('update alert injection', () => {
+    beforeEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it('injects a cached update alert into the sorted alert list', async () => {
+      vi.spyOn(await import('../updates/update-check'), 'getCachedUpdate').mockReturnValue({
+        currentVersion: '1.2.0',
+        latestVersion: 'v1.3.0',
+        releaseUrl: 'https://github.com/owner/repo/releases/tag/v1.3.0',
+        releaseBody: 'Release notes.',
+        checkedAt: '2026-04-20T12:00:00Z',
+      });
+
+      mockWithAlerts({
+        features: [
+          { properties: { id: 'real-1', event: 'Tornado Warning', severity: 'Extreme', headline: 'T', description: 'x', sent: '2026-04-16T16:28:00Z', effective: '2026-04-16T16:28:00Z', expires: '2026-04-16T17:00:00Z', areaDesc: 'Here' } },
+        ],
+      });
+
+      const result = await normalizeWeather();
+
+      // Two alerts: the real tornado (rank 3) first, the update (rank 13) last.
+      expect(result.alerts).toHaveLength(2);
+      expect(result.alerts[0]!.tier).toBe('tornado-warning');
+      expect(result.alerts[1]!.tier).toBe('advisory');
+      expect(result.alerts[1]!.id).toBe('update-v1.3.0');
+      expect(result.alerts[1]!.event).toBe('Update Available');
+    });
+
+    it('does not inject anything when the cache is null', async () => {
+      vi.spyOn(await import('../updates/update-check'), 'getCachedUpdate').mockReturnValue(null);
+
+      mockWithAlerts({ features: [] });
+
+      const result = await normalizeWeather();
+
+      expect(result.alerts).toHaveLength(0);
     });
   });
 

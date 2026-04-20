@@ -1,6 +1,6 @@
 # SkyFrame — Project Status
 
-**Last updated:** 2026-04-19 (Feature 6)
+**Last updated:** 2026-04-20 (v1.2.1)
 
 ## What is SkyFrame
 
@@ -12,7 +12,7 @@ A local, ad-free weather dashboard. Single user, serves on localhost. HUD-style 
 - **Backend:** Fastify 5 + Node.js via tsx (serves API + prod static bundle on port 3000)
 - **Styling:** Vanilla CSS with custom properties (`--accent`, `--accent-rgb`, `--accent-glow-*`) for the accent color system
 - **Data:** NOAA/NWS public REST API (no auth required, User-Agent header mandatory)
-- **Tests:** Vitest (228 tests across 13 files — mostly server-side, plus pure client-side helpers in `client/alert-detail-format.test.ts` and `client/sound/alert-sounds.test.ts`). No React component test infrastructure (RTL / jsdom).
+- **Tests:** Vitest (260 tests across 15 files — mostly server-side, plus pure client-side helpers in `client/alert-detail-format.test.ts`, `client/sound/alert-sounds.test.ts`, `server/updates/github-release.test.ts`, and `server/updates/update-check.test.ts`). No React component test infrastructure (RTL / jsdom).
 - **Build:** `npm run build` → Vite bundles client into `dist/client/` (gitignored)
 - **Config:** Location + identity lives in `.env` (gitignored). Copy `.env.example` to get started.
 
@@ -83,6 +83,8 @@ shared/
 ## What's pending
 
 ### Future version backlog
+- **Footer `LINK.{station}` heartbeat mismatch during initial load:** the Footer's link-status heartbeat animates in the "active/pulsing" state before the first weather poll resolves, while the TopBar correctly shows `LINK.OFFLINE` for the same moment. Both indicators should agree on offline until fresh data arrives. Small scope — likely a missing `data-state` toggle or effect in `Footer.tsx`.
+- **Cosmetic skin selection:** placeholder shipped in v1.2.1 Settings modal (disabled "Default (HUD cyan)" select). Future work is the actual theme-switching logic and the skin options themselves. Carried from v1.1's deferred color-picker.
 - **Settings gear:** °F/°C toggle + curated color picker (no alert-color overlap). Per spec: `docs/superpowers/specs/2026-04-15-v1.1-roadmap-design.md`. Originally v1.1 Step 5, deferred.
 - **Alert dismiss duration:** Currently dismissed alerts stay dismissed until they drop off the NWS feed. Could add time-based auto-reactivation if needed.
 - **Icon set expansion (v1.2 Section 2c):** New SVG icons for the ~25 NWS weather states currently lumped or falling through to generic cloud (tornado, hurricane, sleet, wind variants, etc.). Gap list at `docs/icon-gaps.md`. Deferred pending user-produced icon art.
@@ -104,7 +106,7 @@ npm run server       # Fastify API server (port 3000, reads .env)
 npm run start:prod   # builds client + starts Fastify on port 3000
 
 # Tests
-npm test             # Vitest (228 tests — mostly server, plus pure client helpers)
+npm test             # Vitest (260 tests — mostly server, plus pure client helpers)
 npm run typecheck    # Both server + client TypeScript configs
 
 # Debug alerts (dev only)
@@ -190,3 +192,10 @@ Running list of what's in the codebase. Update this when a feature ships so we d
 - Single banner click (anywhere on the banner) silences all currently-looping sounds. Implemented as one root-level `onClick` — the three spec-listed acknowledgment actions (banner click / detail-modal open / dismissal) all bubble through the same handler.
 - Acknowledgments persisted in `localStorage` under `skyframe.alerts.soundAcknowledged` (same shape as the dismissed-alerts set; same pruning pattern). Single-play alerts self-acknowledge when the beep finishes, so reloads don't re-beep.
 - Autoplay handling: attaches a one-time document-level click/keydown/touchstart listener that calls `ctx.resume()` from inside a real user gesture, avoiding the browser's "AudioContext was not allowed to start" warning. Single-play beeps that fail due to suspended context are queued and drained on unlock so the user doesn't miss the severe-warning tone. Sound plays from backgrounded tabs / other windows as long as the user has interacted with the dashboard at least once this session.
+
+### Settings modal + GitHub update notifications (v1.2.1)
+- `LocationSetup` replaced with a persistent `Settings` modal reachable from a `≡` hamburger button in the TopBar (far right, after the clock). Same chrome (`.setup-*` classes retained) with expanded form: Location + `⌖ USE MY LOCATION` button + Email (all preserved from v1.2 Feature 7), plus a new "Check GitHub for new SkyFrame releases" checkbox (default **off**) and a disabled "Cosmetic skin — coming soon" placeholder. First-run auto-opens Settings with CANCEL hidden and modal-close disabled; anytime-edit via hamburger (or the existing TopBar location link) re-fetches `/api/config` so the form reflects the latest persisted state.
+- When the checkbox is enabled, the server runs an unauthenticated `GET /repos/OniNoKen4192/SkyFrame/releases/latest` at startup and at local midnight daily. If the returned `tag_name` is newer than `package.json.version`, a synthetic `advisory`-tier alert is injected into the normalizer's alert list with `id: "update-${tag}"`. The alert appears at the bottom of the alert stack (advisory rank 13), clickable for release notes in the existing TerminalModal, dismissible via the existing flow. "UNTIL / EXPIRES" suffix suppressed for update alerts since the synthetic far-future expires has no meaningful display.
+- No outbound requests to GitHub when the checkbox is off. Explicit UI consent model per CLAUDE.md's "no transmitted data beyond the forecast" hard rule — checkbox hint text explains what enabling it does.
+- Server scheduler toggles live with `/api/setup`: off → on starts the scheduler immediately; on → off stops the timer and clears any cached update so a visible alert disappears on the next client poll. Backwards-compatible with pre-v1.2.1 configs (missing field defaults to false).
+- `package.json` version bumped from `0.1.0` to `1.2.1`. `skyframe.config.json` gains `updateCheckEnabled: boolean`. `/api/config` extended to return the current config values for Settings pre-population.

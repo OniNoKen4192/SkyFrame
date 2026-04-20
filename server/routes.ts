@@ -4,6 +4,7 @@ import { normalizeWeather } from './nws/normalizer';
 import { resolveSetup } from './nws/setup';
 import { TTLCache } from './nws/cache';
 import { CONFIG, reloadConfig, saveSkyFrameConfig } from './config';
+import { startUpdateScheduler, stopUpdateScheduler, clearCachedUpdate } from './updates/update-check';
 
 const WEATHER_CACHE_KEY = 'weather';
 
@@ -11,9 +12,18 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
   const cache = new TTLCache();
 
   app.get('/api/config', async () => {
+    if (!CONFIG.configured) {
+      return {
+        configured: false as const,
+        updateCheckEnabled: CONFIG.updateCheckEnabled,
+      };
+    }
     return {
-      configured: CONFIG.configured,
+      configured: true as const,
       locationName: CONFIG.location.name,
+      location: `${CONFIG.location.lat.toFixed(4)}, ${CONFIG.location.lon.toFixed(4)}`,
+      email: CONFIG.email,
+      updateCheckEnabled: CONFIG.updateCheckEnabled,
     };
   });
 
@@ -48,20 +58,34 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
   });
 
   app.post<{
-    Body: { location: string; email: string };
+    Body: { location: string; email: string; updateCheckEnabled?: boolean };
     Reply: { success: true; locationName: string } | ErrorReply;
   }>('/api/setup', async (req, reply) => {
     try {
-      const { location, email } = req.body;
+      const { location, email, updateCheckEnabled } = req.body;
       if (!location || !email) {
         reply.code(400);
         return { error: 'invalid_input', message: 'Both location and email are required.' };
       }
 
+      const previousUpdateEnabled = CONFIG.updateCheckEnabled;
       const resolved = await resolveSetup({ location, email });
-      saveSkyFrameConfig(resolved);
+      const newUpdateEnabled = updateCheckEnabled ?? false;
+
+      // Persist with the new updateCheckEnabled flag
+      saveSkyFrameConfig({ ...resolved, updateCheckEnabled: newUpdateEnabled });
       reloadConfig();
       cache.clear();
+
+      // Reconcile the scheduler against the new flag state
+      if (newUpdateEnabled && !previousUpdateEnabled) {
+        startUpdateScheduler();
+        app.log.info('Update check enabled — scheduler started');
+      } else if (!newUpdateEnabled && previousUpdateEnabled) {
+        stopUpdateScheduler();
+        clearCachedUpdate();
+        app.log.info('Update check disabled — scheduler stopped, cache cleared');
+      }
 
       app.log.info(`Location configured: ${resolved.locationName} (${resolved.lat}, ${resolved.lon})`);
       return { success: true as const, locationName: resolved.locationName };
