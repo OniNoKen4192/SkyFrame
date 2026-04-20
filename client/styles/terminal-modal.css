@@ -93,20 +93,22 @@
    inside the modal; splitting would be one more file to trace. */
 .alert-detail-meta {
   color: var(--terminal-modal-accent, #22d3ee);
-  font-size: 11px;
-  letter-spacing: 0.04em;
-  margin-bottom: 10px;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  margin-bottom: 14px;
   font-weight: 700;
+  opacity: 0.85;
 }
 
 .alert-detail-paragraph {
-  margin: 0 0 9px;
+  margin: 0 0 10px;
   white-space: pre-wrap;
 }
 
 .alert-detail-prefix {
   color: var(--terminal-modal-accent, #22d3ee);
   font-weight: 700;
+  letter-spacing: 0.08em;
 }
 
 /* Forecast-narrative content styles (v1.2 Feature 5). Lives with
