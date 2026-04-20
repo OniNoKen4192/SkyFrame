@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { Alert } from '../../shared/types';
 import { tierRank } from '../../shared/alert-tiers';
+import { isUpdateAlert } from '../alert-detail-format';
 
 // Tornado Emergency, PDS Tornado, Tornado Warning, Destructive Severe
 // Thunderstorm Warning, and Severe Thunderstorm Warning — imminent /
@@ -59,7 +60,7 @@ export function AlertBanner({ alerts, onDismiss, onOpenDetail, onAcknowledgeSoun
                 >
                   {primaryEventUpper}
                 </button>
-                {' · UNTIL '}{expiresLabel}
+                {isUpdateAlert(primary) ? null : <>{' · UNTIL '}{expiresLabel}</>}
               </>
             ) : (
               <>
@@ -72,7 +73,7 @@ export function AlertBanner({ alerts, onDismiss, onOpenDetail, onAcknowledgeSoun
                 >
                   {primaryEventUpper}
                 </button>
-                {' UNTIL '}{expiresLabel}
+                {isUpdateAlert(primary) ? null : <>{' UNTIL '}{expiresLabel}</>}
               </>
             )}
           </span>
@@ -112,8 +113,12 @@ export function AlertBanner({ alerts, onDismiss, onOpenDetail, onAcknowledgeSoun
               >
                 {a.event}
               </button>
-              <span className="alert-banner-list-sep"> · </span>
-              <span className="alert-banner-list-expires">until {formatExpires(a.expires)}</span>
+              {!isUpdateAlert(a) && (
+                <>
+                  <span className="alert-banner-list-sep"> · </span>
+                  <span className="alert-banner-list-expires">until {formatExpires(a.expires)}</span>
+                </>
+              )}
               <span className="alert-banner-list-sep">  ·  </span>
               <span className="alert-banner-list-area">({a.areaDesc})</span>
             </li>
