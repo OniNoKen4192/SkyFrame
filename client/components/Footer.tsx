@@ -20,16 +20,20 @@ function formatHM(iso: string | undefined): string {
 }
 
 export function Footer({ meta, error, nextRetryAt }: FooterProps) {
-  const stationId = meta?.stationId ?? 'KMKE';
+  const offline = !!error || !meta;
+  const fallback = !offline && meta.error === 'station_fallback';
   const lastPull = formatHM(meta?.fetchedAt);
   const nextPull = error && nextRetryAt
     ? formatHM(nextRetryAt)
     : formatHM(meta?.nextRefreshAt);
 
+  const dotClass = offline ? 'dot dot-error' : fallback ? 'dot dot-fallback' : 'dot';
+  const linkClass = fallback ? 'footer-link footer-link-fallback' : 'footer-link';
+
   return (
     <div className="hud-footer">
-      <span className={error ? 'dot dot-error' : 'dot'}></span>
-      {error ? 'LINK.OFFLINE' : `LINK.${stationId}`}
+      <span className={dotClass}></span>
+      <span className={linkClass}>{offline ? 'LINK.OFFLINE' : `LINK.${meta.stationId}`}</span>
       &nbsp;·&nbsp; LAST PULL {lastPull} &nbsp;·&nbsp; NEXT {nextPull}
     </div>
   );

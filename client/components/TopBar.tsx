@@ -27,6 +27,7 @@ function partsToMap(parts: Intl.DateTimeFormatPart[]): Record<string, string> {
 interface TopBarProps {
   stationId: string | null;
   error: string | null;
+  fallback: boolean;
   locationName: string;
   activeView: ViewKey;
   onViewChange: (view: ViewKey) => void;
@@ -41,7 +42,7 @@ const TABS: Array<{ key: ViewKey; label: string }> = [
   { key: 'all',     label: 'ALL' },
 ];
 
-export function TopBar({ stationId, error, locationName, activeView, onViewChange, onLocationClick, onOpenSettings }: TopBarProps) {
+export function TopBar({ stationId, error, fallback, locationName, activeView, onViewChange, onLocationClick, onOpenSettings }: TopBarProps) {
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
@@ -58,7 +59,7 @@ export function TopBar({ stationId, error, locationName, activeView, onViewChang
 
   const linkText = error || !stationId ? 'LINK.OFFLINE' : `LINK.${stationId}`;
   const offline = error || !stationId;
-  const linkClass = offline ? 'link link-offline' : 'link';
+  const linkClass = offline ? 'link link-offline' : fallback ? 'link link-fallback' : 'link';
   const locClass = offline ? 'loc loc-offline' : 'loc';
 
   return (
