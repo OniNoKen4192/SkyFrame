@@ -34,7 +34,7 @@ To find your NWS metadata: `curl https://api.weather.gov/points/{lat},{lon}` —
 - **Educational tone.** When making a judgment call, explain *why* and what the tradeoff is. When the user needs to choose between options, lay out pros and cons for each, don't just ask. Override the default "short and concise" posture for design and config decisions — brevity still applies to mechanical updates.
 - **Don't add features beyond what was asked.** No speculative abstraction, no "while I'm here" cleanup, no hypothetical future-proofing. Three similar lines beats a premature abstraction.
 - **Don't narrate the obvious.** Educational ≠ exhaustive. Explain the non-obvious choice; skip the restatement of what the code plainly does.
-- **Stack is not yet chosen.** The spec proposes React + Node.js but nothing is committed. Discuss stack options with tradeoffs before scaffolding.
+- **Stack is committed.** React 18 + Vite 5 (client) + Fastify 5 + TypeScript 5.4 + Vitest 1.6 (server). See `PROJECT_STATUS.md` for the current file tree. Stack-level changes (swapping Fastify, adding a state library, etc.) still warrant a brainstorm — but the default is "use what's there."
 
 ## Dev tools
 
@@ -47,7 +47,7 @@ SKYFRAME_DEBUG_TIERS=tornado-warning npm run server          # single red banner
 SKYFRAME_DEBUG_TIERS=tornado-warning,flood,watch npm run server  # 3 alerts, expand toggle
 ```
 
-Valid tier names: `tornado-emergency`, `tornado-pds`, `tornado-warning`, `tstorm-destructive`, `severe-warning`, `blizzard`, `winter-storm`, `flood`, `heat`, `special-weather-statement`, `watch`. Unknown names are silently dropped. When unset, production behavior is unchanged.
+Valid tier names: `tornado-emergency`, `tornado-pds`, `tornado-warning`, `tstorm-destructive`, `severe-warning`, `blizzard`, `winter-storm`, `flood`, `heat`, `special-weather-statement`, `watch`, `advisory-high`, `advisory`. Unknown names are silently dropped. When unset, production behavior is unchanged.
 
 A startup log line confirms when debug mode is active — safety net against leaving it set accidentally.
 
