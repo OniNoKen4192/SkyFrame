@@ -1,6 +1,6 @@
 # SkyFrame — Project Status
 
-**Last updated:** 2026-04-19 (Feature 7)
+**Last updated:** 2026-04-19 (Feature 6)
 
 ## What is SkyFrame
 
@@ -12,7 +12,7 @@ A local, ad-free weather dashboard. Single user, serves on localhost. HUD-style 
 - **Backend:** Fastify 5 + Node.js via tsx (serves API + prod static bundle on port 3000)
 - **Styling:** Vanilla CSS with custom properties (`--accent`, `--accent-rgb`, `--accent-glow-*`) for the accent color system
 - **Data:** NOAA/NWS public REST API (no auth required, User-Agent header mandatory)
-- **Tests:** Vitest (221 tests across 12 files — mostly server-side, plus pure client-side helpers in `client/alert-detail-format.test.ts`). No React component test infrastructure (RTL / jsdom).
+- **Tests:** Vitest (228 tests across 13 files — mostly server-side, plus pure client-side helpers in `client/alert-detail-format.test.ts` and `client/sound/alert-sounds.test.ts`). No React component test infrastructure (RTL / jsdom).
 - **Build:** `npm run build` → Vite bundles client into `dist/client/` (gitignored)
 - **Config:** Location + identity lives in `.env` (gitignored). Copy `.env.example` to get started.
 
@@ -104,7 +104,7 @@ npm run server       # Fastify API server (port 3000, reads .env)
 npm run start:prod   # builds client + starts Fastify on port 3000
 
 # Tests
-npm test             # Vitest (221 tests — mostly server, plus pure client helpers)
+npm test             # Vitest (228 tests — mostly server, plus pure client helpers)
 npm run typecheck    # Both server + client TypeScript configs
 
 # Debug alerts (dev only)
@@ -184,3 +184,9 @@ Running list of what's in the codebase. Update this when a feature ships so we d
 - `⌖ USE MY LOCATION` button in the `LocationSetup` modal. Click → browser Geolocation prompt → on success, coordinates populate the existing LOCATION input as `"lat, lon"` with 4-decimal precision. User reviews and clicks SAVE as normal — the existing `/api/setup` flow runs unchanged.
 - Localhost-gated via `window.location.hostname` check against `localhost`, `127.0.0.1`, `::1`. Off-loopback hostnames show the button as `GPS LOCATION UNAVAILABLE` (disabled), with tooltip explaining browsers block Geolocation over non-HTTPS origins.
 - Along the way: `LocationSetup` modal top-aligns below the banner (matching `TerminalModal`), and the generic `.setup-btn:disabled` state gets explicit opacity / not-allowed-cursor styling that was previously only on the primary variant.
+
+### Alert sounds (v1.2 Feature 6)
+- Synthesized beep tones via Web Audio API when a new qualifying alert arrives. `tornado-emergency`, `tornado-pds`, `tornado-warning`, and `tstorm-destructive` loop a 500ms 880Hz square-wave pulse every 1.5 seconds until the user clicks the banner; `severe-warning` plays one beep. Other tiers silent. No audio files, no licenses, no external deps.
+- Single banner click (anywhere on the banner) silences all currently-looping sounds. Implemented as one root-level `onClick` — the three spec-listed acknowledgment actions (banner click / detail-modal open / dismissal) all bubble through the same handler.
+- Acknowledgments persisted in `localStorage` under `skyframe.alerts.soundAcknowledged` (same shape as the dismissed-alerts set; same pruning pattern). Single-play alerts self-acknowledge when the beep finishes, so reloads don't re-beep.
+- Autoplay handling: attaches a one-time document-level click/keydown/touchstart listener that calls `ctx.resume()` from inside a real user gesture, avoiding the browser's "AudioContext was not allowed to start" warning. Single-play beeps that fail due to suspended context are queued and drained on unlock so the user doesn't miss the severe-warning tone. Sound plays from backgrounded tabs / other windows as long as the user has interacted with the dashboard at least once this session.
