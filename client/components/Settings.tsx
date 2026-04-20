@@ -135,7 +135,7 @@ export function Settings({ onComplete, onCancel, initialConfig }: SettingsProps)
           </span>
         </label>
 
-        <label className="setup-label setup-checkbox-label">
+        <label className="setup-label">
           UPDATES
           <label className="setup-checkbox-row">
             <input
