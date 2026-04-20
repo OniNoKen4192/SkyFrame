@@ -6,7 +6,7 @@ import { TerminalModal } from './components/TerminalModal';
 import { AlertDetailBody } from './components/AlertDetailBody';
 import { formatTime } from './alert-detail-format';
 import { TIER_COLORS } from '../shared/alert-tiers';
-import { LocationSetup } from './components/LocationSetup';
+import { Settings, type SettingsInitialConfig } from './components/Settings';
 import { TopBar } from './components/TopBar';
 import { Footer } from './components/Footer';
 import { CurrentPanel } from './components/CurrentPanel';
@@ -124,16 +124,35 @@ export default function App() {
   const [units, setUnits] = useState<TempUnit>(() => loadUnits());
   const [detailAlertId, setDetailAlertId] = useState<string | null>(null);
   const [forecastTrigger, setForecastTrigger] = useState<ForecastTrigger | null>(null);
+  const [settingsInitial, setSettingsInitial] = useState<SettingsInitialConfig>({
+    location: '',
+    email: '',
+    updateCheckEnabled: false,
+  });
 
-  // Check config status on mount
-  useEffect(() => {
-    fetch('/api/config')
+  const fetchConfig = () => {
+    return fetch('/api/config')
       .then((r) => r.json())
-      .then((cfg: { configured: boolean }) => {
+      .then((cfg: {
+        configured: boolean;
+        location?: string;
+        email?: string;
+        updateCheckEnabled?: boolean;
+      }) => {
         setConfigured(cfg.configured);
+        setSettingsInitial({
+          location: cfg.location ?? '',
+          email: cfg.email ?? '',
+          updateCheckEnabled: cfg.updateCheckEnabled ?? false,
+        });
         if (!cfg.configured) setShowSetup(true);
       })
       .catch(() => setConfigured(false));
+  };
+
+  // Check config status on mount
+  useEffect(() => {
+    void fetchConfig();
   }, []);
 
   // Poll weather data only when configured
@@ -365,6 +384,12 @@ export default function App() {
     setData(null);
   };
 
+  const handleOpenSettings = () => {
+    // Refresh initialConfig from the server before opening, so any changes
+    // made outside this tab (or on a prior save cycle) are reflected.
+    void fetchConfig().then(() => setShowSetup(true));
+  };
+
   const detailAlert = detailAlertId !== null
     ? alerts.find((a) => a.id === detailAlertId) ?? null
     : null;
@@ -389,9 +414,10 @@ export default function App() {
   return (
     <div className="hud-showcase" data-alert-tier={primaryTier}>
       {showSetup && (
-        <LocationSetup
+        <Settings
           onComplete={handleSetupComplete}
           onCancel={configured ? () => setShowSetup(false) : undefined}
+          initialConfig={settingsInitial}
         />
       )}
       {visible.length > 0 && (
@@ -428,7 +454,8 @@ export default function App() {
         locationName={data?.meta?.locationName ?? ''}
         activeView={activeView}
         onViewChange={setActiveView}
-        onLocationClick={() => setShowSetup(true)}
+        onLocationClick={handleOpenSettings}
+        onOpenSettings={handleOpenSettings}
       />
 
       {renderView()}

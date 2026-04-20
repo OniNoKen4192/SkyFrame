@@ -1102,3 +1102,54 @@
   margin-top: -6px;
   margin-bottom: 14px;
 }
+
+/* ============================================================
+   TopBar settings hamburger (v1.2.1). Muted triple-bar glyph,
+   brightens on hover. Same styling pattern as the forecast-inline
+   trigger from v1.2 Feature 5.
+   ============================================================ */
+.hud-topbar-settings {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font: inherit;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 10px;
+  opacity: 0.55;
+  text-shadow: 0 0 6px rgba(var(--accent-rgb), 0.5);
+  margin-left: 12px;
+}
+
+.hud-topbar-settings:hover {
+  opacity: 1;
+}
+
+.hud-topbar-settings:focus-visible {
+  outline: 1px dashed currentColor;
+  outline-offset: 2px;
+}
+
+/* ============================================================
+   Settings modal checkbox row (v1.2.1). The UPDATES label
+   contains a checkbox + inline text; this gives it the right
+   inline layout without disturbing the existing .setup-label
+   vertical rhythm.
+   ============================================================ */
+.setup-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: none;
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.setup-checkbox-row input[type="checkbox"] {
+  cursor: pointer;
+  accent-color: var(--accent);
+}

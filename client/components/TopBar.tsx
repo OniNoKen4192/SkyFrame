@@ -31,6 +31,7 @@ interface TopBarProps {
   activeView: ViewKey;
   onViewChange: (view: ViewKey) => void;
   onLocationClick: () => void;
+  onOpenSettings: () => void;
 }
 
 const TABS: Array<{ key: ViewKey; label: string }> = [
@@ -40,7 +41,7 @@ const TABS: Array<{ key: ViewKey; label: string }> = [
   { key: 'all',     label: 'ALL' },
 ];
 
-export function TopBar({ stationId, error, locationName, activeView, onViewChange, onLocationClick }: TopBarProps) {
+export function TopBar({ stationId, error, locationName, activeView, onViewChange, onLocationClick, onOpenSettings }: TopBarProps) {
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
@@ -92,6 +93,15 @@ export function TopBar({ stationId, error, locationName, activeView, onViewChang
         </div>
         <div className="clock-date">{dateStr}</div>
       </div>
+      <button
+        type="button"
+        className="hud-topbar-settings"
+        onClick={onOpenSettings}
+        aria-label="Open settings"
+        title="Settings"
+      >
+        ≡
+      </button>
     </div>
   );
 }
