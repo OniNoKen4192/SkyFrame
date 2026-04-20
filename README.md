@@ -6,11 +6,14 @@ Local, ad-free weather dashboard powered by NOAA/NWS. Runs on your own computer,
 
 ## Features
 
-- **Current conditions** — temperature, wind, humidity, pressure, visibility, dewpoint with trend arrows
-- **Hourly forecast** — scrollable 24-hour strip
-- **7-day outlook** — daily highs/lows with condition icons
-- **Weather alerts** — color-coded banners for active NWS alerts in your area
-- **First-run setup** — enter a city/ZIP and email; SkyFrame auto-resolves all NWS grid metadata for you
+- **Current conditions** — temperature, wind, humidity, pressure, visibility, dewpoint with trend arrows; click the hero temperature to toggle °F / °C
+- **Hourly forecast** — next 12 hours as an SVG line chart with per-hour icons and precipitation-probability bars
+- **7-day outlook** — daily highs/lows with condition icons; click any day to open the full NWS narrative
+- **Weather alerts** — color-coded banners for active NWS alerts (13-tier system from tornado-emergency through advisory); click an event name to open the full text in a terminal-styled modal; audible beep tones for top-severity alerts; dismissal persists in localStorage
+- **Forecast narrative** — click the `▶` glyph next to any label to open NWS's human-written forecast body for today or any day ahead
+- **Settings modal** — reachable anytime from the `≡` hamburger in the TopBar; edit location / email / update-check preference without restarting
+- **GPS autodetect** — one-click "use my location" button in Settings (localhost only; browsers block Geolocation over non-HTTPS)
+- **GitHub update notifications (opt-in)** — enable the checkbox in Settings and SkyFrame surfaces new releases as a dismissible advisory alert with release notes; off by default so no outbound calls happen without consent
 
 ## Requirements
 
@@ -30,7 +33,7 @@ npm run server
 
 Open **http://localhost:3000** in your browser.
 
-On first launch you will see a setup screen. Enter your location (city name, ZIP code, or city + state) and a contact email. SkyFrame calls the NWS `/points` API to resolve your forecast office, grid coordinates, timezone, observation stations, and forecast zone automatically. The result is saved to `skyframe.config.json` (gitignored) so you only do this once.
+On first launch you will see the Settings modal with the location / email fields empty. Enter a location (ZIP code or `lat, lon` — there's also a `⌖ USE MY LOCATION` button if you're on localhost) and a contact email. SkyFrame calls the NWS `/points` API to resolve your forecast office, grid coordinates, timezone, observation stations, and forecast zone automatically. The result is saved to `skyframe.config.json` (gitignored) so you only do this once — and you can edit it anytime from the `≡` hamburger in the TopBar.
 
 ## Usage
 
@@ -68,7 +71,7 @@ npm run typecheck  # TypeScript check without building
 
 All location data lives in `skyframe.config.json`, created automatically by the first-run setup. You can also configure via a `.env` file (copy `.env.example` to `.env`). The config file takes priority over `.env` values.
 
-To reconfigure your location, delete `skyframe.config.json` and restart the server — the setup screen will reappear.
+To reconfigure your location, open Settings from the `≡` hamburger in the TopBar and change the fields. (Deleting `skyframe.config.json` and restarting the server also works — Settings will auto-open in first-run mode.)
 
 ### Advanced: manual `.env` setup
 

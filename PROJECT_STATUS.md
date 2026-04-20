@@ -1,6 +1,6 @@
 # SkyFrame — Project Status
 
-**Last updated:** 2026-04-20 (v1.2.1)
+**Last updated:** 2026-04-20 (v1.2.1 docs refresh)
 
 ## What is SkyFrame
 
@@ -19,36 +19,72 @@ A local, ad-free weather dashboard. Single user, serves on localhost. HUD-style 
 ## Architecture
 
 ```
-client/                     React SPA (served by Vite in dev, by Fastify in prod)
-  App.tsx                   Root: data fetching, polling, view state, alert dismissal
+client/                             React SPA (served by Vite in dev, by Fastify in prod)
+  App.tsx                           Root: data fetching, polling, view state, alert/forecast/settings
+                                    modal state, alert-sound trigger effect, dismissed pruning
+  alert-detail-format.ts            Pure helpers: parseDescription, formatAlertMeta, formatTime,
+                                    isUpdateAlert (shared by AlertDetailBody + AlertBanner)
   components/
-    TopBar.tsx              Status line + clock + tab switcher
-    CurrentPanel.tsx        Hero temperature + 5 metric bars + trends
-    HourlyPanel.tsx         SVG line chart (next 12h) + icons + precip bars
-    OutlookPanel.tsx        7-day high/low range bars + icons + precip %
-    AlertBanner.tsx         Hazard-stripe alert banner (conditional, above TopBar)
-    Footer.tsx              Station link status + pull timestamps + offline indicator
-    WxIcon.tsx              SVG icon renderer (uses inline sprite)
-  icons.svg                 Inline SVG sprite (sun, moon, cloud, partly-*, rain, snow, thunder, fog)
-  main.tsx                  Entry point (injects SVG sprite into DOM, mounts React)
-  styles/hud.css            All styles. CSS custom properties drive the accent color system.
+    TopBar.tsx                      Status line + clock + tab switcher + ≡ hamburger (opens Settings)
+    CurrentPanel.tsx                Hero temperature (click to toggle °F/°C) + 5 metric bars + trends
+                                    + ▶ forecast trigger inline with TEMP/FEEL label
+    HourlyPanel.tsx                 SVG line chart (next 12h) + icons + precip bars + ▶ forecast
+                                    trigger inline with section label
+    OutlookPanel.tsx                7-day high/low range bars + icons + precip % + clickable day
+                                    labels that open the forecast narrative modal
+    AlertBanner.tsx                 Hazard-stripe alert banner (conditional, above TopBar). Event
+                                    names clickable to open TerminalModal; root onClick acks sounds
+    Footer.tsx                      Station link status + pull timestamps + offline indicator
+    WxIcon.tsx                      SVG icon renderer (uses inline sprite)
+    TerminalModal.tsx               Reusable chrome primitive: overlay, title bar, Esc/overlay close,
+                                    focus restore, accent-colored border via CSS variable
+    AlertDetailBody.tsx             Content for TerminalModal in alert-detail mode (meta line +
+                                    parsed description paragraphs with tier-color prefix highlights)
+    ForecastBody.tsx                Content for TerminalModal in forecast-narrative mode (day+night
+                                    section headers + narrative paragraphs)
+    ForecastButton.tsx              Small inline ▶ trigger used by Current and Hourly panels
+    Settings.tsx                    Always-accessible config modal: location, GPS autodetect,
+                                    email, update-check checkbox (opt-in), cosmetic-skin placeholder
+  icons.svg                         Inline SVG sprite (sun, moon, cloud, partly-*, rain, snow,
+                                    thunder, fog)
+  sound/
+    alert-sounds.ts                 Web Audio synthesis: pure tier→mode classification + imperative
+                                    orchestrator (loops, single-play, unlock listener for autoplay)
+  main.tsx                          Entry point: injects SVG sprite, mounts React
+  styles/
+    hud.css                         All dashboard chrome, CSS custom properties for accent colors
+    terminal-modal.css              Modal chrome + .alert-detail-* and .forecast-* body rules
 
 server/
-  index.ts                  Fastify server entry: API routes + static file serving
-  config.ts                 Reads location/identity from .env, cache TTLs, debug flags
-  routes.ts                 GET /api/weather → calls normalizer, caches result
+  index.ts                          Fastify entry: debug-tier log, update-check scheduler startup,
+                                    routes + static serving
+  config.ts                         Loads .env + skyframe.config.json → runtime CONFIG; surfaces
+                                    lat/lon/email/grid/stations/updateCheckEnabled/debug
+  routes.ts                         GET /api/weather (cached), POST /api/setup (writes config +
+                                    reconciles update-check scheduler), GET /api/config (returns
+                                    current values for Settings pre-population)
   nws/
-    client.ts               Thin fetch wrapper with User-Agent header
-    normalizer.ts           Orchestrator: parallel-fetches NWS endpoints, normalizes to WeatherResponse
-    cache.ts                TTL-based in-memory cache
-    icon-mapping.ts         NWS icon URL → IconCode (with precip probability threshold)
-    precip.ts               Precipitation outlook string builder
-    trends.ts               6-observation trend computation (up/down/steady per metric)
-    debug-alerts.ts         Synthetic alert injection for dev (SKYFRAME_DEBUG_TIERS env var)
+    client.ts                       Thin fetch wrapper with User-Agent header
+    normalizer.ts                   Orchestrator: parallel-fetches NWS endpoints, normalizes to
+                                    WeatherResponse, injects cached update alert when present
+    cache.ts                        TTL-based in-memory cache
+    icon-mapping.ts                 NWS icon URL → IconCode; hourly downgrade < 30%, daily upgrade
+                                    >= 50% based on precip probability
+    precip.ts                       Precipitation outlook string builder
+    trends.ts                       6-observation trend computation (up/down/steady per metric)
+    setup.ts                        resolveSetup: geocodes ZIP → lat/lon, calls NWS /points
+    debug-alerts.ts                 Synthetic alert injection for dev (SKYFRAME_DEBUG_TIERS env var)
+  updates/
+    github-release.ts               Pure helpers: parseVersion, compareVersions, parseReleaseResponse
+    update-check.ts                 Imperative orchestrator: scheduler (startup + local midnight),
+                                    fetchLatestRelease, cachedAvailableUpdate state, buildUpdateAlert
 
 shared/
-  types.ts                  WeatherResponse, CurrentConditions, HourlyPeriod, DailyPeriod, Alert, AlertTier
-  alert-tiers.ts            Event→tier mapping, tier ranking, TIER_COLORS palette
+  types.ts                          WeatherResponse, CurrentConditions, HourlyPeriod, DailyPeriod,
+                                    Alert (incl. issuedAt), AlertTier, WeatherMeta (incl.
+                                    forecastGeneratedAt), IconCode
+  alert-tiers.ts                    Event→tier mapping, tier ranking, TIER_COLORS palette (13 tiers)
+  units.ts                          °F↔°C conversion + trend rescaling for the temperature toggle
 ```
 
 ## Data flow
@@ -76,20 +112,37 @@ shared/
 - **Step 1** ✅ Offline indicator (Footer + TopBar reflect connectivity state)
 - **Step 2** ✅ Tabbed view switcher (CURRENT | HOURLY | OUTLOOK | ALL)
 - **Steps 3+4** ✅ NWS alerts + UI color override (9-tier system, hazard-stripe banner, expand/collapse, dismissal)
-- **Step 5** — Settings gear (°F/°C toggle, color picker) — **deferred to future version**
+- **Step 5** — Settings gear (°F/°C toggle, color picker) — partially shipped post-v1.1 (°F/°C toggle via hero click); color picker still deferred
 - **Step 6** ✅ Location setup — first-run modal (ZIP or lat/lon), NWS auto-resolve (office, grid, timezone, stations), persistent skyframe.config.json, re-configurable via clickable TopBar location
 - **Bug fixes:** hourly past-hour filtering, icon occlusion, range bar glow, precip icon threshold, overnight orphan dedup, stripe rendering
+
+### Post-v1.1 alert/UI refinements
+- PDS Tornado and Destructive Severe Thunderstorm tiers (Impact-Based Warning damage-threat parsing)
+- Advisory tiers (`advisory-high` honey-orange for 7 known low-severity events, `advisory` catch-all) — 13 tiers total; `classifyAlert` no longer drops unknown events
+- Hero-temperature click toggles °F/°C globally (client-side conversion, localStorage persistence)
+- Daily icon override at precipProb ≥ 50% (picks rain/snow/thunder via shortForecast keyword match)
+- Hero icon centers when conditions are clear sky
+
+### v1.2
+- **Feature 4** ✅ Alert detail terminal modal — click event name → full NWS description with HAZARD/SOURCE/IMPACT tier-colored prefixes. Introduces reusable `TerminalModal` chrome primitive
+- **Feature 5** ✅ Forecast narrative modal — ▶ glyph on CurrentPanel/HourlyPanel labels and clickable day labels in OutlookPanel open day+night NWS detailedForecast text. Second `TerminalModal` consumer validates chrome-vs-body split
+- **Feature 6** ✅ Alert sounds — synthesized Web Audio beeps (looping for top-4 tiers, one-shot for severe-warning). Click-to-acknowledge, localStorage persistence, user-gesture autoplay unlock with pending single-play queue
+- **Feature 7** ✅ GPS autodetect — `⌖ USE MY LOCATION` button in Settings modal (localhost-gated; shows `GPS LOCATION UNAVAILABLE` off-loopback)
+
+### v1.2.1
+- `LocationSetup` refactored to persistent `Settings` modal reachable from a new `≡` hamburger in the TopBar; same form expanded with update-check opt-in checkbox + disabled cosmetic-skin placeholder. First-run flow unchanged (auto-opens, CANCEL hidden)
+- GitHub update notifications (opt-in) — scheduler polls `/repos/OniNoKen4192/SkyFrame/releases/latest` at startup and local midnight when checkbox is on. Newer tag than `package.json.version` injects a synthetic `advisory`-tier alert with release notes in the TerminalModal; UNTIL/EXPIRES suffix suppressed. No outbound requests when off
+- `package.json` version bumped to `1.2.1`. `/api/config` returns current values for Settings pre-population; `/api/setup` reconciles scheduler state on toggle
 
 ## What's pending
 
 ### Future version backlog
 - **Footer `LINK.{station}` heartbeat mismatch during initial load:** the Footer's link-status heartbeat animates in the "active/pulsing" state before the first weather poll resolves, while the TopBar correctly shows `LINK.OFFLINE` for the same moment. Both indicators should agree on offline until fresh data arrives. Small scope — likely a missing `data-state` toggle or effect in `Footer.tsx`.
-- **Cosmetic skin selection:** placeholder shipped in v1.2.1 Settings modal (disabled "Default (HUD cyan)" select). Future work is the actual theme-switching logic and the skin options themselves. Carried from v1.1's deferred color-picker.
-- **Settings gear:** °F/°C toggle + curated color picker (no alert-color overlap). Per spec: `docs/superpowers/specs/2026-04-15-v1.1-roadmap-design.md`. Originally v1.1 Step 5, deferred.
+- **Cosmetic skin selection / color picker:** placeholder shipped in v1.2.1 Settings modal (disabled "Default (HUD cyan)" select). Future work is the actual theme-switching logic and the skin options themselves. Subsumes the v1.1 Step 5 color-picker deferral (°F/°C toggle already shipped via hero click post-v1.1).
 - **Alert dismiss duration:** Currently dismissed alerts stay dismissed until they drop off the NWS feed. Could add time-based auto-reactivation if needed.
 - **Icon set expansion (v1.2 Section 2c):** New SVG icons for the ~25 NWS weather states currently lumped or falling through to generic cloud (tornado, hurricane, sleet, wind variants, etc.). Gap list at `docs/icon-gaps.md`. Deferred pending user-produced icon art.
 - **Hero icon centering edge case:** The current `data-clear="true"` rule uses `flex-grow: 1` which works in fixed-width windows. On a maximized/very-wide window the centered icon may drift visually far from the readout. Easy fix when it matters: add a `max-width` cap (e.g. `240px`) to `.hud-hero-icon[data-clear="true"]` in `client/styles/hud.css`.
-- **Vitest 2 upgrade (test runner):** `npm test` script uses `--pool=forks` to work around a Vitest 1.6.1 thread-pool bug that intermittently fails with "No test suite found in file..." across all test files. Forks pool is reliable but ~2× slower than the (broken) threads pool. Vitest 2 is reported to fix the underlying bug; upgrading would let us drop the workaround. Low priority — current setup runs all 204 tests in under 6s.
+- **Vitest 2 upgrade (test runner):** `npm test` script uses `--pool=forks` to work around a Vitest 1.6.1 thread-pool bug that intermittently fails with "No test suite found in file..." across all test files. Forks pool is reliable but ~2× slower than the (broken) threads pool. Vitest 2 is reported to fix the underlying bug; upgrading would let us drop the workaround. Low priority — current setup runs all 260 tests in under 6s.
 - See `docs/userInput/v1.2 ideas.txt` for additional candidates (NWS alert types, per-alert deep-dive, sound/notifications, animations, keyboard shortcuts)
 
 ## How to run
@@ -119,13 +172,13 @@ SKYFRAME_DEBUG_TIERS=tornado-warning,flood npm run server
 
 2. **Alert tier system:** `shared/alert-tiers.ts` maps NWS event names → tiers → severity ranks. Both server and client import it. Adding a tier = one Map entry + one CSS color rule.
 
-3. **No client tests:** Server has comprehensive Vitest coverage. Client verified manually.
+3. **Client tests are pure-helper only:** Server has comprehensive Vitest coverage. The client has Vitest files for pure helpers (`client/alert-detail-format.test.ts`, `client/sound/alert-sounds.test.ts`) but no React-component test infrastructure (RTL / jsdom) — component behavior is still verified manually.
 
-4. **Icon probability threshold:** Precip icons (rain/snow/thunder) downgraded to partly-day/night when probability < 30%.
+4. **Icon probability thresholds:** Hourly precip icons (rain/snow/thunder) downgrade to partly-day/night when probability < 30%. Daily icons upgrade from NWS's non-precip choice to rain/snow/thunder when probability ≥ 50% (target picked via shortForecast keyword match: thunder > snow > rain).
 
 5. **Inline SVG sprite:** `client/icons.svg` imported via `?raw` in `main.tsx`. Changes require Vite dev server restart (not just browser refresh).
 
-6. **Commit convention:** Short imperative subject, multi-paragraph body, `Co-Authored-By: Claude Opus 4.6 (1M context) <noreply@anthropic.com>` trailer.
+6. **Commit convention:** Short imperative subject, multi-paragraph body, `Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>` trailer.
 
 7. **PR workflow:** Feature branches named `feat/...` or `fix/...`. PRs via `gh pr create`. Merge via GitHub UI. Post-merge: `git checkout main && git pull && git branch -d <branch>`.
 
