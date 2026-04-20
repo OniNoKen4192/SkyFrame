@@ -32,8 +32,10 @@ export function shouldTriggerSound(
 // ========== Web Audio internals ==========
 
 const PULSE_INTERVAL_MS = 1500;
-const BEEP_DURATION_MS = 300;
-const SINGLE_PLAY_END_DELAY_MS = 400;  // fires onSinglePlayEnd just after the beep tails off
+const BEEP_DURATION_MS = 500;
+const BEEP_ATTACK_S = 0.010;  // 10ms ramp-up (avoids click artifact)
+const BEEP_RELEASE_S = 0.050; // 50ms ramp-down (avoids click artifact)
+const SINGLE_PLAY_END_DELAY_MS = BEEP_DURATION_MS + 100;  // fires onSinglePlayEnd just after the beep tails off
 
 let ctx: AudioContext | null = null;
 let unlockAttached = false;
@@ -125,19 +127,20 @@ function playBeep(): boolean {
   }
 
   const now = audio.currentTime;
+  const totalS = BEEP_DURATION_MS / 1000;
   const osc = audio.createOscillator();
   const gain = audio.createGain();
 
   osc.type = 'square';
   osc.frequency.value = 880;
   gain.gain.setValueAtTime(0, now);
-  gain.gain.linearRampToValueAtTime(0.25, now + 0.01);
-  gain.gain.setValueAtTime(0.25, now + 0.25);
-  gain.gain.linearRampToValueAtTime(0, now + BEEP_DURATION_MS / 1000);
+  gain.gain.linearRampToValueAtTime(0.25, now + BEEP_ATTACK_S);
+  gain.gain.setValueAtTime(0.25, now + totalS - BEEP_RELEASE_S);
+  gain.gain.linearRampToValueAtTime(0, now + totalS);
 
   osc.connect(gain).connect(audio.destination);
   osc.start(now);
-  osc.stop(now + BEEP_DURATION_MS / 1000);
+  osc.stop(now + totalS);
   return true;
 }
 
