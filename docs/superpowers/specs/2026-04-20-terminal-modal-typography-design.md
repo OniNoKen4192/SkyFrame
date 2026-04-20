@@ -13,7 +13,9 @@ Refresh the typography and title-bar treatment of the shared `TerminalModal` pri
 
 The `TerminalModal` chrome (built for alert detail, reused for forecast narrative) shipped with ad-hoc typography — `12px` body, `0.05em` title letterspacing, no title-bar background tint. Meanwhile the earlier `Settings` modal established a Settings-style HUD type system: `13px` titles with `0.18em` letterspacing + glow, section labels at `10–11px` with `0.18em` letterspacing + reduced opacity, and a readable `13px` body. The two modals look like they're from different products.
 
-This refactor aligns the `TerminalModal` to the Settings type system and adds a subtle recessed title-bar band so the chrome reads as a terminal console strip rather than a flat colored line.
+Separately, the modal is currently rendering in the **browser default sans-serif**, not the HUD monospace stack. `TerminalModal` uses `createPortal(content, document.body)` so it renders outside the `.hud-showcase` scope where `font-family: 'SF Mono','Consolas','Courier New',monospace;` is set ([hud.css:22](../../../client/styles/hud.css#L22)). `.terminal-modal { font-family: inherit; }` therefore inherits from `<body>`, which has no font set, and falls through to the browser default. This bug is the reason forecast-narrative body text looks proportional while the rest of the HUD is monospaced.
+
+This refactor aligns the `TerminalModal` to the Settings type system, adds a subtle recessed title-bar band so the chrome reads as a terminal console strip rather than a flat colored line, and fixes the portal-font-inheritance bug so the type treatment actually lands against the HUD monospace font it was designed for.
 
 ## Decisions settled during brainstorming
 
@@ -26,6 +28,7 @@ This refactor aligns the `TerminalModal` to the Settings type system and adds a 
 ## Scope
 
 **In scope:**
+- Modal container: explicit `font-family` (fix portal-breaks-inherit bug)
 - Title bar background tint + typography (title text + right-side metadata)
 - Modal body base typography (size, line-height, letterspacing, padding)
 - Alert-detail content: meta line and prefix (HAZARD/SOURCE/IMPACT) treatment
@@ -48,6 +51,14 @@ Only `client/styles/terminal-modal.css`.
 No other files touched. `TerminalModal.tsx`, `AlertDetailBody.tsx`, `ForecastBody.tsx`, `hud.css`, test files — all unchanged.
 
 ## Specification
+
+### Modal container — `.terminal-modal`
+
+| Property | Current | New |
+|---|---|---|
+| `font-family` | `inherit` | `'SF Mono','Consolas','Courier New',monospace` |
+
+This is the portal-inheritance fix described in Motivation. Setting the stack explicitly on the modal container fixes both consumers (alert detail and forecast narrative) since they share this class. All other `.terminal-modal` properties (`background`, `border`, `box-shadow`, `width`, `max-height`, `display`, `flex-direction`, `animation`) stay unchanged.
 
 ### Title bar — `.terminal-modal-titlebar`
 
@@ -167,6 +178,7 @@ The existing `.forecast-section-header:not(:first-child) { margin-top: 16px; }` 
 
 Manual validation via `SKYFRAME_DEBUG_TIERS`:
 
+0. **Font fix sanity check** — open any modal (alert or forecast). Body text (paragraphs, not just section headers) should now render in the HUD monospace stack, matching the rest of the HUD. Easy diff: a capital "M" and a lowercase "i" should be the same width. Before the fix, the body text was proportional.
 1. **Alert detail modal** — inject a tornado-warning, open the detail modal. Verify:
    - Title bar background is visibly darker than body
    - Title text has heavier letterspacing and a red glow
