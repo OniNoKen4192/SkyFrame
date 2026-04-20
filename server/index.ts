@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { existsSync } from 'node:fs';
 import { CONFIG } from './config';
 import { registerRoutes } from './routes';
+import { startUpdateScheduler } from './updates/update-check';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const CLIENT_DIST = resolve(__dirname, '../dist/client');
@@ -17,6 +18,11 @@ async function main() {
       `[debug] SKYFRAME_DEBUG_TIERS active: ${CONFIG.debug.injectTiers.join(',')}` +
       ` — synthetic alerts will replace NWS fetch`,
     );
+  }
+
+  if (CONFIG.updateCheckEnabled) {
+    startUpdateScheduler();
+    app.log.info('Update check enabled — will query GitHub at startup and local midnight');
   }
 
   await registerRoutes(app);

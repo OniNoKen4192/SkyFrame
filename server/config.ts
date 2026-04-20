@@ -32,6 +32,7 @@ export interface SkyFrameLocationConfig {
   stationPrimary: string;
   stationFallback: string;
   locationName: string;
+  updateCheckEnabled?: boolean;   // optional for backwards compat
 }
 
 const CONFIG_FILE = resolve(PROJECT_ROOT, 'skyframe.config.json');
@@ -59,6 +60,7 @@ function buildConfig() {
   const lat = saved?.lat ?? (process.env.SKYFRAME_LAT ? Number(process.env.SKYFRAME_LAT) : null);
   const lon = saved?.lon ?? (process.env.SKYFRAME_LON ? Number(process.env.SKYFRAME_LON) : null);
   const email = saved?.email ?? process.env.SKYFRAME_EMAIL ?? null;
+  const updateCheckEnabled = saved?.updateCheckEnabled ?? false;
 
   const configured = lat != null && lon != null && email != null;
 
@@ -111,6 +113,7 @@ function buildConfig() {
     debug: {
       injectTiers: parseDebugTiers(process.env.SKYFRAME_DEBUG_TIERS),
     },
+    updateCheckEnabled,
   };
 }
 
