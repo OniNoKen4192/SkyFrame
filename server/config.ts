@@ -66,6 +66,7 @@ function buildConfig() {
 
   return {
     configured,
+    email: email ?? '',
 
     location: {
       lat: lat ?? 0,

@@ -22,7 +22,7 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
       configured: true as const,
       locationName: CONFIG.location.name,
       location: `${CONFIG.location.lat.toFixed(4)}, ${CONFIG.location.lon.toFixed(4)}`,
-      email: CONFIG.nws.userAgent.match(/\(([^)]+)\)/)?.[1] ?? '',
+      email: CONFIG.email,
       updateCheckEnabled: CONFIG.updateCheckEnabled,
     };
   });
