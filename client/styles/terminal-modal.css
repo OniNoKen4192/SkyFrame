@@ -35,19 +35,20 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 14px;
+  padding: 10px 16px;
   border-bottom: 1px solid color-mix(in srgb, var(--terminal-modal-accent, #22d3ee) 30%, transparent);
   position: sticky;
   top: 0;
-  background: inherit;
+  background: #050a10;
   z-index: 1;
 }
 
 .terminal-modal-title {
   font-weight: 700;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.18em;
   color: var(--terminal-modal-accent, #22d3ee);
-  font-size: 12px;
+  font-size: 13px;
+  text-shadow: 0 0 8px color-mix(in srgb, var(--terminal-modal-accent, #22d3ee) 50%, transparent);
 }
 
 .terminal-modal-title-right {
@@ -55,15 +56,16 @@
   align-items: center;
   gap: 14px;
   color: #8b95a7;
-  font-size: 11px;
-  letter-spacing: 0.04em;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  opacity: 0.55;
 }
 
 .terminal-modal-close {
   background: none;
   border: none;
   color: #8b95a7;
-  font-size: 18px;
+  font-size: 16px;
   line-height: 1;
   cursor: pointer;
   padding: 0 4px;
