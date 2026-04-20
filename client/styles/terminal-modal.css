@@ -27,7 +27,7 @@
   flex-direction: column;
   border: 1px solid var(--terminal-modal-accent, #22d3ee);
   box-shadow: 0 0 18px color-mix(in srgb, var(--terminal-modal-accent, #22d3ee) 25%, transparent);
-  font-family: inherit;
+  font-family: 'SF Mono','Consolas','Courier New',monospace;
   animation: terminal-modal-fade 120ms ease-out;
 }
 
