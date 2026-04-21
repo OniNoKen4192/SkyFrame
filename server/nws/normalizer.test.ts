@@ -95,7 +95,18 @@ const FIXTURE_FORECAST_LATE_EVENING = {
 };
 
 describe('normalizeWeather', () => {
+  // Pin stationOverride to 'auto' for the whole describe. Without this, any test
+  // run after a user has used the UI to pin the secondary station (which persists
+  // stationOverride='force-secondary' in skyframe.config.json) would break the
+  // KMKE-asserting tests below, since CONFIG loads from that file at import time.
+  // The override-specific test further down opts back into 'force-secondary'
+  // explicitly via its own save/restore — this outer pin protects everyone else.
+  const configMut = CONFIG as { stationOverride: 'auto' | 'force-secondary' };
+  let originalStationOverride: 'auto' | 'force-secondary';
+
   beforeEach(() => {
+    originalStationOverride = configMut.stationOverride;
+    configMut.stationOverride = 'auto';
     vi.restoreAllMocks();
     // Mock fetchNws to return the right fixture based on path
     vi.spyOn(client, 'fetchNws').mockImplementation(async (path: string) => {
@@ -107,6 +118,10 @@ describe('normalizeWeather', () => {
       if (path.includes('/alerts/active')) return { features: [] } as never;
       throw new Error('Unexpected path: ' + path);
     });
+  });
+
+  afterEach(() => {
+    configMut.stationOverride = originalStationOverride;
   });
 
   // Shared helper for alert-related tests
