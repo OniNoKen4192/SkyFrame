@@ -1,6 +1,6 @@
 # SkyFrame — Project Status
 
-**Last updated:** 2026-04-20 (v1.2.1 docs refresh)
+**Last updated:** 2026-04-20 (v1.2.2)
 
 ## What is SkyFrame
 
@@ -134,10 +134,12 @@ shared/
 - GitHub update notifications (opt-in) — scheduler polls `/repos/OniNoKen4192/SkyFrame/releases/latest` at startup and local midnight when checkbox is on. Newer tag than `package.json.version` injects a synthetic `advisory`-tier alert with release notes in the TerminalModal; UNTIL/EXPIRES suffix suppressed. No outbound requests when off
 - `package.json` version bumped to `1.2.1`. `/api/config` returns current values for Settings pre-population; `/api/setup` reconciles scheduler state on toggle
 
+### v1.2.2
+- Timezone propagation fix: client now reads the NWS-derived timezone from `/api/config` instead of hardcoding `America/Chicago`. Fixes off-by-hour display for users outside Central time.
+
 ## What's pending
 
 ### Future version backlog
-- **Footer `LINK.{station}` heartbeat mismatch during initial load:** the Footer's link-status heartbeat animates in the "active/pulsing" state before the first weather poll resolves, while the TopBar correctly shows `LINK.OFFLINE` for the same moment. Both indicators should agree on offline until fresh data arrives. Small scope — likely a missing `data-state` toggle or effect in `Footer.tsx`.
 - **Cosmetic skin selection / color picker:** placeholder shipped in v1.2.1 Settings modal (disabled "Default (HUD cyan)" select). Future work is the actual theme-switching logic and the skin options themselves. Subsumes the v1.1 Step 5 color-picker deferral (°F/°C toggle already shipped via hero click post-v1.1).
 - **Alert dismiss duration:** Currently dismissed alerts stay dismissed until they drop off the NWS feed. Could add time-based auto-reactivation if needed.
 - **Icon set expansion (v1.2 Section 2c):** New SVG icons for the ~25 NWS weather states currently lumped or falling through to generic cloud (tornado, hurricane, sleet, wind variants, etc.). Gap list at `docs/icon-gaps.md`. Deferred pending user-produced icon art.
@@ -258,3 +260,9 @@ Running list of what's in the codebase. Update this when a feature ships so we d
 - Fixed a portal-inheritance font bug: `TerminalModal` uses `createPortal(document.body)` and sat outside the `.hud-showcase` scope that sets the HUD monospace stack. `font-family: inherit` was falling through to the browser default sans-serif. `.terminal-modal` now sets the monospace stack explicitly.
 - Stylesheet-only refactor — no component, prop, test, or accessibility changes. Tier accent color (`--terminal-modal-accent`) continues to flow through to the title glow, meta line, and prefix/header colors per alert tier.
 - Spec: [docs/superpowers/specs/2026-04-20-terminal-modal-typography-design.md](docs/superpowers/specs/2026-04-20-terminal-modal-typography-design.md)
+
+### Timezone propagation fix (v1.2.2)
+- Extended `/api/config` to include the NWS-derived `timezone` (IANA ID like `America/New_York`). Client's `App.tsx` stores it in state and prop-drills it to `TopBar`, `Footer`, `AlertBanner`, and `AlertDetailBody`, plus the two `formatTime(...)` call sites for the alert detail and forecast narrative modal title-right timestamps.
+- `formatTime` and `formatAlertMeta` in `client/alert-detail-format.ts` now accept a `timezone: string | null` parameter; module-level `Intl.DateTimeFormat` constants in `TopBar`, `Footer`, and `AlertBanner` moved to per-call construction with the same parameter pattern.
+- Fallback: when the timezone is `null` (only during the brief window between App mount and config fetch resolution), formatters pass `timeZone: undefined` to `Intl.DateTimeFormat`, which resolves to the browser's local timezone. Once config resolves, all formatters switch to the authoritative NWS-derived TZ.
+- New `alert-detail-format.test.ts` regression test verifies the timezone parameter is honored (`America/Chicago` vs `America/New_York` produce different outputs for the same ISO input).
