@@ -1,6 +1,6 @@
 # SkyFrame — Project Status
 
-**Last updated:** 2026-04-20 (v1.2.3)
+**Last updated:** 2026-04-21 (v1.2.4)
 
 ## What is SkyFrame
 
@@ -139,6 +139,9 @@ shared/
 
 ### v1.2.3
 - Force-fallback station override: Footer `LINK.XXXX` is now a clickable button that opens a HUD-styled popover with AUTO / FORCE SECONDARY radios and a live side-by-side preview of both stations' current readings. Persisted in `skyframe.config.json`. When active, Footer renders in amber with a `[PIN]` suffix. Solves the "primary station is up but reporting physically impossible values during a storm" scenario that the automatic staleness check can't catch.
+
+### v1.2.4
+- Favicon: adds the SF-monogram browser-tab icon. Wired via `<link rel="icon">` in `index.html`, served from `client/public/favicon.png` (which Vite ships at the bundle root in production).
 
 ## What's pending
 
