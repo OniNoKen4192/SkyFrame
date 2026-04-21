@@ -3,10 +3,11 @@ import { formatAlertMeta, parseDescription } from '../alert-detail-format';
 
 interface AlertDetailBodyProps {
   alert: Alert;
+  timezone: string | null;
 }
 
-export function AlertDetailBody({ alert }: AlertDetailBodyProps) {
-  const meta = formatAlertMeta(alert);
+export function AlertDetailBody({ alert, timezone }: AlertDetailBodyProps) {
+  const meta = formatAlertMeta(alert, timezone);
   const paragraphs = parseDescription(alert.description);
 
   return (

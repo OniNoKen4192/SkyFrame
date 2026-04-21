@@ -15,24 +15,25 @@ interface AlertBannerProps {
   onDismiss: (id: string) => void;
   onOpenDetail: (id: string) => void;
   onAcknowledgeSounds: () => void;
+  timezone: string | null;
 }
 
-function formatExpires(iso: string): string {
+function formatExpires(iso: string, tz: string | null): string {
   const fmt = new Intl.DateTimeFormat('en-US', {
-    timeZone: 'America/Chicago',
+    timeZone: tz ?? undefined,
     hour: 'numeric', minute: '2-digit', hour12: true, timeZoneName: 'short',
   });
   return fmt.format(new Date(iso)).toUpperCase();
 }
 
-export function AlertBanner({ alerts, onDismiss, onOpenDetail, onAcknowledgeSounds }: AlertBannerProps) {
+export function AlertBanner({ alerts, onDismiss, onOpenDetail, onAcknowledgeSounds, timezone }: AlertBannerProps) {
   const [expanded, setExpanded] = useState(false);
 
   if (alerts.length === 0) return null;
 
   const primary = alerts[0]!;
   const primaryEventUpper = primary.event.toUpperCase();
-  const expiresLabel = formatExpires(primary.expires);
+  const expiresLabel = formatExpires(primary.expires, timezone);
 
   const canExpand = alerts.length > 1;
   const canDismiss = tierRank(primary.tier) > NON_DISMISSIBLE_RANK_THRESHOLD;
@@ -116,7 +117,7 @@ export function AlertBanner({ alerts, onDismiss, onOpenDetail, onAcknowledgeSoun
               {!isUpdateAlert(a) && (
                 <>
                   <span className="alert-banner-list-sep"> · </span>
-                  <span className="alert-banner-list-expires">until {formatExpires(a.expires)}</span>
+                  <span className="alert-banner-list-expires">until {formatExpires(a.expires, timezone)}</span>
                 </>
               )}
               <span className="alert-banner-list-sep">  ·  </span>

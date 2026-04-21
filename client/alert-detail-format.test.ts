@@ -78,7 +78,7 @@ describe('parseDescription', () => {
   });
 });
 
-import { formatAlertMeta, isUpdateAlert } from './alert-detail-format';
+import { formatAlertMeta, formatTime, isUpdateAlert } from './alert-detail-format';
 import type { Alert } from '../shared/types';
 
 const SAMPLE_ALERT: Alert = {
@@ -96,7 +96,7 @@ const SAMPLE_ALERT: Alert = {
 
 describe('formatAlertMeta', () => {
   it('renders issued / expires / area in uppercase with bullet separators', () => {
-    const result = formatAlertMeta(SAMPLE_ALERT);
+    const result = formatAlertMeta(SAMPLE_ALERT, 'America/Chicago');
     expect(result).toBe('ISSUED 2:14 PM CDT \u00B7 EXPIRES 3:00 PM CDT \u00B7 LINN COUNTY, IA');
   });
 
@@ -106,7 +106,7 @@ describe('formatAlertMeta', () => {
       issuedAt: '2026-04-16T04:30:00Z',  // 11:30 PM CDT previous day
       expires:  '2026-04-16T06:00:00Z',  // 1:00 AM CDT
     };
-    const result = formatAlertMeta(alert);
+    const result = formatAlertMeta(alert, 'America/Chicago');
     expect(result).toBe('ISSUED 11:30 PM CDT \u00B7 EXPIRES 1:00 AM CDT \u00B7 LINN COUNTY, IA');
   });
 
@@ -118,7 +118,7 @@ describe('formatAlertMeta', () => {
       tier: 'advisory',
       areaDesc: 'Update',
     };
-    const result = formatAlertMeta(alert);
+    const result = formatAlertMeta(alert, 'America/Chicago');
     expect(result).toBe('ISSUED 2:14 PM CDT \u00B7 UPDATE');
     expect(result).not.toContain('EXPIRES');
   });
@@ -131,5 +131,23 @@ describe('isUpdateAlert', () => {
   it('returns false for other ids', () => {
     expect(isUpdateAlert({ ...SAMPLE_ALERT, id: 'urn:oid:nws.alerts.1' })).toBe(false);
     expect(isUpdateAlert({ ...SAMPLE_ALERT, id: 'debug-tornado-warning-0' })).toBe(false);
+  });
+});
+
+describe('formatTime timezone parameter', () => {
+  const iso = '2026-04-20T20:00:00Z';  // 8 PM UTC = 3 PM CDT = 4 PM EDT
+
+  it('renders in America/Chicago when that timezone is passed', () => {
+    expect(formatTime(iso, 'America/Chicago')).toBe('3:00 PM CDT');
+  });
+
+  it('renders in America/New_York when that timezone is passed', () => {
+    expect(formatTime(iso, 'America/New_York')).toBe('4:00 PM EDT');
+  });
+
+  it('falls back to browser timezone when timezone is null', () => {
+    const result = formatTime(iso, null);
+    expect(result).toBeTruthy();
+    expect(typeof result).toBe('string');
   });
 });

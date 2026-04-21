@@ -30,16 +30,15 @@ export function parseDescription(raw: string): AlertDescriptionParagraph[] {
   return paragraphs;
 }
 
-const TIME_FMT = new Intl.DateTimeFormat('en-US', {
-  timeZone: 'America/Chicago',
-  hour: 'numeric',
-  minute: '2-digit',
-  hour12: true,
-  timeZoneName: 'short',
-});
-
-export function formatTime(iso: string): string {
-  return TIME_FMT.format(new Date(iso)).toUpperCase();
+export function formatTime(iso: string, timezone: string | null): string {
+  const fmt = new Intl.DateTimeFormat('en-US', {
+    timeZone: timezone ?? undefined,
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+    timeZoneName: 'short',
+  });
+  return fmt.format(new Date(iso)).toUpperCase();
 }
 
 // Synthetic "Update Available" alerts (from the server's update-check module)
@@ -51,12 +50,12 @@ export function isUpdateAlert(alert: Alert): boolean {
   return alert.id.startsWith('update-');
 }
 
-export function formatAlertMeta(alert: Alert): string {
-  const issued = formatTime(alert.issuedAt);
+export function formatAlertMeta(alert: Alert, timezone: string | null): string {
+  const issued = formatTime(alert.issuedAt, timezone);
   const area = alert.areaDesc.toUpperCase();
   if (isUpdateAlert(alert)) {
     return `ISSUED ${issued} \u00B7 ${area}`;
   }
-  const expires = formatTime(alert.expires);
+  const expires = formatTime(alert.expires, timezone);
   return `ISSUED ${issued} \u00B7 EXPIRES ${expires} \u00B7 ${area}`;
 }

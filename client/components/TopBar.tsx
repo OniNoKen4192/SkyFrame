@@ -1,23 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { ViewKey } from '../App';
 
-const TIME_FORMAT = new Intl.DateTimeFormat('en-US', {
-  timeZone: 'America/Chicago',
-  hour: '2-digit',
-  minute: '2-digit',
-  second: '2-digit',
-  hourCycle: 'h23',
-  timeZoneName: 'short',
-});
-
-const DATE_FORMAT = new Intl.DateTimeFormat('en-US', {
-  timeZone: 'America/Chicago',
-  weekday: 'short',
-  month: 'short',
-  day: '2-digit',
-  year: 'numeric',
-});
-
 function partsToMap(parts: Intl.DateTimeFormatPart[]): Record<string, string> {
   const map: Record<string, string> = {};
   for (const p of parts) map[p.type] = p.value;
@@ -29,6 +12,7 @@ interface TopBarProps {
   error: string | null;
   fallback: boolean;
   locationName: string;
+  timezone: string | null;
   activeView: ViewKey;
   onViewChange: (view: ViewKey) => void;
   onLocationClick: () => void;
@@ -42,7 +26,7 @@ const TABS: Array<{ key: ViewKey; label: string }> = [
   { key: 'all',     label: 'ALL' },
 ];
 
-export function TopBar({ stationId, error, fallback, locationName, activeView, onViewChange, onLocationClick, onOpenSettings }: TopBarProps) {
+export function TopBar({ stationId, error, fallback, locationName, timezone, activeView, onViewChange, onLocationClick, onOpenSettings }: TopBarProps) {
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
@@ -50,8 +34,25 @@ export function TopBar({ stationId, error, fallback, locationName, activeView, o
     return () => clearInterval(id);
   }, []);
 
-  const t = partsToMap(TIME_FORMAT.formatToParts(now));
-  const d = partsToMap(DATE_FORMAT.formatToParts(now));
+  const timeFormat = new Intl.DateTimeFormat('en-US', {
+    timeZone: timezone ?? undefined,
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hourCycle: 'h23',
+    timeZoneName: 'short',
+  });
+
+  const dateFormat = new Intl.DateTimeFormat('en-US', {
+    timeZone: timezone ?? undefined,
+    weekday: 'short',
+    month: 'short',
+    day: '2-digit',
+    year: 'numeric',
+  });
+
+  const t = partsToMap(timeFormat.formatToParts(now));
+  const d = partsToMap(dateFormat.formatToParts(now));
 
   const digits = `${t.hour}:${t.minute}:${t.second}`;
   const tz = t.timeZoneName ?? '';
