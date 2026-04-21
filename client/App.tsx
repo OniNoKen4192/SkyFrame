@@ -129,6 +129,7 @@ export default function App() {
     email: '',
     updateCheckEnabled: false,
   });
+  const [timezone, setTimezone] = useState<string | null>(null);
 
   // Sequence guard: rapid clicks on the hamburger or the location link can
   // fire concurrent /api/config fetches. If their responses land out of order,
@@ -145,9 +146,11 @@ export default function App() {
         location?: string;
         email?: string;
         updateCheckEnabled?: boolean;
+        timezone?: string;
       }) => {
         if (seq !== fetchConfigSeqRef.current) return;
         setConfigured(cfg.configured);
+        setTimezone(cfg.timezone ?? null);
         setSettingsInitial({
           location: cfg.location ?? '',
           email: cfg.email ?? '',
