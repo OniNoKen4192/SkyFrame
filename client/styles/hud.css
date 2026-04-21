@@ -1194,7 +1194,11 @@
   background: #050a10;
   border: 1px solid var(--accent);
   padding: 14px 16px;
-  font-family: inherit;
+  /* Explicit monospace stack — the popover is portaled to document.body
+     (to escape .hud-footer's opacity: 0.55 inheritance), so font-family: inherit
+     would fall through to the browser default sans-serif. Same fix as
+     .terminal-modal for the same reason. */
+  font-family: 'SF Mono', 'Consolas', 'Courier New', monospace;
   font-size: 11px;
   letter-spacing: 0.12em;
   z-index: 100;

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 export type StationOverrideMode = 'auto' | 'force-secondary';
 
@@ -133,7 +134,10 @@ export function StationPopover({
 
   if (!position) return null;
 
-  return (
+  // Rendered via portal to document.body so the popover escapes the Footer's
+  // opacity: 0.55 (CSS opacity cascades to all descendants and cannot be
+  // overridden in a child). Matches the TerminalModal pattern.
+  return createPortal(
     <div
       ref={popoverRef}
       className="station-popover"
@@ -184,6 +188,7 @@ export function StationPopover({
       )}
 
       {submitError && <div className="station-popover-error">▲ {submitError}</div>}
-    </div>
+    </div>,
+    document.body,
   );
 }
