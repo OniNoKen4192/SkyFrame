@@ -3,8 +3,10 @@ import type { WeatherResponse } from '../shared/types';
 import { normalizeWeather } from './nws/normalizer';
 import { resolveSetup } from './nws/setup';
 import { TTLCache } from './nws/cache';
-import { CONFIG, reloadConfig, saveSkyFrameConfig } from './config';
+import { CONFIG, reloadConfig, saveSkyFrameConfig, loadSavedConfig } from './config';
 import { startUpdateScheduler, stopUpdateScheduler, clearCachedUpdate } from './updates/update-check';
+import { fetchNws } from './nws/client';
+import { summarizeStation, type StationSummary } from './nws/station-preview';
 
 const WEATHER_CACHE_KEY = 'weather';
 
@@ -95,5 +97,61 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
       reply.code(400);
       return { error: 'setup_failed', message: (err as Error).message };
     }
+  });
+
+  app.post<{
+    Body: { mode: 'auto' | 'force-secondary' };
+    Reply: { success: true } | ErrorReply;
+  }>('/api/station-override', async (req, reply) => {
+    if (!CONFIG.configured) {
+      reply.code(503);
+      return { error: 'not_configured', message: 'Location not set.' };
+    }
+
+    const { mode } = req.body;
+    if (mode !== 'auto' && mode !== 'force-secondary') {
+      reply.code(400);
+      return { error: 'invalid_input', message: 'mode must be "auto" or "force-secondary"' };
+    }
+
+    const saved = loadSavedConfig();
+    if (!saved) {
+      reply.code(500);
+      return { error: 'config_missing', message: 'skyframe.config.json not found despite configured state' };
+    }
+    saveSkyFrameConfig({ ...saved, stationOverride: mode });
+    reloadConfig();
+    cache.clear();  // invalidate weather cache so the flip takes effect immediately
+
+    app.log.info(`Station override set to ${mode}`);
+    return { success: true as const };
+  });
+
+  interface NwsObsResponse {
+    properties: {
+      timestamp: string;
+      temperature: { value: number | null };
+    };
+  }
+
+  app.get<{
+    Reply: { primary: StationSummary; fallback: StationSummary } | ErrorReply;
+  }>('/api/stations/preview', async (_req, reply) => {
+    if (!CONFIG.configured) {
+      reply.code(503);
+      return { error: 'not_configured', message: 'Location not set.' };
+    }
+
+    const { primary, fallback } = CONFIG.stations;
+    const now = new Date();
+    const [primaryResult, fallbackResult] = await Promise.allSettled([
+      fetchNws<NwsObsResponse>(`/stations/${primary}/observations/latest`),
+      fetchNws<NwsObsResponse>(`/stations/${fallback}/observations/latest`),
+    ]);
+
+    return {
+      primary: summarizeStation(primary, primaryResult, now),
+      fallback: summarizeStation(fallback, fallbackResult, now),
+    };
   });
 }
