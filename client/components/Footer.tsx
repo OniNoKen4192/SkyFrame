@@ -78,7 +78,11 @@ export function Footer({
       >
         {linkLabel}
       </button>
-      {pinned && <span className="footer-link-pin">[PIN]</span>}
+      {stationOverride !== null && (
+        <span className="footer-link-mode" data-mode={pinned ? 'pinned' : 'auto'}>
+          {pinned ? '[PINNED]' : '[AUTO]'}
+        </span>
+      )}
       &nbsp;·&nbsp; LAST PULL {lastPull} &nbsp;·&nbsp; NEXT {nextPull}
 
       {popoverOpen && linkClickable && stationOverride && primaryStationId && fallbackStationId && (
