@@ -130,6 +130,9 @@ export default function App() {
     updateCheckEnabled: false,
   });
   const [timezone, setTimezone] = useState<string | null>(null);
+  const [stationOverride, setStationOverride] = useState<'auto' | 'force-secondary' | null>(null);
+  const [primaryStationId, setPrimaryStationId] = useState<string | null>(null);
+  const [fallbackStationId, setFallbackStationId] = useState<string | null>(null);
 
   // Sequence guard: rapid clicks on the hamburger or the location link can
   // fire concurrent /api/config fetches. If their responses land out of order,
@@ -147,10 +150,16 @@ export default function App() {
         email?: string;
         updateCheckEnabled?: boolean;
         timezone?: string;
+        stationOverride?: 'auto' | 'force-secondary';
+        stationPrimary?: string;
+        stationFallback?: string;
       }) => {
         if (seq !== fetchConfigSeqRef.current) return;
         setConfigured(cfg.configured);
         setTimezone(cfg.timezone ?? null);
+        setStationOverride(cfg.stationOverride ?? null);
+        setPrimaryStationId(cfg.stationPrimary ?? null);
+        setFallbackStationId(cfg.stationFallback ?? null);
         setSettingsInitial({
           location: cfg.location ?? '',
           email: cfg.email ?? '',
@@ -169,47 +178,46 @@ export default function App() {
     void fetchConfig();
   }, []);
 
-  // Poll weather data only when configured
+  // Ref holding a cancel handle for the currently-scheduled next poll, so
+  // handleOverrideChange can cancel and trigger an immediate refetch.
+  const pollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pollCancelledRef = useRef(false);
+
+  const fetchWeatherOnce = async () => {
+    try {
+      const res = await fetch('/api/weather');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = (await res.json()) as WeatherResponse;
+      if (pollCancelledRef.current) return;
+
+      setData(json);
+      setError(null);
+      setNextRetryAt(null);
+
+      const nextAt = Date.parse(json.meta.nextRefreshAt);
+      const delay = Number.isFinite(nextAt)
+        ? nextAt - Date.now() + REFRESH_BUFFER_MS
+        : FALLBACK_REFRESH_MS;
+      if (pollTimeoutRef.current !== null) clearTimeout(pollTimeoutRef.current);
+      pollTimeoutRef.current = setTimeout(fetchWeatherOnce, Math.max(1000, delay));
+    } catch (e) {
+      if (pollCancelledRef.current) return;
+      setError((e as Error).message);
+      setNextRetryAt(new Date(Date.now() + ERROR_RETRY_MS).toISOString());
+      if (pollTimeoutRef.current !== null) clearTimeout(pollTimeoutRef.current);
+      pollTimeoutRef.current = setTimeout(fetchWeatherOnce, ERROR_RETRY_MS);
+    }
+  };
+
   useEffect(() => {
     if (!configured) return;
-
-    let cancelled = false;
-    let timeoutId: ReturnType<typeof setTimeout> | undefined;
-
-    const scheduleNext = (delayMs: number) => {
-      if (cancelled) return;
-      timeoutId = setTimeout(fetchWeather, Math.max(1000, delayMs));
-    };
-
-    const fetchWeather = async () => {
-      try {
-        const res = await fetch('/api/weather');
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const json = (await res.json()) as WeatherResponse;
-        if (cancelled) return;
-
-        setData(json);
-        setError(null);
-        setNextRetryAt(null);
-
-        const nextAt = Date.parse(json.meta.nextRefreshAt);
-        const delay = Number.isFinite(nextAt)
-          ? nextAt - Date.now() + REFRESH_BUFFER_MS
-          : FALLBACK_REFRESH_MS;
-        scheduleNext(delay);
-      } catch (e) {
-        if (cancelled) return;
-        setError((e as Error).message);
-        setNextRetryAt(new Date(Date.now() + ERROR_RETRY_MS).toISOString());
-        scheduleNext(ERROR_RETRY_MS);
-      }
-    };
-
-    fetchWeather();
+    pollCancelledRef.current = false;
+    fetchWeatherOnce();
     return () => {
-      cancelled = true;
-      if (timeoutId !== undefined) clearTimeout(timeoutId);
+      pollCancelledRef.current = true;
+      if (pollTimeoutRef.current !== null) clearTimeout(pollTimeoutRef.current);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [configured]);
 
   const loadingPlaceholder = (
@@ -392,6 +400,22 @@ export default function App() {
     saveUnits(next);
   };
 
+  const handleStationOverrideChange = async (mode: 'auto' | 'force-secondary') => {
+    const res = await fetch('/api/station-override', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode }),
+    });
+    if (!res.ok) {
+      const msg = (await res.json().catch(() => ({ message: `HTTP ${res.status}` }))).message;
+      throw new Error(msg);
+    }
+    setStationOverride(mode);
+    // Trigger immediate refetch so the data updates without waiting for the
+    // next scheduled poll (up to 90s away otherwise).
+    await fetchWeatherOnce();
+  };
+
   const handleSetupComplete = () => {
     setShowSetup(false);
     setConfigured(true);
@@ -477,7 +501,16 @@ export default function App() {
 
       {renderView()}
 
-      <Footer meta={data?.meta ?? null} error={error} nextRetryAt={nextRetryAt} timezone={timezone} />
+      <Footer
+        meta={data?.meta ?? null}
+        error={error}
+        nextRetryAt={nextRetryAt}
+        timezone={timezone}
+        stationOverride={stationOverride}
+        primaryStationId={primaryStationId}
+        fallbackStationId={fallbackStationId}
+        onOverrideChange={handleStationOverrideChange}
+      />
     </div>
   );
 }
