@@ -33,11 +33,12 @@ export interface SkyFrameLocationConfig {
   stationFallback: string;
   locationName: string;
   updateCheckEnabled?: boolean;   // optional for backwards compat
+  stationOverride?: 'auto' | 'force-secondary';  // optional for backwards compat; defaults to 'auto'
 }
 
 const CONFIG_FILE = resolve(PROJECT_ROOT, 'skyframe.config.json');
 
-function loadSavedConfig(): SkyFrameLocationConfig | null {
+export function loadSavedConfig(): SkyFrameLocationConfig | null {
   if (!existsSync(CONFIG_FILE)) return null;
   try {
     const raw = JSON.parse(readFileSync(CONFIG_FILE, 'utf-8'));
@@ -115,6 +116,7 @@ function buildConfig() {
       injectTiers: parseDebugTiers(process.env.SKYFRAME_DEBUG_TIERS),
     },
     updateCheckEnabled,
+    stationOverride: (saved?.stationOverride ?? 'auto') as 'auto' | 'force-secondary',
   };
 }
 

@@ -25,7 +25,7 @@ To find your NWS metadata: `curl https://api.weather.gov/points/{lat},{lon}` —
 - Current conditions: `/stations/{stationId}/observations/latest`
 - Alerts: `/alerts/active?point={lat},{lon}`
 
-**Station fallback:** when the primary station's latest observation is older than ~90 min or has null core fields, the server falls back to the secondary station configured in `.env`.
+**Station fallback:** when the primary station's latest observation is older than ~90 min or has null core fields, the server falls back to the secondary station configured in `.env`. The user can also manually pin to the secondary by clicking the `LINK.XXXX` button in the Footer — useful when the primary is responding but reporting physically impossible values (a scenario the automatic staleness check can't catch).
 
 **User-Agent** (required by NWS on every request): `SkyFrame/0.1 ({SKYFRAME_EMAIL from .env})`
 

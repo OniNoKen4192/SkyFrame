@@ -1,6 +1,6 @@
 # SkyFrame — Project Status
 
-**Last updated:** 2026-04-20 (v1.2.2)
+**Last updated:** 2026-04-20 (v1.2.3)
 
 ## What is SkyFrame
 
@@ -137,6 +137,9 @@ shared/
 ### v1.2.2
 - Timezone propagation fix: client now reads the NWS-derived timezone from `/api/config` instead of hardcoding `America/Chicago`. Fixes off-by-hour display for users outside Central time.
 
+### v1.2.3
+- Force-fallback station override: Footer `LINK.XXXX` is now a clickable button that opens a HUD-styled popover with AUTO / FORCE SECONDARY radios and a live side-by-side preview of both stations' current readings. Persisted in `skyframe.config.json`. When active, Footer renders in amber with a `[PIN]` suffix. Solves the "primary station is up but reporting physically impossible values during a storm" scenario that the automatic staleness check can't catch.
+
 ## What's pending
 
 ### Future version backlog
@@ -266,3 +269,11 @@ Running list of what's in the codebase. Update this when a feature ships so we d
 - `formatTime` and `formatAlertMeta` in `client/alert-detail-format.ts` now accept a `timezone: string | null` parameter; module-level `Intl.DateTimeFormat` constants in `TopBar`, `Footer`, and `AlertBanner` moved to per-call construction with the same parameter pattern.
 - Fallback: when the timezone is `null` (only during the brief window between App mount and config fetch resolution), formatters pass `timeZone: undefined` to `Intl.DateTimeFormat`, which resolves to the browser's local timezone. Once config resolves, all formatters switch to the authoritative NWS-derived TZ.
 - New `alert-detail-format.test.ts` regression test verifies the timezone parameter is honored (`America/Chicago` vs `America/New_York` produce different outputs for the same ISO input).
+
+### Force fallback station (v1.2.3)
+- New `StationPopover` component anchored to the Footer `LINK.XXXX` button. Displays AUTO / FORCE SECONDARY radios + live preview rows for both primary and fallback stations (ID, observed time, temp, live/stale/error status). Preview data fetched on popover open via `GET /api/stations/preview` (parallel `Promise.allSettled` to both stations).
+- `POST /api/station-override` persists the mode to `skyframe.config.json`, clears the weather cache, and returns 200. `App.tsx` triggers an immediate `/api/weather` refetch after a successful override change so the UI updates without waiting for the 90s poll cycle.
+- Footer renders `LINK.KRAC [PIN]` in amber when the override is active; distinguishes from the pre-existing auto-fallback amber state via the `[PIN]` text marker. Same amber color space is reused intentionally — both states mean "not on primary station."
+- `fetchObservationsWithFallback` in `server/nws/normalizer.ts` short-circuits to the fallback station when `CONFIG.stationOverride === 'force-secondary'`, without issuing any primary-station requests. `meta.error` is NOT set to `'station_fallback'` for pinned responses — the two fields are orthogonal.
+- `WeatherMeta.stationOverride` added (`'auto' | 'force-secondary'`, always present) so the client can render `[PIN]` without a second round-trip.
+- Motivated by a real scenario (Oak Creek, WI, 2026-04-18): primary station (KMKE) was responsive but reported 0°F mid-storm after lightning damage. Automatic staleness check can't detect physically impossible values; this is the human-in-the-loop escape hatch. Spec: [docs/superpowers/specs/2026-04-20-force-fallback-station-design.md](docs/superpowers/specs/2026-04-20-force-fallback-station-design.md)

@@ -166,6 +166,7 @@ interface ObsFetchResult {
   obsHistory: NwsObsListResponse;
   stationId: string;
   fellBack: boolean;
+  pinned: boolean;
 }
 
 function isObservationUsable(obs: NwsObsProperties, now: Date): boolean {
@@ -178,7 +179,24 @@ function isObservationUsable(obs: NwsObsProperties, now: Date): boolean {
 }
 
 async function fetchObservationsWithFallback(now: Date): Promise<ObsFetchResult> {
-  const { stations } = CONFIG;
+  const { stations, stationOverride } = CONFIG;
+
+  // User has explicitly pinned to secondary — skip primary entirely.
+  if (stationOverride === 'force-secondary') {
+    const secondaryLatest = await fetchNws<NwsObsResponse>(
+      `/stations/${stations.fallback}/observations/latest`,
+    );
+    const secondaryHistory = await fetchNws<NwsObsListResponse>(
+      `/stations/${stations.fallback}/observations?limit=6`,
+    );
+    return {
+      obsLatest: secondaryLatest,
+      obsHistory: secondaryHistory,
+      stationId: stations.fallback,
+      fellBack: false,  // this is a pin, not a fallback
+      pinned: true,
+    };
+  }
 
   try {
     const primaryLatest = await fetchNws<NwsObsResponse>(
@@ -188,7 +206,7 @@ async function fetchObservationsWithFallback(now: Date): Promise<ObsFetchResult>
       const primaryHistory = await fetchNws<NwsObsListResponse>(
         `/stations/${stations.primary}/observations?limit=6`,
       );
-      return { obsLatest: primaryLatest, obsHistory: primaryHistory, stationId: stations.primary, fellBack: false };
+      return { obsLatest: primaryLatest, obsHistory: primaryHistory, stationId: stations.primary, fellBack: false, pinned: false };
     }
   } catch {
     // Swallow; fall through to secondary
@@ -200,7 +218,7 @@ async function fetchObservationsWithFallback(now: Date): Promise<ObsFetchResult>
   const secondaryHistory = await fetchNws<NwsObsListResponse>(
     `/stations/${stations.fallback}/observations?limit=6`,
   );
-  return { obsLatest: secondaryLatest, obsHistory: secondaryHistory, stationId: stations.fallback, fellBack: true };
+  return { obsLatest: secondaryLatest, obsHistory: secondaryHistory, stationId: stations.fallback, fellBack: true, pinned: false };
 }
 
 interface AlertsFetchResult {
@@ -272,7 +290,7 @@ export async function normalizeWeather(): Promise<WeatherResponse> {
     fetchObservationsWithFallback(now),
     fetchAlertsSafe(),
   ]);
-  const { obsLatest, obsHistory, stationId: activeStationId, fellBack } = obsResult;
+  const { obsLatest, obsHistory, stationId: activeStationId, fellBack, pinned } = obsResult;
   const alerts = normalizeAlerts(alertsResult.data);
   const alertsFailed = alertsResult.failed;
 
@@ -324,6 +342,7 @@ export async function normalizeWeather(): Promise<WeatherResponse> {
     cacheHit: false,
     stationId: activeStationId,
     locationName: CONFIG.location.name,
+    stationOverride: pinned ? ('force-secondary' as const) : ('auto' as const),
     forecastGeneratedAt: forecast.properties.generatedAt,
     ...(metaError ? { error: metaError } : {}),
   };
