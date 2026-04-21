@@ -24,6 +24,7 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
       location: `${CONFIG.location.lat.toFixed(4)}, ${CONFIG.location.lon.toFixed(4)}`,
       email: CONFIG.email,
       updateCheckEnabled: CONFIG.updateCheckEnabled,
+      timezone: CONFIG.nws.timezone,
     };
   });
 
