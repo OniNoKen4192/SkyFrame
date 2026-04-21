@@ -490,7 +490,7 @@ export default function App() {
       <TopBar
         stationId={data?.meta?.stationId ?? null}
         error={error}
-        fallback={data?.meta?.error === 'station_fallback'}
+        fallback={data?.meta?.error === 'station_fallback' || stationOverride === 'force-secondary'}
         locationName={data?.meta?.locationName ?? ''}
         timezone={timezone}
         activeView={activeView}
