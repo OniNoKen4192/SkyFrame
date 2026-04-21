@@ -408,7 +408,7 @@ export default function App() {
     ? alerts.find((a) => a.id === detailAlertId) ?? null
     : null;
 
-  const detailIssuedLabel = detailAlert ? formatTime(detailAlert.issuedAt) : '';
+  const detailIssuedLabel = detailAlert ? formatTime(detailAlert.issuedAt, timezone) : '';
 
   const forecastPeriod: DailyPeriod | null =
     forecastTrigger?.kind === 'today' ? (daily[0] ?? null) :
@@ -422,7 +422,7 @@ export default function App() {
     : '';
 
   const forecastGeneratedLabel = data?.meta?.forecastGeneratedAt
-    ? formatTime(data.meta.forecastGeneratedAt)
+    ? formatTime(data.meta.forecastGeneratedAt, timezone)
     : '';
 
   return (
@@ -440,6 +440,7 @@ export default function App() {
           onDismiss={dismissAlert}
           onOpenDetail={setDetailAlertId}
           onAcknowledgeSounds={acknowledgeAlertSounds}
+          timezone={timezone}
         />
       )}
       <TerminalModal
@@ -450,7 +451,7 @@ export default function App() {
         titleRight={detailIssuedLabel}
         accentColor={detailAlert ? TIER_COLORS[detailAlert.tier].base : '#22d3ee'}
       >
-        {detailAlert && <AlertDetailBody alert={detailAlert} />}
+        {detailAlert && <AlertDetailBody alert={detailAlert} timezone={timezone} />}
       </TerminalModal>
       <TerminalModal
         open={forecastPeriod !== null}
@@ -467,6 +468,7 @@ export default function App() {
         error={error}
         fallback={data?.meta?.error === 'station_fallback'}
         locationName={data?.meta?.locationName ?? ''}
+        timezone={timezone}
         activeView={activeView}
         onViewChange={setActiveView}
         onLocationClick={handleOpenSettings}
@@ -475,7 +477,7 @@ export default function App() {
 
       {renderView()}
 
-      <Footer meta={data?.meta ?? null} error={error} nextRetryAt={nextRetryAt} />
+      <Footer meta={data?.meta ?? null} error={error} nextRetryAt={nextRetryAt} timezone={timezone} />
     </div>
   );
 }
