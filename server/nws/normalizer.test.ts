@@ -276,6 +276,46 @@ describe('normalizeWeather', () => {
     vi.useRealTimers();
   });
 
+  it('reads from KRAC without touching KMKE when stationOverride is force-secondary', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-04-15T19:30:00+00:00'));
+
+    // Mutate CONFIG.stationOverride via cast — matches the pattern used by the
+    // CONFIG.debug.injectTiers tests further down this file.
+    const configMut = CONFIG as { stationOverride: 'auto' | 'force-secondary' };
+    const originalOverride = configMut.stationOverride;
+    configMut.stationOverride = 'force-secondary';
+
+    try {
+      const calledPaths: string[] = [];
+      vi.spyOn(client, 'fetchNws').mockImplementation(async (path: string) => {
+        calledPaths.push(path);
+        if (path.includes('/points/')) return FIXTURE_POINT as never;
+        if (path.includes('/forecast/hourly')) return FIXTURE_HOURLY as never;
+        if (path.includes('/forecast')) return FIXTURE_FORECAST as never;
+        if (path.includes('KRAC/observations/latest')) return FIXTURE_OBS_LATEST as never;
+        if (path.includes('KRAC/observations')) return FIXTURE_OBS_HISTORY as never;
+        if (path.includes('/alerts/active')) return { features: [] } as never;
+        throw new Error('Unexpected path: ' + path);
+      });
+
+      const result = await normalizeWeather();
+
+      // KMKE must never be queried
+      expect(calledPaths.some((p) => p.includes('KMKE'))).toBe(false);
+      // Result reflects the pinned station
+      expect(result.meta.stationId).toBe('KRAC');
+      expect(result.current.stationId).toBe('KRAC');
+      // `error: 'station_fallback'` is for auto-fallback only — not for user pins
+      expect(result.meta.error).not.toBe('station_fallback');
+      // And the new meta field reflects the pin
+      expect(result.meta.stationOverride).toBe('force-secondary');
+    } finally {
+      configMut.stationOverride = originalOverride;
+      vi.useRealTimers();
+    }
+  });
+
   it('falls back to KRAC when KMKE observation has null temperature', async () => {
     vi.spyOn(client, 'fetchNws').mockImplementation(async (path: string) => {
       if (path.includes('/points/')) return FIXTURE_POINT as never;

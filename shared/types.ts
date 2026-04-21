@@ -74,6 +74,7 @@ export interface WeatherMeta {
   cacheHit: boolean;
   stationId: string;
   locationName: string;
+  stationOverride: 'auto' | 'force-secondary';  // always present; 'auto' when user hasn't pinned
   forecastGeneratedAt: string;  // NWS top-level generatedAt from /gridpoints/.../forecast
   error?: 'rate_limited' | 'upstream_malformed' | 'station_fallback' | 'partial';
 }
