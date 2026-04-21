@@ -4,13 +4,14 @@ interface FooterProps {
   meta: WeatherMeta | null;
   error: string | null;
   nextRetryAt?: string | null;
+  timezone: string | null;
 }
 
-function formatHM(iso: string | undefined): string {
+function formatHM(iso: string | undefined, tz: string | null): string {
   if (!iso) return '--:--:--';
   const d = new Date(iso);
   const fmt = new Intl.DateTimeFormat('en-US', {
-    timeZone: 'America/Chicago',
+    timeZone: tz ?? undefined,
     hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23',
   });
   const parts = fmt.formatToParts(d);
@@ -19,13 +20,13 @@ function formatHM(iso: string | undefined): string {
   return `${map.hour}:${map.minute}:${map.second}`;
 }
 
-export function Footer({ meta, error, nextRetryAt }: FooterProps) {
+export function Footer({ meta, error, nextRetryAt, timezone }: FooterProps) {
   const offline = !!error || !meta;
   const fallback = !offline && meta.error === 'station_fallback';
-  const lastPull = formatHM(meta?.fetchedAt);
+  const lastPull = formatHM(meta?.fetchedAt, timezone);
   const nextPull = error && nextRetryAt
-    ? formatHM(nextRetryAt)
-    : formatHM(meta?.nextRefreshAt);
+    ? formatHM(nextRetryAt, timezone)
+    : formatHM(meta?.nextRefreshAt, timezone);
 
   const dotClass = offline ? 'dot dot-error' : fallback ? 'dot dot-fallback' : 'dot';
   const linkClass = fallback ? 'footer-link footer-link-fallback' : 'footer-link';
