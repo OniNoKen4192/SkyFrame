@@ -5,9 +5,12 @@ import { isUpdateAlert } from '../alert-detail-format';
 
 // Tornado Emergency, PDS Tornado, Tornado Warning, Destructive Severe
 // Thunderstorm Warning, and Severe Thunderstorm Warning — imminent /
-// short-duration threats. The user shouldn't be able to silence these.
-// Longer-duration alerts (blizzard, winter storm, flood, heat, SWS,
-// watches) remain dismissible so they don't nag for hours.
+// short-duration threats. The user shouldn't be able to dismiss these
+// from the UI (no × button). Longer-duration alerts (blizzard, winter
+// storm, flood, heat, SWS, watches) remain dismissible so they don't
+// nag for hours. Silencing the audio loop is a separate concern —
+// see the SILENCE button, which acts on any repeating-tier alert
+// regardless of dismissibility.
 const NON_DISMISSIBLE_RANK_THRESHOLD = 5;
 
 interface AlertBannerProps {
@@ -96,7 +99,7 @@ export function AlertBanner({ alerts, onDismiss, onOpenDetail, onAcknowledgeSoun
             type="button"
             className="alert-banner-silence"
             onClick={onAcknowledgeSounds}
-            aria-label="Silence alert sound"
+            aria-label="Silence alert sounds"
           >
             SILENCE
           </button>
