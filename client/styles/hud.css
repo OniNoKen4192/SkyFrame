@@ -995,9 +995,16 @@
 }
 
 .hud-topbar .loc .loc-link {
+  background: none;
+  border: none;
+  padding: 0 0 1px 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+  text-shadow: inherit;
   cursor: pointer;
   border-bottom: 1px dashed rgba(var(--accent-rgb), 0.4);
-  padding-bottom: 1px;
   transition: opacity 120ms ease, border-color 120ms ease;
 }
 
