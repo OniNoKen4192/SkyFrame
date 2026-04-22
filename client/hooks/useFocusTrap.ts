@@ -33,6 +33,9 @@ export function useFocusTrap(
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Tab') return;
 
+      // offsetParent !== null is a pragmatic visibility proxy. Caveat: it returns
+      // null for `position: fixed` elements, so a fixed focusable inside the modal
+      // would be excluded. Not a concern today (modal content uses flow layout).
       const focusables = Array.from(
         container.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
       ).filter((el) => !el.hasAttribute('inert') && el.offsetParent !== null);

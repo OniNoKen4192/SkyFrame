@@ -33,6 +33,9 @@ export function TerminalModal({
     onCloseRef.current = onClose;
   });
 
+  // Trap Tab within the modal while open. Focus RESTORATION on close is
+  // handled by the separate effect below (snapshot activeElement + restore
+  // on cleanup). The two effects compose — don't reorder without checking.
   useFocusTrap(modalRef, open);
 
   useEffect(() => {
