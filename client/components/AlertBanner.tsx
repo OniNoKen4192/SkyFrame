@@ -5,9 +5,12 @@ import { isUpdateAlert } from '../alert-detail-format';
 
 // Tornado Emergency, PDS Tornado, Tornado Warning, Destructive Severe
 // Thunderstorm Warning, and Severe Thunderstorm Warning — imminent /
-// short-duration threats. The user shouldn't be able to silence these.
-// Longer-duration alerts (blizzard, winter storm, flood, heat, SWS,
-// watches) remain dismissible so they don't nag for hours.
+// short-duration threats. The user shouldn't be able to dismiss these
+// from the UI (no × button). Longer-duration alerts (blizzard, winter
+// storm, flood, heat, SWS, watches) remain dismissible so they don't
+// nag for hours. Silencing the audio loop is a separate concern —
+// see the SILENCE button, which acts on any repeating-tier alert
+// regardless of dismissibility.
 const NON_DISMISSIBLE_RANK_THRESHOLD = 5;
 
 interface AlertBannerProps {
@@ -15,6 +18,7 @@ interface AlertBannerProps {
   onDismiss: (id: string) => void;
   onOpenDetail: (id: string) => void;
   onAcknowledgeSounds: () => void;
+  anyLooping: boolean;
   timezone: string | null;
 }
 
@@ -26,7 +30,7 @@ function formatExpires(iso: string, tz: string | null): string {
   return fmt.format(new Date(iso)).toUpperCase();
 }
 
-export function AlertBanner({ alerts, onDismiss, onOpenDetail, onAcknowledgeSounds, timezone }: AlertBannerProps) {
+export function AlertBanner({ alerts, onDismiss, onOpenDetail, onAcknowledgeSounds, anyLooping, timezone }: AlertBannerProps) {
   const [expanded, setExpanded] = useState(false);
 
   if (alerts.length === 0) return null;
@@ -44,7 +48,6 @@ export function AlertBanner({ alerts, onDismiss, onOpenDetail, onAcknowledgeSoun
       data-tier={primary.tier}
       role="status"
       aria-live="polite"
-      onClick={onAcknowledgeSounds}
     >
       <div className="alert-banner-row">
         <div className="alert-banner-stripes alert-banner-stripes-left" aria-hidden="true" />
@@ -89,6 +92,16 @@ export function AlertBanner({ alerts, onDismiss, onOpenDetail, onAcknowledgeSoun
             aria-label={expanded ? 'Collapse alerts list' : 'Expand alerts list'}
           >
             {expanded ? '▴' : '▾'}
+          </button>
+        )}
+        {anyLooping && (
+          <button
+            type="button"
+            className="alert-banner-silence"
+            onClick={onAcknowledgeSounds}
+            aria-label="Silence alert sounds"
+          >
+            SILENCE
           </button>
         )}
         {canDismiss && (

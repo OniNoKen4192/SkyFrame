@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, type ReactNode, type CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 
 interface TerminalModalProps {
   open: boolean;
@@ -24,12 +25,18 @@ export function TerminalModal({
   const closeRef = useRef<HTMLButtonElement>(null);
   const overlayMouseDownRef = useRef(false);
   const onCloseRef = useRef(onClose);
+  const modalRef = useRef<HTMLDivElement>(null);
 
   // Keep the ref current on every render so the keydown handler always calls
   // the latest onClose without needing it in the main effect's dep array.
   useEffect(() => {
     onCloseRef.current = onClose;
   });
+
+  // Trap Tab within the modal while open. Focus RESTORATION on close is
+  // handled by the separate effect below (snapshot activeElement + restore
+  // on cleanup). The two effects compose — don't reorder without checking.
+  useFocusTrap(modalRef, open);
 
   useEffect(() => {
     if (!open) return;
@@ -82,6 +89,7 @@ export function TerminalModal({
       onMouseUp={onOverlayMouseUp}
     >
       <div
+        ref={modalRef}
         className="terminal-modal"
         role="dialog"
         aria-modal="true"

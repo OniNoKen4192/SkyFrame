@@ -1,6 +1,6 @@
 # SkyFrame — Project Status
 
-**Last updated:** 2026-04-21 (v1.2.4)
+**Last updated:** 2026-04-22 (v1.2.5)
 
 ## What is SkyFrame
 
@@ -280,3 +280,10 @@ Running list of what's in the codebase. Update this when a feature ships so we d
 - `fetchObservationsWithFallback` in `server/nws/normalizer.ts` short-circuits to the fallback station when `CONFIG.stationOverride === 'force-secondary'`, without issuing any primary-station requests. `meta.error` is NOT set to `'station_fallback'` for pinned responses — the two fields are orthogonal.
 - `WeatherMeta.stationOverride` added (`'auto' | 'force-secondary'`, always present) so the client can render `[PIN]` without a second round-trip.
 - Motivated by a real scenario (Oak Creek, WI, 2026-04-18): primary station (KMKE) was responsive but reported 0°F mid-storm after lightning damage. Automatic staleness check can't detect physically impossible values; this is the human-in-the-loop escape hatch. Spec: [docs/superpowers/specs/2026-04-20-force-fallback-station-design.md](docs/superpowers/specs/2026-04-20-force-fallback-station-design.md)
+
+### Senior-dev review fixes (v1.2.5)
+- TopBar location name is now a real `<button>` (previously a `<span role="button">` with no `onKeyDown` — keyboard users could not activate it). CSS resets button chrome so the visual design is unchanged; a `:focus-visible` outline matches the sibling inline-button idiom.
+- AlertBanner silencing is now explicit: a dedicated `SILENCE` button appears whenever any visible alert has an active repeating sound. The old click-anywhere `onClick` on the banner root is gone — opening the detail modal or expanding the multi-alert list no longer silences. Button shows only when a looping alert is un-acknowledged; disappears after SILENCE click or when the alert drops off the feed. Powered by a new pure `anyAlertLooping(alerts, acknowledged)` predicate in `client/sound/alert-sounds.ts` with 5 unit tests.
+- `/api/config` bootstrap failure now renders a visible `■ SKYFRAME\ BOOTSTRAP FAILED` panel with the error message and a `RETRY` button instead of silently rendering a blank (un-configured-looking) dashboard. Distinguishes "server unreachable" from "first-run unconfigured."
+- Removed hardcoded Milwaukee strings (`MKX GRID 88,58`, `KMKE`, `WIZ066`) from `HourlyPanel` and `OutlookPanel`. `WeatherMeta` now carries `forecastOffice`, `gridX`, `gridY`, and `forecastZone` from the server; panels render them dynamically. Labels are truthful for any configured ZIP.
+- `TerminalModal` now traps `Tab` / `Shift+Tab` focus within the dialog via a new `useFocusTrap` hook (`client/hooks/useFocusTrap.ts`). The existing `aria-modal="true"` claim is now backed by the behavior — focus can no longer escape to the underlying page while the modal is open. Existing focus-restore-on-close behavior preserved.

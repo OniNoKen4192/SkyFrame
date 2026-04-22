@@ -659,6 +659,25 @@
   filter: brightness(1.2);
 }
 
+.alert-banner-silence {
+  background: none;
+  border: 1px solid currentColor;
+  color: inherit;
+  font: inherit;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  cursor: pointer;
+  padding: 3px 10px;
+  margin-right: 6px;
+  text-shadow: inherit;
+  opacity: 0.75;
+}
+
+.alert-banner-silence:hover {
+  opacity: 1;
+  filter: brightness(1.2);
+}
+
 .alert-banner-list {
   list-style: none;
   padding: 8px 18px 12px;
@@ -995,9 +1014,16 @@
 }
 
 .hud-topbar .loc .loc-link {
+  background: none;
+  border: none;
+  padding: 0 0 1px 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+  text-shadow: inherit;
   cursor: pointer;
   border-bottom: 1px dashed rgba(var(--accent-rgb), 0.4);
-  padding-bottom: 1px;
   transition: opacity 120ms ease, border-color 120ms ease;
 }
 
@@ -1005,6 +1031,11 @@
   opacity: 1;
   border-color: var(--accent);
   text-shadow: 0 0 8px var(--accent-glow-soft);
+}
+
+.hud-topbar .loc .loc-link:focus-visible {
+  outline: 1px dashed currentColor;
+  outline-offset: 2px;
 }
 
 /* ============================================================
@@ -1242,4 +1273,62 @@
   margin-top: 8px;
   color: #ff4444;
   font-size: 10px;
+}
+
+.bootstrap-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+.bootstrap-error-panel {
+  max-width: 520px;
+  padding: 32px 40px;
+  border: 1px solid rgba(var(--accent-rgb), 0.4);
+  background: rgba(5, 10, 16, 0.8);
+  text-align: left;
+}
+
+.bootstrap-error-title {
+  font-size: 12px;
+  letter-spacing: 0.24em;
+  color: var(--accent);
+  text-shadow: 0 0 8px var(--accent-glow-soft);
+  margin-bottom: 16px;
+}
+
+.bootstrap-error-message {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: #f88;
+  margin-bottom: 16px;
+  word-break: break-word;
+}
+
+.bootstrap-error-hint {
+  font-size: 11px;
+  line-height: 1.6;
+  opacity: 0.8;
+  margin-bottom: 24px;
+}
+
+.bootstrap-error-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.bootstrap-error-btn {
+  background: none;
+  border: 1px solid var(--accent);
+  color: inherit;
+  font: inherit;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  padding: 8px 20px;
+  cursor: pointer;
+}
+
+.bootstrap-error-btn:hover {
+  background: rgba(var(--accent-rgb), 0.1);
 }

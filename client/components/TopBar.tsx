@@ -68,9 +68,9 @@ export function TopBar({ stationId, error, fallback, locationName, timezone, act
       <div className="hud-topbar-left">
         <div className={locClass}>
           <span className="loc-brand">■ SKYFRAME\\</span> &nbsp;·&nbsp;
-          <span className="loc-link" onClick={onLocationClick} role="button" tabIndex={0}>
+          <button type="button" className="loc-link" onClick={onLocationClick}>
             {locationName || 'SET LOCATION'} ✎
-          </span>
+          </button>
           &nbsp;·&nbsp;
           <span className={linkClass}>{linkText}</span>
         </div>

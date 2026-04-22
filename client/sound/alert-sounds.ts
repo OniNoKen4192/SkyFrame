@@ -29,6 +29,15 @@ export function shouldTriggerSound(
   return mode;
 }
 
+export function anyAlertLooping(
+  alerts: readonly Alert[],
+  acknowledged: ReadonlySet<string>,
+): boolean {
+  return alerts.some(
+    (a) => soundModeForTier(a.tier) === 'repeating' && !acknowledged.has(a.id),
+  );
+}
+
 // ========== Web Audio internals ==========
 
 const PULSE_INTERVAL_MS = 1500;

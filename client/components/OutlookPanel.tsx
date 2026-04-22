@@ -1,9 +1,10 @@
-import type { DailyPeriod } from '../../shared/types';
+import type { DailyPeriod, WeatherMeta } from '../../shared/types';
 import { convertTempF, type TempUnit } from '../../shared/units';
 import { WxIcon } from './WxIcon';
 
 interface OutlookPanelProps {
   daily: DailyPeriod[];
+  meta: WeatherMeta | null;
   units: TempUnit;
   onOpenForecastDay: (dateISO: string) => void;
 }
@@ -15,7 +16,7 @@ function precipClass(pct: number): string {
   return 'precip zero';
 }
 
-export function OutlookPanel({ daily, units, onOpenForecastDay }: OutlookPanelProps) {
+export function OutlookPanel({ daily, meta, units, onOpenForecastDay }: OutlookPanelProps) {
   if (daily.length === 0) return null;
 
   // Compute shared scale from all days' highs/lows in chosen unit
@@ -36,7 +37,14 @@ export function OutlookPanel({ daily, units, onOpenForecastDay }: OutlookPanelPr
   return (
     <div className="hud-outlook-section">
       <div className="hud-section-label">
-        <span>■ 7-DAY OUTLOOK &nbsp;·&nbsp; KMKE &nbsp;/&nbsp; MKX GRID 88,58 &nbsp;/&nbsp; WIZ066</span>
+        <span>
+          ■ 7-DAY OUTLOOK
+          {meta && (
+            <>
+              &nbsp;·&nbsp; {meta.stationId} &nbsp;/&nbsp; {meta.forecastOffice} GRID {meta.gridX},{meta.gridY} &nbsp;/&nbsp; {meta.forecastZone}
+            </>
+          )}
+        </span>
         <span>RANGE {scaleMin}° — {scaleMax}°{units}</span>
       </div>
 
