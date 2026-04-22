@@ -100,8 +100,9 @@ export function AlertBanner({ alerts, onDismiss, onOpenDetail, onAcknowledgeSoun
             className="alert-banner-silence"
             onClick={onAcknowledgeSounds}
             aria-label="Silence alert sounds"
+            title="Silence alert sounds"
           >
-            SILENCE
+            {'\u{1F507}\uFE0E'}
           </button>
         )}
         {canDismiss && (
