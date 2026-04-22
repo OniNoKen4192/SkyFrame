@@ -41,6 +41,10 @@ const FIXTURE_RESPONSE = {
     locationName: 'TEST LOCATION',
     stationOverride: 'auto' as const,
     forecastGeneratedAt: '2026-04-15T13:30:00Z',
+    forecastOffice: 'MKX',
+    gridX: 88,
+    gridY: 58,
+    forecastZone: 'WIZ066',
   },
 };
 

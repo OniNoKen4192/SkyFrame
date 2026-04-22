@@ -824,5 +824,26 @@ describe('normalizeWeather', () => {
 
       expect(result.meta.forecastGeneratedAt).toBe('2026-04-15T13:30:00Z');
     });
+
+    it('surfaces forecast office, grid coordinates, and forecast zone in meta', async () => {
+      mockWithForecast(FIXTURE_FORECAST);
+      const result = await normalizeWeather();
+
+      // Values come from CONFIG.nws (which in tests is driven by test-env .env values).
+      // We only assert that the fields are present and of the correct shape —
+      // the exact value will vary with the test fixture's CONFIG.
+      expect(result.meta).toHaveProperty('forecastOffice');
+      expect(typeof result.meta.forecastOffice).toBe('string');
+      expect(result.meta.forecastOffice.length).toBeGreaterThan(0);
+
+      expect(result.meta).toHaveProperty('gridX');
+      expect(typeof result.meta.gridX).toBe('number');
+
+      expect(result.meta).toHaveProperty('gridY');
+      expect(typeof result.meta.gridY).toBe('number');
+
+      expect(result.meta).toHaveProperty('forecastZone');
+      expect(typeof result.meta.forecastZone).toBe('string');
+    });
   });
 });

@@ -344,6 +344,10 @@ export async function normalizeWeather(): Promise<WeatherResponse> {
     locationName: CONFIG.location.name,
     stationOverride: pinned ? ('force-secondary' as const) : ('auto' as const),
     forecastGeneratedAt: forecast.properties.generatedAt,
+    forecastOffice: nws.forecastOffice,
+    gridX: nws.gridX,
+    gridY: nws.gridY,
+    forecastZone: nws.forecastZone,
     ...(metaError ? { error: metaError } : {}),
   };
 

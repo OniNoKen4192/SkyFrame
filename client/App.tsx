@@ -251,13 +251,14 @@ export default function App() {
       case 'hourly':  return (
         <HourlyPanel
           hourly={data.hourly}
+          meta={data.meta}
           units={units}
           onOpenForecastToday={openToday}
           forecastButtonDisabled={forecastDisabled}
         />
       );
       case 'outlook': return (
-        <OutlookPanel daily={data.daily} units={units} onOpenForecastDay={openDay} />
+        <OutlookPanel daily={data.daily} meta={data.meta} units={units} onOpenForecastDay={openDay} />
       );
       case 'all': return (
         <>
@@ -270,11 +271,12 @@ export default function App() {
           />
           <HourlyPanel
             hourly={data.hourly}
+            meta={data.meta}
             units={units}
             onOpenForecastToday={openToday}
             forecastButtonDisabled={forecastDisabled}
           />
-          <OutlookPanel daily={data.daily} units={units} onOpenForecastDay={openDay} />
+          <OutlookPanel daily={data.daily} meta={data.meta} units={units} onOpenForecastDay={openDay} />
         </>
       );
     }
