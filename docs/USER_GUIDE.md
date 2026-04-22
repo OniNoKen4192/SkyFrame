@@ -138,11 +138,13 @@ Close with `×`, `Esc`, or by clicking the darkened overlay outside the modal.
 
 The `×` on the right end of the banner dismisses an alert. Dismissal persists in localStorage and holds until NWS drops the alert from the active feed — when that happens, the alert is cleared from the dismissed set automatically, so if NWS re-issues it later it will appear again.
 
-**The top five tiers cannot be dismissed.** Tornado Emergency, PDS Tornado, Tornado Warning, Destructive Severe Thunderstorm, and Severe Thunderstorm Warning render without a `×` button by design — these are life-safety alerts and staying visible is the whole point. You can still silence the sound by clicking the banner, and you can still open the detail modal for the full text, but the banner itself stays up until NWS drops the alert.
+**The top five tiers cannot be dismissed.** Tornado Emergency, PDS Tornado, Tornado Warning, Destructive Severe Thunderstorm, and Severe Thunderstorm Warning render without a `×` button by design — these are life-safety alerts and staying visible is the whole point. You can still silence the audio loop via the banner's 🔇 mute glyph (see below), and you can still open the detail modal for the full text, but the banner itself stays up until NWS drops the alert.
 
 ### Alert sounds
 
-Alerts at the top four tiers loop a 500 ms beep every 1.5 seconds until you click the banner. `severe-warning` plays one beep. Lower tiers are silent. All sound is synthesized via Web Audio — no files, no licenses.
+Alerts at the top four tiers loop a 500 ms beep every 1.5 seconds until you click the 🔇 mute glyph. `severe-warning` plays one beep. Lower tiers are silent. All sound is synthesized via Web Audio — no files, no licenses.
+
+A 🔇 **mute glyph** appears on the banner's right side (left of the `×` dismiss, if present) whenever an un-acknowledged repeating alert is active. Click it to cancel all current loops; the acknowledgment persists in localStorage so those alerts won't re-beep on reload. The glyph disappears once every looping alert has been silenced or dropped from the NWS feed. Opening the alert detail modal or toggling the multi-alert list is side-effect free — only the mute glyph silences.
 
 **Note:** browsers block audio playback until the tab has received a user click or keypress. If an alert arrives before you've interacted with the page, the beep is queued and plays as soon as you click anywhere. Once you've interacted, sounds play from a backgrounded tab too.
 
@@ -242,7 +244,7 @@ The dashboard's interactive elements are standard HTML buttons, so full keyboard
 - **Enter** or **Space** — activates the focused element. Either works.
 - **Esc** — closes the currently open modal (Settings, alert detail, or forecast narrative). Clicking the darkened overlay outside the modal is equivalent.
 
-Focus returns to the element that opened the modal on close, so keyboard users don't lose their place.
+Focus returns to the element that opened the modal on close, so keyboard users don't lose their place. While any modal is open, Tab and Shift+Tab cycle within the modal — focus can't escape to the TopBar, panels, or Footer until you close it.
 
 ---
 
@@ -258,6 +260,10 @@ The client can't reach the SkyFrame server, or the server can't reach NWS. Check
 2. Can you open `http://localhost:3000/api/weather` directly? If it returns JSON, the server is fine and the client will recover on the next poll.
 3. Is your machine online? Try `https://api.weather.gov` in another tab.
 4. Rare: NWS itself is down. Their outages are usually minutes, not hours. Wait and the indicator clears on the next successful pull.
+
+### "SKYFRAME\\ BOOTSTRAP FAILED screen"
+
+The client loaded but couldn't reach the server at all — the `/api/config` request failed. This usually means the Node server isn't running (terminal closed, process crashed). Start the server with `npm run server` and click **RETRY** on the panel. If the retry also fails, check the server terminal for errors.
 
 ### "Data looks stuck / old timestamp"
 
