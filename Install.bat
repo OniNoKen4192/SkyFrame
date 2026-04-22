@@ -1,5 +1,5 @@
 @echo off
-setlocal EnableDelayedExpansion
+setlocal
 
 :: SkyFrame installer for Windows.
 :: 1. Ensures Node.js is installed (offers winget auto-install when available).
@@ -40,8 +40,16 @@ echo  Windows' built-in package manager (winget) can install Node.js
 echo  for you. This requires one UAC prompt ("Do you want to
 echo  allow...?") and takes about 30-60 seconds.
 echo.
+:: Y=1, N=2; any other code (e.g. Ctrl+C=0) is a cancellation.
 choice /c YN /n /m "  Install Node.js now? [Y/N]: "
 if %ERRORLEVEL% EQU 2 goto :manual_install_message
+if %ERRORLEVEL% NEQ 1 (
+    echo.
+    echo  [ERROR] Installation cancelled.
+    echo.
+    pause
+    exit /b 1
+)
 
 echo.
 echo  Installing Node.js LTS via winget...
