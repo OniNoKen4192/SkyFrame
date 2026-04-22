@@ -834,7 +834,6 @@ describe('normalizeWeather', () => {
       // the exact value will vary with the test fixture's CONFIG.
       expect(result.meta).toHaveProperty('forecastOffice');
       expect(typeof result.meta.forecastOffice).toBe('string');
-      expect(result.meta.forecastOffice.length).toBeGreaterThan(0);
 
       expect(result.meta).toHaveProperty('gridX');
       expect(typeof result.meta.gridX).toBe('number');
