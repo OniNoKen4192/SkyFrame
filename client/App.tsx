@@ -18,6 +18,7 @@ import {
   triggerAlertSound,
   cancelAllLoops,
   pruneSoundState,
+  anyAlertLooping,
 } from './sound/alert-sounds';
 
 export type ViewKey = 'current' | 'hourly' | 'outlook' | 'all';
@@ -365,6 +366,7 @@ export default function App() {
 
   const visible = alerts.filter((a) => !dismissed.has(a.id));
   const primaryTier = visible[0]?.tier;
+  const anyLooping = anyAlertLooping(visible, soundAcked);
 
   const dismissAlert = (id: string) => {
     const next = new Set(dismissed);
@@ -464,6 +466,7 @@ export default function App() {
           onDismiss={dismissAlert}
           onOpenDetail={setDetailAlertId}
           onAcknowledgeSounds={acknowledgeAlertSounds}
+          anyLooping={anyLooping}
           timezone={timezone}
         />
       )}

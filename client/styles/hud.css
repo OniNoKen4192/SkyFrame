@@ -659,6 +659,25 @@
   filter: brightness(1.2);
 }
 
+.alert-banner-silence {
+  background: none;
+  border: 1px solid currentColor;
+  color: inherit;
+  font: inherit;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  cursor: pointer;
+  padding: 3px 10px;
+  margin-right: 6px;
+  text-shadow: inherit;
+  opacity: 0.75;
+}
+
+.alert-banner-silence:hover {
+  opacity: 1;
+  filter: brightness(1.2);
+}
+
 .alert-banner-list {
   list-style: none;
   padding: 8px 18px 12px;

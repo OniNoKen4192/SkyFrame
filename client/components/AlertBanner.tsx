@@ -15,6 +15,7 @@ interface AlertBannerProps {
   onDismiss: (id: string) => void;
   onOpenDetail: (id: string) => void;
   onAcknowledgeSounds: () => void;
+  anyLooping: boolean;
   timezone: string | null;
 }
 
@@ -26,7 +27,7 @@ function formatExpires(iso: string, tz: string | null): string {
   return fmt.format(new Date(iso)).toUpperCase();
 }
 
-export function AlertBanner({ alerts, onDismiss, onOpenDetail, onAcknowledgeSounds, timezone }: AlertBannerProps) {
+export function AlertBanner({ alerts, onDismiss, onOpenDetail, onAcknowledgeSounds, anyLooping, timezone }: AlertBannerProps) {
   const [expanded, setExpanded] = useState(false);
 
   if (alerts.length === 0) return null;
@@ -44,7 +45,6 @@ export function AlertBanner({ alerts, onDismiss, onOpenDetail, onAcknowledgeSoun
       data-tier={primary.tier}
       role="status"
       aria-live="polite"
-      onClick={onAcknowledgeSounds}
     >
       <div className="alert-banner-row">
         <div className="alert-banner-stripes alert-banner-stripes-left" aria-hidden="true" />
@@ -89,6 +89,16 @@ export function AlertBanner({ alerts, onDismiss, onOpenDetail, onAcknowledgeSoun
             aria-label={expanded ? 'Collapse alerts list' : 'Expand alerts list'}
           >
             {expanded ? '▴' : '▾'}
+          </button>
+        )}
+        {anyLooping && (
+          <button
+            type="button"
+            className="alert-banner-silence"
+            onClick={onAcknowledgeSounds}
+            aria-label="Silence alert sound"
+          >
+            SILENCE
           </button>
         )}
         {canDismiss && (

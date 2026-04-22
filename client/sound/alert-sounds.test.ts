@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { soundModeForTier, shouldTriggerSound } from './alert-sounds';
+import { soundModeForTier, shouldTriggerSound, anyAlertLooping } from './alert-sounds';
 import type { Alert, AlertTier } from '../../shared/types';
 
 function makeAlert(id: string, tier: AlertTier): Alert {
@@ -62,5 +62,45 @@ describe('shouldTriggerSound', () => {
   it('returns "silent" when the tier is silent, regardless of acked/played state', () => {
     expect(shouldTriggerSound(makeAlert('a', 'flood'), empty, empty)).toBe('silent');
     expect(shouldTriggerSound(makeAlert('b', 'advisory'), new Set(['b']), empty)).toBe('silent');
+  });
+});
+
+describe('anyAlertLooping', () => {
+  const noneAcked = new Set<string>();
+
+  it('returns false for an empty alerts list', () => {
+    expect(anyAlertLooping([], noneAcked)).toBe(false);
+  });
+
+  it('returns false when no alerts are repeating-tier', () => {
+    const alerts = [
+      makeAlert('a', 'flood'),
+      makeAlert('b', 'watch'),
+      makeAlert('c', 'severe-warning'), // single-play, not repeating
+    ];
+    expect(anyAlertLooping(alerts, noneAcked)).toBe(false);
+  });
+
+  it('returns true when at least one repeating-tier alert is un-acked', () => {
+    const alerts = [makeAlert('a', 'tornado-warning'), makeAlert('b', 'flood')];
+    expect(anyAlertLooping(alerts, noneAcked)).toBe(true);
+  });
+
+  it('returns false once every repeating alert is acknowledged', () => {
+    const alerts = [
+      makeAlert('a', 'tornado-warning'),
+      makeAlert('b', 'tstorm-destructive'),
+    ];
+    const acked = new Set(['a', 'b']);
+    expect(anyAlertLooping(alerts, acked)).toBe(false);
+  });
+
+  it('returns true if any repeating alert remains un-acked', () => {
+    const alerts = [
+      makeAlert('a', 'tornado-warning'),
+      makeAlert('b', 'tstorm-destructive'),
+    ];
+    const acked = new Set(['a']); // only one acked
+    expect(anyAlertLooping(alerts, acked)).toBe(true);
   });
 });
