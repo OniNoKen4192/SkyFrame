@@ -21,6 +21,21 @@ See the **[User's Guide](docs/USER_GUIDE.md)** for a full walkthrough of the das
 - A US location (NWS only covers the United States and its territories)
 - A contact email (NWS requires one in the User-Agent header — it is never sent anywhere else)
 
+## Easy install (Windows, no developer tools needed)
+
+1. Click the green **Code** button at the top of this page → **Download ZIP**.
+2. Extract the ZIP anywhere (Desktop, Documents, etc.).
+3. Open the extracted folder and double-click **Install.bat**.
+   - If Node.js isn't installed, Install.bat will offer to install it for you.
+   - Windows may show a UAC ("Do you want to allow...?") prompt once — that's the Node.js installer.
+   - First run takes 1–2 minutes.
+4. When setup finishes, double-click **SkyFrame.bat**.
+   Your browser will open automatically to SkyFrame.
+5. **First launch:** SkyFrame will show a Settings panel — enter a ZIP code (or `lat, lon`) and a contact email (required by the National Weather Service), click SAVE, and you're done. You only do this once.
+
+To stop SkyFrame: close the black console window that opened with it.
+To update later: download the new ZIP, replace the folder, and run Install.bat again.
+
 ## Quick start
 
 ```bash
