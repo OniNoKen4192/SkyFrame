@@ -6,14 +6,14 @@ Local, ad-free weather dashboard powered by NOAA/NWS. Runs on your own computer,
 
 ## Features
 
-- **Current conditions** — temperature, wind, humidity, pressure, visibility, dewpoint with trend arrows; click the hero temperature to toggle °F / °C
-- **Hourly forecast** — next 12 hours as an SVG line chart with per-hour icons and precipitation-probability bars
-- **7-day outlook** — daily highs/lows with condition icons; click any day to open the full NWS narrative
-- **Weather alerts** — color-coded banners for active NWS alerts (13-tier system from tornado-emergency through advisory); click an event name to open the full text in a terminal-styled modal; audible beep tones for top-severity alerts; dismissal persists in localStorage
-- **Forecast narrative** — click the `▶` glyph next to any label to open NWS's human-written forecast body for today or any day ahead
-- **Settings modal** — reachable anytime from the `≡` hamburger in the TopBar; edit location / email / update-check preference without restarting
-- **GPS autodetect** — one-click "use my location" button in Settings (localhost only; browsers block Geolocation over non-HTTPS)
-- **GitHub update notifications (opt-in)** — enable the checkbox in Settings and SkyFrame surfaces new releases as a dismissible advisory alert with release notes; off by default so no outbound calls happen without consent
+- **Current conditions, hourly forecast, and 7-day outlook** in one HUD-styled dashboard
+- **Weather alerts** with a 13-tier color system and audible beeps for severe warnings
+- **NWS narrative forecasts** for any day, inline via a terminal-styled modal
+- **Station override** — manually pin to the secondary station when the primary reports bad data
+- **GPS autodetect** and **opt-in GitHub update notifications** in a persistent Settings modal
+- **No ads, no analytics, no telemetry, no API keys** — data comes straight from NOAA/NWS
+
+See the **[User's Guide](docs/USER_GUIDE.md)** for a full walkthrough of the dashboard with screenshots.
 
 ## Requirements
 
