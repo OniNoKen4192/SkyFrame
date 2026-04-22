@@ -115,6 +115,7 @@ const ERROR_RETRY_MS = 30 * 1000;
 
 export default function App() {
   const [configured, setConfigured] = useState<boolean | null>(null);
+  const [configLoadError, setConfigLoadError] = useState<string | null>(null);
   const [showSetup, setShowSetup] = useState(false);
   const [data, setData] = useState<WeatherResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -144,7 +145,10 @@ export default function App() {
   const fetchConfig = () => {
     const seq = ++fetchConfigSeqRef.current;
     return fetch('/api/config')
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then((cfg: {
         configured: boolean;
         location?: string;
@@ -156,6 +160,7 @@ export default function App() {
         stationFallback?: string;
       }) => {
         if (seq !== fetchConfigSeqRef.current) return;
+        setConfigLoadError(null);
         setConfigured(cfg.configured);
         setTimezone(cfg.timezone ?? null);
         setStationOverride(cfg.stationOverride ?? null);
@@ -168,8 +173,9 @@ export default function App() {
         });
         if (!cfg.configured) setShowSetup(true);
       })
-      .catch(() => {
+      .catch((e: Error) => {
         if (seq !== fetchConfigSeqRef.current) return;
+        setConfigLoadError(e.message || 'Failed to load config');
         setConfigured(false);
       });
   };
@@ -450,6 +456,34 @@ export default function App() {
   const forecastGeneratedLabel = data?.meta?.forecastGeneratedAt
     ? formatTime(data.meta.forecastGeneratedAt, timezone)
     : '';
+
+  if (configLoadError !== null && !configured) {
+    return (
+      <div className="hud-showcase bootstrap-error">
+        <div className="bootstrap-error-panel">
+          <div className="bootstrap-error-title">■ SKYFRAME\\ BOOTSTRAP FAILED</div>
+          <div className="bootstrap-error-message">{configLoadError}</div>
+          <div className="bootstrap-error-hint">
+            The server returned an error or is unreachable. Check the server process
+            and click RETRY below.
+          </div>
+          <div className="bootstrap-error-actions">
+            <button
+              type="button"
+              className="bootstrap-error-btn"
+              onClick={() => {
+                setConfigLoadError(null);
+                setConfigured(null);
+                void fetchConfig();
+              }}
+            >
+              RETRY
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="hud-showcase" data-alert-tier={primaryTier}>
