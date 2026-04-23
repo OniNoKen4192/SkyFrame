@@ -1,6 +1,6 @@
 {
   "name": "skyframe",
-  "version": "1.2.5",
+  "version": "1.2.6",
   "private": true,
   "type": "module",
   "description": "Local ad-free weather dashboard — configurable location via .env",
