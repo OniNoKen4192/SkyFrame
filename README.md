@@ -23,6 +23,8 @@ See the **[User's Guide](docs/USER_GUIDE.md)** for a full walkthrough of the das
 
 ## Easy install (Windows, no developer tools needed)
 
+**No prior setup needed** — Install.bat handles the Node.js requirement above for you.
+
 1. Click the green **Code** button at the top of this page → **Download ZIP**.
 2. Extract the ZIP anywhere (Desktop, Documents, etc.).
 3. Open the extracted folder and double-click **Install.bat**.
