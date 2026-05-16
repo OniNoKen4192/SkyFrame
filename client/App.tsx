@@ -430,6 +430,12 @@ export default function App() {
     setShowSetup(false);
     setConfigured(true);
     setData(null);
+    // Refresh /api/config so timezone, station override, and primary/fallback
+    // station IDs reflect the values that were just saved. Without this, those
+    // pieces of state stay null until the next reload or Settings open — the
+    // station-override popover would have nothing to anchor on, and timestamps
+    // would fall back to the browser's local TZ instead of the NWS-derived one.
+    void fetchConfig();
   };
 
   const handleOpenSettings = () => {
@@ -527,7 +533,7 @@ export default function App() {
         {forecastPeriod && <ForecastBody period={forecastPeriod} />}
       </TerminalModal>
       <TopBar
-        stationId={data?.meta?.stationId ?? null}
+        stationId={data?.meta?.error === 'no_usable_station' ? null : (data?.meta?.stationId ?? null)}
         error={error}
         fallback={data?.meta?.error === 'station_fallback' || stationOverride === 'force-secondary'}
         locationName={data?.meta?.locationName ?? ''}

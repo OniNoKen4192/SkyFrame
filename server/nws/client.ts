@@ -43,12 +43,21 @@ export async function fetchNws<T = unknown>(path: string): Promise<T> {
 
   for (let attempt = 0; attempt < 2; attempt++) {
     let response: Response;
+    // Per-attempt AbortController so the retry gets its own clock.
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), CONFIG.nws.timeoutMs);
     try {
-      response = await fetch(url, { headers });
+      response = await fetch(url, { headers, signal: controller.signal });
     } catch (e) {
-      lastError = new NwsError(`Network error: ${(e as Error).message}`, 'network');
+      const err = e as Error;
+      const isTimeout = err.name === 'AbortError';
+      lastError = isTimeout
+        ? new NwsError(`Timeout after ${CONFIG.nws.timeoutMs}ms: ${url}`, 'timeout')
+        : new NwsError(`Network error: ${err.message}`, 'network');
       if (attempt === 0) { await sleep(RETRY_DELAY_MS); continue; }
       throw lastError;
+    } finally {
+      clearTimeout(timeoutId);
     }
 
     if (response.status === 429) {

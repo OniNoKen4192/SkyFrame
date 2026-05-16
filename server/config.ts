@@ -83,6 +83,7 @@ function buildConfig() {
       forecastZone: saved?.forecastZone ?? process.env.SKYFRAME_FORECAST_ZONE ?? '',
       userAgent: email ? `SkyFrame/0.1 (${email})` : 'SkyFrame/0.1 (unconfigured)',
       baseUrl: 'https://api.weather.gov',
+      timeoutMs: 10000,  // per-attempt fetch timeout; AbortController in fetchNws
     },
 
     stations: {

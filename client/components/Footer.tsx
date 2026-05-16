@@ -36,7 +36,10 @@ export function Footer({
   fallbackStationId,
   onOverrideChange,
 }: FooterProps) {
-  const offline = !!error || !meta;
+  // 'no_usable_station' means both primary and fallback observations failed
+  // the freshness/completeness check — there is no trustworthy station data,
+  // so render the station link as offline even though /api/weather succeeded.
+  const offline = !!error || !meta || meta.error === 'no_usable_station';
   const autoFallback = !offline && meta.error === 'station_fallback';
   const pinned = stationOverride === 'force-secondary';
   const amber = autoFallback || pinned;

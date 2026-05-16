@@ -167,6 +167,11 @@ interface ObsFetchResult {
   stationId: string;
   fellBack: boolean;
   pinned: boolean;
+  // false when the returned observation failed isObservationUsable (stale,
+  // null temp/wind, or empty conditionText). Data is still returned so
+  // /api/weather stays up, but the client should surface a warning rather
+  // than render the values as authoritative.
+  usable: boolean;
 }
 
 function isObservationUsable(obs: NwsObsProperties, now: Date): boolean {
@@ -195,6 +200,7 @@ async function fetchObservationsWithFallback(now: Date): Promise<ObsFetchResult>
       stationId: stations.fallback,
       fellBack: false,  // this is a pin, not a fallback
       pinned: true,
+      usable: isObservationUsable(secondaryLatest.properties, now),
     };
   }
 
@@ -206,7 +212,7 @@ async function fetchObservationsWithFallback(now: Date): Promise<ObsFetchResult>
       const primaryHistory = await fetchNws<NwsObsListResponse>(
         `/stations/${stations.primary}/observations?limit=6`,
       );
-      return { obsLatest: primaryLatest, obsHistory: primaryHistory, stationId: stations.primary, fellBack: false, pinned: false };
+      return { obsLatest: primaryLatest, obsHistory: primaryHistory, stationId: stations.primary, fellBack: false, pinned: false, usable: true };
     }
   } catch {
     // Swallow; fall through to secondary
@@ -218,7 +224,14 @@ async function fetchObservationsWithFallback(now: Date): Promise<ObsFetchResult>
   const secondaryHistory = await fetchNws<NwsObsListResponse>(
     `/stations/${stations.fallback}/observations?limit=6`,
   );
-  return { obsLatest: secondaryLatest, obsHistory: secondaryHistory, stationId: stations.fallback, fellBack: true, pinned: false };
+  return {
+    obsLatest: secondaryLatest,
+    obsHistory: secondaryHistory,
+    stationId: stations.fallback,
+    fellBack: true,
+    pinned: false,
+    usable: isObservationUsable(secondaryLatest.properties, now),
+  };
 }
 
 interface AlertsFetchResult {
@@ -290,7 +303,7 @@ export async function normalizeWeather(): Promise<WeatherResponse> {
     fetchObservationsWithFallback(now),
     fetchAlertsSafe(),
   ]);
-  const { obsLatest, obsHistory, stationId: activeStationId, fellBack, pinned } = obsResult;
+  const { obsLatest, obsHistory, stationId: activeStationId, fellBack, pinned, usable: obsUsable } = obsResult;
   const alerts = normalizeAlerts(alertsResult.data);
   const alertsFailed = alertsResult.failed;
 
@@ -330,8 +343,11 @@ export async function normalizeWeather(): Promise<WeatherResponse> {
   // 5. Normalize daily (collapse day+night period pairs)
   const dailyPeriods = collapseDailyPeriods(forecast.properties.periods, nws.timezone);
 
-  // 6. Assemble meta
+  // 6. Assemble meta. 'no_usable_station' supersedes 'station_fallback' —
+  // when fallback data is also bad the client needs the stronger signal so
+  // it can warn instead of rendering unreliable readings as authoritative.
   const metaError =
+    !obsUsable ? 'no_usable_station' as const :
     fellBack ? 'station_fallback' as const :
     alertsFailed ? 'partial' as const :
     undefined;

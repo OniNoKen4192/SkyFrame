@@ -61,4 +61,47 @@ describe('fetchNws', () => {
       code: 'upstream_malformed',
     });
   });
+
+  it('passes an AbortSignal to fetch so requests can be cancelled', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ ok: true }), { status: 200, headers: { 'content-type': 'application/json' } })
+    );
+
+    await fetchNws('/test');
+
+    const [, init] = fetchSpy.mock.calls[0]!;
+    expect(init?.signal).toBeInstanceOf(AbortSignal);
+  });
+
+  it('throws NwsError with code "timeout" when fetch exceeds the configured timeout', async () => {
+    vi.useFakeTimers();
+
+    // Mock fetch to respect the abort signal and otherwise never resolve.
+    // Real NWS never replying is exactly the scenario this guards against.
+    vi.spyOn(globalThis, 'fetch').mockImplementation((_url, init) => {
+      return new Promise((_, reject) => {
+        const signal = (init as RequestInit | undefined)?.signal;
+        signal?.addEventListener('abort', () => {
+          const err = new Error('The operation was aborted');
+          err.name = 'AbortError';
+          reject(err);
+        });
+      });
+    });
+
+    const settled = fetchNws('/test').catch((e) => e);
+
+    // Attempt 1 hangs → timeout fires
+    await vi.advanceTimersByTimeAsync(CONFIG.nws.timeoutMs + 1);
+    // Retry backoff
+    await vi.advanceTimersByTimeAsync(1100);
+    // Attempt 2 hangs → timeout fires
+    await vi.advanceTimersByTimeAsync(CONFIG.nws.timeoutMs + 1);
+
+    const result = await settled;
+    expect(result).toBeInstanceOf(NwsError);
+    expect((result as NwsError).code).toBe('timeout');
+
+    vi.useRealTimers();
+  });
 });

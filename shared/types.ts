@@ -80,7 +80,7 @@ export interface WeatherMeta {
   gridX: number;                // NWS gridpoint X coordinate
   gridY: number;                // NWS gridpoint Y coordinate
   forecastZone: string;         // e.g. "WIZ066" — NWS public forecast zone ID
-  error?: 'rate_limited' | 'upstream_malformed' | 'station_fallback' | 'partial';
+  error?: 'rate_limited' | 'upstream_malformed' | 'station_fallback' | 'no_usable_station' | 'partial';
 }
 
 export interface WeatherResponse {

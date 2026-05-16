@@ -332,6 +332,12 @@ describe('normalizeWeather', () => {
   });
 
   it('falls back to KRAC when KMKE observation has null temperature', async () => {
+    // Pin the clock so KRAC's fixture timestamp counts as fresh — otherwise
+    // real wall-clock time makes the fallback also fail isObservationUsable,
+    // and the meta.error correctly becomes 'no_usable_station' instead.
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-04-15T19:30:00+00:00'));
+
     vi.spyOn(client, 'fetchNws').mockImplementation(async (path: string) => {
       if (path.includes('/points/')) return FIXTURE_POINT as never;
       if (path.includes('/forecast/hourly')) return FIXTURE_HOURLY as never;
@@ -354,6 +360,8 @@ describe('normalizeWeather', () => {
     const result = await normalizeWeather();
     expect(result.meta.stationId).toBe('KRAC');
     expect(result.meta.error).toBe('station_fallback');
+
+    vi.useRealTimers();
   });
 
   it('uses KMKE without error flag when primary is fresh and complete', async () => {
@@ -366,6 +374,98 @@ describe('normalizeWeather', () => {
     expect(result.meta.error).toBeUndefined();
 
     vi.useRealTimers();
+  });
+
+  it('sets meta.error=no_usable_station when both primary and fallback are stale (auto path)', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-04-15T19:30:00+00:00'));
+
+    vi.spyOn(client, 'fetchNws').mockImplementation(async (path: string) => {
+      if (path.includes('/points/')) return FIXTURE_POINT as never;
+      if (path.includes('/forecast/hourly')) return FIXTURE_HOURLY as never;
+      if (path.includes('/forecast')) return FIXTURE_FORECAST as never;
+      if (path.includes('KMKE/observations/latest')) {
+        return {
+          properties: { ...FIXTURE_OBS_LATEST.properties, timestamp: '2026-04-15T12:00:00+00:00' }, // 7.5h stale
+        } as never;
+      }
+      if (path.includes('KRAC/observations/latest')) {
+        return {
+          properties: { ...FIXTURE_OBS_LATEST.properties, timestamp: '2026-04-15T11:00:00+00:00' }, // 8.5h stale
+        } as never;
+      }
+      if (path.includes('/observations')) return FIXTURE_OBS_HISTORY as never;
+      if (path.includes('/alerts/active')) return { features: [] } as never;
+      throw new Error('Unexpected path: ' + path);
+    });
+
+    const result = await normalizeWeather();
+    // Still returns data (so /api/weather is up) but flags it as unusable.
+    expect(result.meta.stationId).toBe('KRAC');
+    expect(result.meta.error).toBe('no_usable_station');
+
+    vi.useRealTimers();
+  });
+
+  it('sets meta.error=no_usable_station when fallback observation has null temperature (auto path)', async () => {
+    vi.spyOn(client, 'fetchNws').mockImplementation(async (path: string) => {
+      if (path.includes('/points/')) return FIXTURE_POINT as never;
+      if (path.includes('/forecast/hourly')) return FIXTURE_HOURLY as never;
+      if (path.includes('/forecast')) return FIXTURE_FORECAST as never;
+      if (path.includes('KMKE/observations/latest')) {
+        return {
+          properties: { ...FIXTURE_OBS_LATEST.properties, temperature: { value: null, unitCode: 'wmoUnit:degC' } },
+        } as never;
+      }
+      if (path.includes('KRAC/observations/latest')) {
+        return {
+          properties: { ...FIXTURE_OBS_LATEST.properties, temperature: { value: null, unitCode: 'wmoUnit:degC' } },
+        } as never;
+      }
+      if (path.includes('/observations')) return FIXTURE_OBS_HISTORY as never;
+      if (path.includes('/alerts/active')) return { features: [] } as never;
+      throw new Error('Unexpected path: ' + path);
+    });
+
+    const result = await normalizeWeather();
+    expect(result.meta.stationId).toBe('KRAC');
+    expect(result.meta.error).toBe('no_usable_station');
+  });
+
+  it('sets meta.error=no_usable_station when force-secondary is pinned but KRAC is stale', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-04-15T19:30:00+00:00'));
+
+    const configMut = CONFIG as { stationOverride: 'auto' | 'force-secondary' };
+    const originalOverride = configMut.stationOverride;
+    configMut.stationOverride = 'force-secondary';
+
+    try {
+      vi.spyOn(client, 'fetchNws').mockImplementation(async (path: string) => {
+        if (path.includes('/points/')) return FIXTURE_POINT as never;
+        if (path.includes('/forecast/hourly')) return FIXTURE_HOURLY as never;
+        if (path.includes('/forecast')) return FIXTURE_FORECAST as never;
+        if (path.includes('KRAC/observations/latest')) {
+          return {
+            properties: { ...FIXTURE_OBS_LATEST.properties, timestamp: '2026-04-15T11:00:00+00:00' }, // 8.5h stale
+          } as never;
+        }
+        if (path.includes('KRAC/observations')) return FIXTURE_OBS_HISTORY as never;
+        if (path.includes('/alerts/active')) return { features: [] } as never;
+        throw new Error('Unexpected path: ' + path);
+      });
+
+      const result = await normalizeWeather();
+      // Pin is still honored — we use the secondary's data even though it's bad,
+      // so /api/weather stays up. But the meta flag tells the client to surface
+      // a warning instead of pretending the values are reliable.
+      expect(result.meta.stationId).toBe('KRAC');
+      expect(result.meta.stationOverride).toBe('force-secondary');
+      expect(result.meta.error).toBe('no_usable_station');
+    } finally {
+      configMut.stationOverride = originalOverride;
+      vi.useRealTimers();
+    }
   });
 
   describe('alerts', () => {
