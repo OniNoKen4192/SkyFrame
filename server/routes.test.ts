@@ -2,6 +2,8 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import Fastify, { type FastifyInstance } from 'fastify';
 import { registerRoutes } from './routes';
 import * as normalizer from './nws/normalizer';
+import * as setup from './nws/setup';
+import * as configModule from './config';
 import { CONFIG } from './config';
 
 // Tests in this file pin CONFIG.configured to a known state via a structural
@@ -90,6 +92,83 @@ describe('GET /api/weather', () => {
     expect(res.statusCode).toBe(503);
     expect(res.json()).toMatchObject({ error: expect.any(String) });
     await freshApp.close();
+  });
+});
+
+describe('POST /api/setup input validation', () => {
+  let app: FastifyInstance;
+  let originalConfigured: boolean;
+
+  beforeEach(async () => {
+    originalConfigured = CONFIG.configured;
+    // Mock all side-effecting helpers so validation tests are hermetic.
+    // Defense in depth: even if validation regresses and reaches these
+    // functions, the user's real skyframe.config.json is never touched.
+    vi.spyOn(setup, 'resolveSetup').mockResolvedValue({
+      lat: 42.9,
+      lon: -87.8,
+      email: 'mocked@example.com',
+      forecastOffice: 'MKX',
+      gridX: 88,
+      gridY: 58,
+      timezone: 'America/Chicago',
+      forecastZone: 'WIZ066',
+      stationPrimary: 'KMKE',
+      stationFallback: 'KRAC',
+      locationName: 'TEST',
+    });
+    vi.spyOn(configModule, 'saveSkyFrameConfig').mockImplementation(() => {});
+    vi.spyOn(configModule, 'reloadConfig').mockImplementation(() => {});
+    app = Fastify();
+    await registerRoutes(app);
+    await app.ready();
+  });
+
+  afterEach(async () => {
+    await app.close();
+    vi.restoreAllMocks();
+    (CONFIG as MutableConfig).configured = originalConfigured;
+  });
+
+  it('rejects an email containing CR characters with 400 + invalid_input', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/setup',
+      payload: { location: '53154', email: 'user@x.com\rX-Injected: true' },
+    });
+    expect(res.statusCode).toBe(400);
+    expect(res.json()).toMatchObject({ error: 'invalid_input' });
+  });
+
+  it('rejects an email containing LF characters with 400 + invalid_input', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/setup',
+      payload: { location: '53154', email: 'user@x.com\nfoo' },
+    });
+    expect(res.statusCode).toBe(400);
+    expect(res.json()).toMatchObject({ error: 'invalid_input' });
+  });
+
+  it('rejects a location containing CRLF with 400 + invalid_input', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/setup',
+      payload: { location: '53154\r\nfoo', email: 'user@x.com' },
+    });
+    expect(res.statusCode).toBe(400);
+    expect(res.json()).toMatchObject({ error: 'invalid_input' });
+  });
+
+  it('rejects an email longer than 254 characters (RFC 5321 limit)', async () => {
+    const longEmail = 'a'.repeat(250) + '@x.com';
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/setup',
+      payload: { location: '53154', email: longEmail },
+    });
+    expect(res.statusCode).toBe(400);
+    expect(res.json()).toMatchObject({ error: 'invalid_input' });
   });
 });
 

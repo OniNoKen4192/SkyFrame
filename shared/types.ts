@@ -106,6 +106,14 @@ export type AlertTier =
   | 'advisory-high'
   | 'advisory';
 
+// Shared between server (Fastify route Reply types) and client (fetch
+// response narrowing). Keeping it in shared/ prevents drift — if the server
+// renames `message` or adds a field, both sides see the change at compile time.
+export interface ErrorReply {
+  error: string;
+  message: string;
+}
+
 export interface Alert {
   id: string;
   event: string;

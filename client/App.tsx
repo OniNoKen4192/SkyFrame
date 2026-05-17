@@ -411,6 +411,10 @@ export default function App() {
   };
 
   const handleStationOverrideChange = async (mode: 'auto' | 'force-secondary') => {
+    // Cancel any pending scheduled poll before kicking off our immediate refetch
+    // below — otherwise the scheduled poll can fire mid-refetch and produce a
+    // duplicate request whose response races with ours.
+    if (pollTimeoutRef.current !== null) clearTimeout(pollTimeoutRef.current);
     const res = await fetch('/api/station-override', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import type { ErrorReply } from '../../shared/types';
 
 const LOCALHOST_HOSTNAMES = new Set(['localhost', '127.0.0.1', '::1']);
 
@@ -74,9 +75,9 @@ export function Settings({ onComplete, onCancel, initialConfig }: SettingsProps)
           updateCheckEnabled,
         }),
       });
-      const data = await res.json();
+      const data = (await res.json()) as ErrorReply | { success: true; locationName: string };
       if (!res.ok) {
-        setError(data.message || 'Setup failed.');
+        setError(('message' in data && data.message) || 'Setup failed.');
         setSaving(false);
         return;
       }

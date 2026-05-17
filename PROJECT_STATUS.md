@@ -1,6 +1,6 @@
 # SkyFrame — Project Status
 
-**Last updated:** 2026-05-16 (v1.2.7)
+**Last updated:** 2026-05-16 (v1.2.8)
 
 ## What is SkyFrame
 
@@ -287,6 +287,14 @@ Running list of what's in the codebase. Update this when a feature ships so we d
 - `/api/config` bootstrap failure now renders a visible `■ SKYFRAME\ BOOTSTRAP FAILED` panel with the error message and a `RETRY` button instead of silently rendering a blank (un-configured-looking) dashboard. Distinguishes "server unreachable" from "first-run unconfigured."
 - Removed hardcoded Milwaukee strings (`MKX GRID 88,58`, `KMKE`, `WIZ066`) from `HourlyPanel` and `OutlookPanel`. `WeatherMeta` now carries `forecastOffice`, `gridX`, `gridY`, and `forecastZone` from the server; panels render them dynamically. Labels are truthful for any configured ZIP.
 - `TerminalModal` now traps `Tab` / `Shift+Tab` focus within the dialog via a new `useFocusTrap` hook (`client/hooks/useFocusTrap.ts`). The existing `aria-modal="true"` claim is now backed by the behavior — focus can no longer escape to the underlying page while the modal is open. Existing focus-restore-on-close behavior preserved.
+
+### Input safety + shared error contract (v1.2.8)
+- **CRLF + length validation on `/api/setup`** — `email` and `location` are now rejected (400 `invalid_input`) if they contain `\r` or `\n` (HTTP-header injection guard, since the email flows into the NWS `User-Agent` header), and `email > 254 chars` / `location > 256 chars` is rejected as DoS protection. Four new regression tests in [server/routes.test.ts](server/routes.test.ts) cover each path.
+- **`stationOverride` config validation** — extracted `parseStationOverride(value: unknown): 'auto' | 'force-secondary'` in [server/config.ts](server/config.ts), replacing the unsafe `as` cast at the buildConfig site. Unknown values coerce to `'auto'` with a `console.warn`; `undefined` silently defaults (backwards compat with pre-v1.2.3 configs). Five new tests in `server/config.test.ts`.
+- **Shared `ErrorReply` contract** — promoted from a route-local type in `server/routes.ts` to `shared/types.ts`. Both server (Fastify `Reply` types) and client ([client/components/Settings.tsx](client/components/Settings.tsx) fetch handler) now import the same definition, so any future shape change (renamed `message`, added field) breaks both sides at compile time instead of silently drifting.
+- **Station-override poll race fix** — `handleStationOverrideChange` in [client/App.tsx](client/App.tsx) now cancels the pending scheduled poll (`clearTimeout(pollTimeoutRef.current)`) before kicking off its immediate refetch. Previously the scheduled poll could fire mid-override, producing a duplicate `/api/weather` request whose response raced with the override-triggered one.
+- **Test isolation hardened** — the `/api/setup` test block now mocks `resolveSetup` + `saveSkyFrameConfig` + `reloadConfig` so input-validation tests don't hit the real NWS API or write to disk. Without this, RED-phase tests against the un-fixed validation path could clobber the user's real `skyframe.config.json` (and did, during PR development — recovered by hand).
+- Three of the four fixes originated in the v1.2.6 senior-dev review's "input safety" group. Fix #6 (poll race) was caught by the same review's edge-case bug hunt.
 
 ### Operational reliability fixes (v1.2.7)
 - **Fallback station also validated** — `isObservationUsable` (staleness + null-field check) now runs on the fallback and force-secondary paths, not just primary. When neither station passes, the server still returns 200 with whatever data it got (so `/api/weather` stays up) but sets `meta.error = 'no_usable_station'`. Client (Footer + TopBar) treats this as offline for the station-data flow — the link shows `LINK.OFFLINE` instead of pretending bad readings are authoritative. Forecast and hourly panels stay live since they don't depend on the observation station. Three new regression tests in [server/nws/normalizer.test.ts](server/nws/normalizer.test.ts) cover: both stations stale (auto), both stations null-temp (auto), force-secondary with stale fallback.

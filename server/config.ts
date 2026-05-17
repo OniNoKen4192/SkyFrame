@@ -53,6 +53,17 @@ export function saveSkyFrameConfig(cfg: SkyFrameLocationConfig): void {
   writeFileSync(CONFIG_FILE, JSON.stringify(cfg, null, 2) + '\n', 'utf-8');
 }
 
+// Validates the persisted stationOverride value. `undefined` is a legitimate
+// missing field (pre-v1.2.3 configs) and silently defaults to 'auto'. Anything
+// else that isn't a recognized literal is treated as corruption — coerce to
+// 'auto' with a warning rather than crashing or trusting bad data.
+export function parseStationOverride(value: unknown): 'auto' | 'force-secondary' {
+  if (value === undefined) return 'auto';
+  if (value === 'auto' || value === 'force-secondary') return value;
+  console.warn(`config: ignoring unrecognized stationOverride value ${JSON.stringify(value)}; defaulting to "auto"`);
+  return 'auto';
+}
+
 // Build the runtime config. Location fields are nullable when unconfigured.
 function buildConfig() {
   const saved = loadSavedConfig();
@@ -117,7 +128,7 @@ function buildConfig() {
       injectTiers: parseDebugTiers(process.env.SKYFRAME_DEBUG_TIERS),
     },
     updateCheckEnabled,
-    stationOverride: (saved?.stationOverride ?? 'auto') as 'auto' | 'force-secondary',
+    stationOverride: parseStationOverride(saved?.stationOverride),
   };
 }
 

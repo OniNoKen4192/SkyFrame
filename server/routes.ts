@@ -1,5 +1,5 @@
 import type { FastifyInstance } from 'fastify';
-import type { WeatherResponse } from '../shared/types';
+import type { WeatherResponse, ErrorReply } from '../shared/types';
 import { normalizeWeather } from './nws/normalizer';
 import { resolveSetup } from './nws/setup';
 import { TTLCache } from './nws/cache';
@@ -32,8 +32,6 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
       stationFallback: CONFIG.stations.fallback,
     };
   });
-
-  type ErrorReply = { error: string; message: string };
 
   app.get<{ Reply: WeatherResponse | ErrorReply }>('/api/weather', async (_req, reply) => {
     if (!CONFIG.configured) {
@@ -72,6 +70,19 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
       if (!location || !email) {
         reply.code(400);
         return { error: 'invalid_input', message: 'Both location and email are required.' };
+      }
+      // Reject CR/LF anywhere in either field — the email flows into the NWS
+      // User-Agent header, and CR/LF there is HTTP header injection. Cheap
+      // belt-and-suspenders on the location field too.
+      if (/[\r\n]/.test(email) || /[\r\n]/.test(location)) {
+        reply.code(400);
+        return { error: 'invalid_input', message: 'Email and location must not contain newline characters.' };
+      }
+      // RFC 5321 caps the email address at 254 characters. Bound the location
+      // generously (256) — typical ZIP/lat-lon inputs are far shorter.
+      if (email.length > 254 || location.length > 256) {
+        reply.code(400);
+        return { error: 'invalid_input', message: 'Email or location exceeds maximum length.' };
       }
 
       const previousUpdateEnabled = CONFIG.updateCheckEnabled;
